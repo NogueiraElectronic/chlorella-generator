@@ -35,23 +35,20 @@ function generateAdvancedData(scenarios, hours, variabilityLevel = 'medium') {
         
         // Parámetros únicos por escenario con variabilidad configurable
         const scenarioParams = {
-            baseTemp: 15 + Math.random() * config.tempRange,        // Rango variable
-            basePh: 6.5 + Math.random() * config.pHRange,          // Rango variable
-            maxPAR: 200 + Math.random() * 800,                     // 200-1000 μmol/m²/s
-            initialBiomass: 0.02 + Math.random() * 0.5,            // 0.02-0.52 g/L
-            nutrientLevel: 0.3 + Math.random() * 0.7,              // 0.3-1.0
+            baseTemp: 15 + Math.random() * config.tempRange,
+            basePh: 6.5 + Math.random() * config.pHRange,
+            maxPAR: 200 + Math.random() * 800,
+            initialBiomass: 0.02 + Math.random() * 0.5,
+            nutrientLevel: 0.3 + Math.random() * 0.7,
             lightRegime: Math.random() > 0.3 ? 'continuous' : 'cyclic',
             stressCondition: Math.random() > (1 - config.stressProb) ? 
                             (Math.random() > 0.5 ? 'high_temp' : 'low_pH') : 'normal',
-            // Parámetros kinéticos con más variabilidad
-            muMax: 0.04 + Math.random() * 0.08,                   // 0.04-0.12 h⁻¹
-            Ks_light: 100 + Math.random() * 400,                  // 100-500 μmol/m²/s
-            Ks_nutrient: 0.02 + Math.random() * 0.15,             // 0.02-0.17 g/L
-            Ki_biomass: 2 + Math.random() * 4,                    // 2-6 g/L
-            // Parámetros ambientales
-            tempOptimal: 20 + Math.random() * 10,                 // 20-30°C
-            pHOptimal: 6.8 + Math.random() * 0.8,                 // 6.8-7.6
-            // Variabilidad configurable
+            muMax: 0.04 + Math.random() * 0.08,
+            Ks_light: 100 + Math.random() * 400,
+            Ks_nutrient: 0.02 + Math.random() * 0.15,
+            Ki_biomass: 2 + Math.random() * 4,
+            tempOptimal: 20 + Math.random() * 10,
+            pHOptimal: 6.8 + Math.random() * 0.8,
             noiseLevel: config.noiseLevel + Math.random() * config.noiseLevel
         };
         
@@ -61,8 +58,8 @@ function generateAdvancedData(scenarios, hours, variabilityLevel = 'medium') {
         let currentpH = scenarioParams.basePh;
         let currentTemp = scenarioParams.baseTemp;
         let nutrients = scenarioParams.nutrientLevel;
-        let oxygenLevel = 6.0 + Math.random() * 4.0; // 6-10 mg/L
-        let co2Level = 0.02 + Math.random() * 0.06;   // 0.02-0.08%
+        let oxygenLevel = 6.0 + Math.random() * 4.0;
+        let co2Level = 0.02 + Math.random() * 0.06;
         
         // Variables derivadas
         let totalProductivity = 0;
@@ -74,176 +71,152 @@ function generateAdvancedData(scenarios, hours, variabilityLevel = 'medium') {
             // Ciclo de luz avanzado con variaciones realistas
             let lightIntensity;
             if (scenarioParams.lightRegime === 'continuous') {
-                // Luz continua con pequeñas fluctuaciones (~5%)
                 lightIntensity = scenarioParams.maxPAR * (0.95 + 0.1 * Math.random());
             } else {
-                // Ciclo día/noche con variación sinusoidal realista
                 const hourOfDay = h % 24;
                 if (hourOfDay >= 6 && hourOfDay <= 18) {
-                    // Curva de luz realista durante el día
                     const lightFactor = Math.sin((hourOfDay - 6) * Math.PI / 12);
                     lightIntensity = scenarioParams.maxPAR * lightFactor * (0.85 + 0.3 * Math.random());
                 } else {
-                    lightIntensity = 0; // Noche completa
+                    lightIntensity = 0;
                 }
             }
             
-            // Variaciones de temperatura MÁS GRADUALES y realistas
+            // Variaciones de temperatura graduales
             let tempVariation = 0;
             if (scenarioParams.stressCondition === 'high_temp') {
-                // Estrés térmico gradual, no abrupto
-                const stressFactor = Math.sin(h * 0.02); // Variación lenta
+                const stressFactor = Math.sin(h * 0.02);
                 tempVariation = 5 + stressFactor * 8 + Math.random() * 2;
             } else {
-                // Variación normal muy gradual
                 tempVariation = Math.sin(h * 0.01) * 2 + (Math.random() - 0.5) * 1;
             }
             
-            // Efecto circadiano MÁS SUAVE en temperatura
             const circadianTemp = 1.0 * Math.sin((h % 24) * Math.PI / 12);
             currentTemp = Math.max(15, Math.min(40, 
                 scenarioParams.baseTemp + tempVariation + circadianTemp));
             
-            // Variaciones de pH MÁS GRADUALES
+            // Variaciones de pH graduales
             let pHDrift = 0;
             if (scenarioParams.stressCondition === 'low_pH') {
-                // Drift gradual de pH, no saltos
                 pHDrift = -0.5 + Math.sin(h * 0.015) * 0.3 + Math.random() * 0.1;
             } else {
-                // Variación muy gradual
                 pHDrift = Math.sin(h * 0.008) * 0.15 + (Math.random() - 0.5) * 0.05;
             }
             
-            // pH afectado GRADUALMENTE por producción de biomasa
             const biomassPHEffect = (biomass - scenarioParams.initialBiomass) * 0.05;
             currentpH = Math.max(6.0, Math.min(9.0, 
                 scenarioParams.basePh + pHDrift + biomassPHEffect));
             
-            // Depleción GRADUAL de nutrientes
+            // Depleción gradual de nutrientes
             const nutrientUptake = (nutrients / (nutrients + 0.05)) * biomass * 0.008;
             nutrients = Math.max(0.05, nutrients - nutrientUptake);
             
-            // Oxígeno disuelto con cambios GRADUALES
+            // Oxígeno con cambios graduales
             const oxygenProduction = lightIntensity > 0 ? biomass * 0.3 : 0;
             const oxygenConsumption = biomass * 0.08;
             const oxygenChange = (oxygenProduction - oxygenConsumption) * 0.002;
             oxygenLevel = Math.max(2, Math.min(12, oxygenLevel + oxygenChange));
             
-            // CO2 con variación GRADUAL
+            // CO2 con variación gradual
             const co2Consumption = lightIntensity > 0 ? biomass * 0.0008 : 0;
             co2Level = Math.max(0.01, Math.min(0.1, 
                 co2Level - co2Consumption + 0.0005 + (Math.random() - 0.5) * 0.0002));
             
             // === MODELO CINÉTICO MEJORADO ===
             
-            // Efectos más realistas y PRONUNCIADOS en el crecimiento
-            
-            // 1. Efecto de LUZ - MUY IMPORTANTE para fotosíntesis
+            // 1. Efecto de LUZ
             const lightEffect = lightIntensity > 0 ? 
                 Math.min(1.0, lightIntensity / (lightIntensity + scenarioParams.Ks_light)) : 0.01;
             
-            // 2. Efecto de TEMPERATURA - MÁS PRONUNCIADO
+            // 2. Efecto de TEMPERATURA
             const tempDiff = Math.abs(currentTemp - scenarioParams.tempOptimal);
             let tempEffect;
             if (currentTemp < 10 || currentTemp > 45) {
-                tempEffect = 0.01; // Muerte por temperatura extrema
+                tempEffect = 0.01;
             } else if (currentTemp < 15 || currentTemp > 40) {
-                tempEffect = 0.1; // Muy limitado
+                tempEffect = 0.1;
             } else {
-                // Curva de campana más pronunciada
                 tempEffect = Math.exp(-Math.pow(tempDiff / 4, 2));
             }
             
-            // 3. Efecto de pH - MÁS PRONUNCIADO
+            // 3. Efecto de pH
             const pHDiff = Math.abs(currentpH - scenarioParams.pHOptimal);
             let pHEffect;
             if (currentpH < 5.5 || currentpH > 9.5) {
-                pHEffect = 0.01; // Muerte por pH extremo
+                pHEffect = 0.01;
             } else if (currentpH < 6.0 || currentpH > 9.0) {
-                pHEffect = 0.1; // Muy limitado
+                pHEffect = 0.1;
             } else {
-                // Curva de campana más pronunciada
                 pHEffect = Math.exp(-Math.pow(pHDiff / 0.6, 2));
             }
             
-            // 4. Efecto de NUTRIENTES - Más limitante
+            // 4. Efecto de NUTRIENTES
             const nutrientEffect = Math.pow(nutrients / (nutrients + scenarioParams.Ks_nutrient), 1.5);
             
-            // 5. Inhibición por DENSIDAD - Más realista
+            // 5. Inhibición por DENSIDAD
             const densityInhibition = Math.exp(-biomass / scenarioParams.Ki_biomass);
             
-            // 6. Efecto del OXÍGENO - Más crítico
+            // 6. Efecto del OXÍGENO
             const oxygenEffect = oxygenLevel > 2 ? 
                 Math.min(1.0, (oxygenLevel - 1) / 7) : 0.01;
             
-            // 7. Efecto del CO2 - Más importante para fotosíntesis
+            // 7. Efecto del CO2
             const co2Effect = lightIntensity > 0 ? 
                 Math.min(1.0, co2Level / 0.025) : 1.0;
             
-            // === CÁLCULO DE CRECIMIENTO CORREGIDO ===
-            
-            // Combinar todos los efectos de forma MULTIPLICATIVA
+            // Combinar todos los efectos
             let combinedEffect = lightEffect * tempEffect * pHEffect * 
                                nutrientEffect * densityInhibition * oxygenEffect * co2Effect;
             
-            // Asegurar que hay un efecto mínimo pero significativo
             combinedEffect = Math.max(0.001, combinedEffect);
             
-            // Tasa específica de crecimiento MÁS SENSIBLE
+            // Tasa específica de crecimiento
             const mu = scenarioParams.muMax * combinedEffect;
             
-            // Aplicar ruido biológico MÁS PEQUEÑO para ver correlaciones claras
+            // Aplicar ruido biológico
             const biologicalNoise = (Math.random() - 0.5) * (scenarioParams.noiseLevel * 0.5);
             const actualGrowthRate = Math.max(0.001, mu + biologicalNoise);
             
-            // === CRECIMIENTO DIFERENCIAL MÁS REALISTA ===
+            // === CRECIMIENTO ===
             
-            // Usar ecuación diferencial simple: dB/dt = μ * B
-            const growthIncrement = actualGrowthRate * biomass * 0.8; // Factor de escalado
-            const mortalityRate = 0.002 * biomass; // Mortalidad natural pequeña
+            const growthIncrement = actualGrowthRate * biomass * 0.8;
+            const mortalityRate = 0.002 * biomass;
             
             const netGrowth = growthIncrement - mortalityRate;
             biomass = Math.max(0.001, Math.min(biomass + netGrowth, scenarioParams.Ki_biomass));
             
-            // Concentración celular PROPORCIONAL a biomasa
+            // Concentración celular
             const cellGrowthFactor = 1.8e6 + (biomass * 0.2e6);
             cellConcentration = biomass * cellGrowthFactor;
             
-            // Productividad instantánea y acumulada CORREGIDA
-            const instantProductivity = netGrowth * 24; // g/L/día
+            // Productividad
+            const instantProductivity = netGrowth * 24;
             totalProductivity += Math.max(0, instantProductivity);
             cumulativeBiomass += biomass;
             
-            // === VARIABLES DERIVADAS MEJORADAS ===
+            // === VARIABLES DERIVADAS ===
             
-            // Densidad óptica PROPORCIONAL a biomasa
             const opticalDensity = biomass * (2.0 + 0.3 * Math.random());
             
-            // Eficiencia fotosintética REALISTA
             const photosyntheticEfficiency = lightIntensity > 0 && actualGrowthRate > 0 ? 
                 (actualGrowthRate * biomass) / (lightIntensity / 1000) : 0;
             
-            // Contenido de clorofila DEPENDIENTE de luz
-            const lightStress = lightIntensity < scenarioParams.maxPAR * 0.3 ? 0.7 : 1.0;
-            const chlorophyllContent = biomass * (12 + 8 * lightStress + 3 * Math.random());
+            const lightStressLevel = lightIntensity < scenarioParams.maxPAR * 0.3 ? 0.7 : 1.0;
+            const chlorophyllContent = biomass * (12 + 8 * lightStressLevel + 3 * Math.random());
             
-            // Contenido de proteínas DEPENDIENTE de nutrientes y temperatura
             const proteinContent = Math.max(20, Math.min(60, 
                 30 + 25 * nutrientEffect + 10 * tempEffect + 5 * Math.random()));
             
-            // Contenido de lípidos INVERSO a nutrientes (estrés aumenta lípidos)
             const stressFactor = 1 - Math.min(tempEffect, pHEffect, nutrientEffect);
             const lipidContent = Math.max(5, Math.min(40, 
                 15 + 20 * stressFactor + 5 * Math.random()));
             
-            // Consumo específico de luz REALISTA
             const specificLightUptake = lightIntensity > 0 && biomass > 0 ? 
                 lightIntensity / biomass : 0;
             
-            // Edad del cultivo
             const cultureAge = h;
             
-            // Fase de crecimiento BASADA EN TASA DE CRECIMIENTO
+            // Fase de crecimiento
             let growthPhase = 'lag';
             if (actualGrowthRate > scenarioParams.muMax * 0.7) {
                 growthPhase = 'exponential';
@@ -255,11 +228,11 @@ function generateAdvancedData(scenarios, hours, variabilityLevel = 'medium') {
                 growthPhase = 'decline';
             }
             
-            // Indicadores de estrés MÁS SENSIBLES
+            // Indicadores de estrés
             const thermalStress = tempEffect < 0.7 ? 1 : 0;
             const pHStress = pHEffect < 0.7 ? 1 : 0;
             const nutrientStress = nutrients < 0.3 ? 1 : 0;
-            const lightStress = lightIntensity < scenarioParams.maxPAR * 0.2 ? 1 : 0;
+            const lightStressIndicator = lightIntensity < scenarioParams.maxPAR * 0.2 ? 1 : 0;
             
             // === CREAR PUNTO DE DATOS ===
             const dataPoint = {
@@ -310,8 +283,8 @@ function generateAdvancedData(scenarios, hours, variabilityLevel = 'medium') {
                 Thermal_Stress: thermalStress,
                 pH_Stress: pHStress,
                 Nutrient_Stress: nutrientStress,
-                Light_Stress: lightStress,
-                Overall_Stress_Score: thermalStress + pHStress + nutrientStress + lightStress,
+                Light_Stress: lightStressIndicator,
+                Overall_Stress_Score: thermalStress + pHStress + nutrientStress + lightStressIndicator,
                 
                 // Condiciones experimentales
                 Light_Regime: scenarioParams.lightRegime,
@@ -322,7 +295,7 @@ function generateAdvancedData(scenarios, hours, variabilityLevel = 'medium') {
                 pH_Optimal: parseFloat(scenarioParams.pHOptimal.toFixed(2)),
                 mu_Max_h: parseFloat(scenarioParams.muMax.toFixed(4)),
                 
-                // Efectos individuales (para análisis)
+                // Efectos individuales
                 Light_Effect: parseFloat(lightEffect.toFixed(4)),
                 Temperature_Effect: parseFloat(tempEffect.toFixed(4)),
                 pH_Effect: parseFloat(pHEffect.toFixed(4)),
