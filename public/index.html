@@ -117,21 +117,6 @@
             margin: 0 auto 20px; 
         }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
-        .correlations { 
-            display: grid; 
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); 
-            gap: 15px; 
-            margin: 20px 0; 
-        }
-        .correlation-item { 
-            background: white; 
-            padding: 15px; 
-            border-radius: 8px; 
-            border-left: 4px solid #667eea; 
-            text-align: center; 
-        }
-        .correlation-value { font-size: 1.4em; font-weight: bold; color: #667eea; }
-        .correlation-label { font-size: 0.9em; color: #666; }
         .debug { 
             background: #f8f9fa; 
             padding: 10px; 
@@ -141,6 +126,7 @@
             margin: 10px 0; 
             max-height: 200px; 
             overflow-y: auto; 
+            white-space: pre-wrap;
         }
     </style>
 </head>
@@ -204,9 +190,6 @@
                     <canvas id="productivityChart" class="chart-canvas"></canvas>
                 </div>
             </div>
-            
-            <h3>🔗 Correlaciones</h3>
-            <div id="correlations" class="correlations"></div>
         </div>
         
         <!-- Loading -->
@@ -233,13 +216,15 @@
             if (debugMode) {
                 console.log(message, data);
                 const debugContent = document.getElementById('debugContent');
-                const timestamp = new Date().toLocaleTimeString();
-                debugContent.innerHTML += `[${timestamp}] ${message}\n`;
-                if (data) {
-                    debugContent.innerHTML += `   Data: ${JSON.stringify(data, null, 2)}\n`;
+                if (debugContent) {
+                    const timestamp = new Date().toLocaleTimeString();
+                    debugContent.innerHTML += `[${timestamp}] ${message}\n`;
+                    if (data) {
+                        debugContent.innerHTML += `   Data: ${JSON.stringify(data, null, 2)}\n`;
+                    }
+                    debugContent.scrollTop = debugContent.scrollHeight;
+                    document.getElementById('debug').classList.remove('hidden');
                 }
-                debugContent.scrollTop = debugContent.scrollHeight;
-                document.getElementById('debug').classList.remove('hidden');
             }
         }
         
@@ -300,7 +285,8 @@
             debugLog(`🚀 Generando ${scenarios} escenarios con ${hours} horas`);
             
             // Deshabilitar botón y mostrar loading
-            document.getElementById('generateBtn').disabled = true;
+            const generateBtn = document.getElementById('generateBtn');
+            generateBtn.disabled = true;
             document.getElementById('loading').classList.remove('hidden');
             document.getElementById('results').classList.add('hidden');
             document.getElementById('charts-section').classList.add('hidden');
@@ -320,14 +306,11 @@
                         scenarios: scenarios,
                         hoursPerScenario: hours
                     })
-            </script>
-</body>
-</html>
+                });
                 
                 debugLog('📡 Respuesta del servidor:', { 
                     status: response.status, 
-                    ok: response.ok,
-                    headers: response.headers
+                    ok: response.ok
                 });
                 
                 if (!response.ok) {
@@ -357,7 +340,6 @@
                 // Crear gráficas si hay datos
                 if (currentDataset && Array.isArray(currentDataset) && currentDataset.length > 0) {
                     createCharts();
-                    calculateCorrelations();
                     document.getElementById('charts-section').classList.remove('hidden');
                 } else {
                     showMessage('⚠️ Dataset generado pero no se pueden mostrar gráficas', 'info');
@@ -371,7 +353,7 @@
                 showMessage(`❌ Error: ${error.message}`, 'error');
             } finally {
                 document.getElementById('loading').classList.add('hidden');
-                document.getElementById('generateBtn').disabled = false;
+                generateBtn.disabled = false;
             }
         }
         
@@ -396,9 +378,7 @@
                     const sampleData = await sampleResponse.json();
                     debugLog('📈 Estructura de muestra recibida:', {
                         keys: Object.keys(sampleData),
-                        dataLength: sampleData.data ? sampleData.data.length : 'no data key',
-                        sampleSize: sampleData.sampleSize,
-                        totalRows: sampleData.totalRows
+                        dataLength: sampleData.data ? sampleData.data.length : 'no data key'
                     });
                     
                     // Verificar si los datos están en la propiedad 'data'
@@ -478,7 +458,6 @@
             }
             
             debugLog('📊 Creando gráficas con', currentDataset.length, 'registros');
-            debugLog('Ejemplo de registro:', currentDataset[0]);
             
             try {
                 // Gráfica de biomasa
@@ -671,109 +650,17 @@
             });
         }
         
-        // Función para calcular correlaciones
-        function calculateCorrelations() {
-            if (!currentDataset || !Array.isArray(currentDataset) || currentDataset.length === 0) {
-                debugLog('⚠️ No hay datos para correlaciones');
-                return;
-            }
-            
-            try {
-                const correlations = [
-                    {
-                        name: 'pH - Biomasa',
-                        value: calculateCorrelation(
-                            currentDataset.map(d => d.pH || 7),
-                            currentDataset.map(d => d.Biomass_g_L || 0)
-                        )
-                    },
-                    {
-                        name: 'Temperatura - Crecimiento',
-                        value: calculateCorrelation(
-                            currentDataset.map(d => d.Temperature_C || 25),
-                            currentDataset.map(d => d.Growth_Rate_mu_h || 0)
-                        )
-                    },
-                    {
-                        name: 'Luz - Biomasa',
-                        value: calculateCorrelation(
-                            currentDataset.map(d => d.PAR_umol_m2_s || 0),
-                            currentDataset.map(d => d.Biomass_g_L || 0)
-                        )
-                    },
-                    {
-                        name: 'Biomasa - Productividad',
-                        value: calculateCorrelation(
-                            currentDataset.map(d => d.Biomass_g_L || 0),
-                            currentDataset.map(d => d.Instantaneous_Productivity_g_L_d || 0)
-                        )
-                    }
-                ];
-                
-                document.getElementById('correlations').innerHTML = correlations.map(corr => `
-                    <div class="correlation-item">
-                        <div class="correlation-value">${corr.value.toFixed(3)}</div>
-                        <div class="correlation-label">${corr.name}</div>
-                    </div>
-                `).join('');
-                
-                debugLog('✅ Correlaciones calculadas:', correlations);
-                
-            } catch (error) {
-                debugLog('❌ Error calculando correlaciones:', error);
-            }
-        }
-        
-        // Función para calcular correlación de Pearson
-        function calculateCorrelation(x, y) {
-            const n = Math.min(x.length, y.length);
-            if (n < 2) return 0;
-            
-            // Filtrar valores válidos
-            const validPairs = [];
-            for (let i = 0; i < n; i++) {
-                if (!isNaN(x[i]) && !isNaN(y[i]) && isFinite(x[i]) && isFinite(y[i])) {
-                    validPairs.push([x[i], y[i]]);
-                }
-            }
-            
-            if (validPairs.length < 2) return 0;
-            
-            const validX = validPairs.map(p => p[0]);
-            const validY = validPairs.map(p => p[1]);
-            const len = validPairs.length;
-            
-            const sumX = validX.reduce((a, b) => a + b, 0);
-            const sumY = validY.reduce((a, b) => a + b, 0);
-            const sumXY = validPairs.reduce((sum, pair) => sum + pair[0] * pair[1], 0);
-            const sumX2 = validX.reduce((sum, xi) => sum + xi * xi, 0);
-            const sumY2 = validY.reduce((sum, yi) => sum + yi * yi, 0);
-            
-            const numerator = len * sumXY - sumX * sumY;
-            const denominator = Math.sqrt((len * sumX2 - sumX * sumX) * (len * sumY2 - sumY * sumY));
-            
-            return denominator === 0 ? 0 : numerator / denominator;
-        }
-        
-        // Inicialización
+        // Inicialización cuando la página carga
         document.addEventListener('DOMContentLoaded', function() {
-            debugLog('🎯 Aplicación cargada');
+            debugLog('🎯 Aplicación cargada correctamente');
             
-            // Test automático del servidor
+            // Test automático del servidor después de 1 segundo
             setTimeout(testServer, 1000);
-            
-            // Limpiar debug cada 10 minutos
-            setInterval(() => {
-                const debugContent = document.getElementById('debugContent');
-                if (debugContent && debugContent.innerHTML.length > 10000) {
-                    debugContent.innerHTML = '[Debug limpiado]\n';
-                }
-            }, 600000);
         });
         
         // Captura de errores globales
         window.addEventListener('error', function(e) {
-            debugLog('🚨 Error JavaScript:', e);
+            debugLog('🚨 Error JavaScript:', e.message);
             showMessage(`🚨 Error: ${e.message}`, 'error');
         });
         
@@ -781,3 +668,10 @@
             debugLog('🚨 Promise rechazada:', e.reason);
             showMessage(`🚨 Error: ${e.reason}`, 'error');
         });
+        
+        // Mensaje de confirmación de carga
+        console.log('✅ JavaScript cargado correctamente');
+        console.log('🧬 Generador Chlorella listo');
+    </script>
+</body>
+</html>
