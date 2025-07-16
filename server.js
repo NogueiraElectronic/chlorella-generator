@@ -122,45 +122,57 @@ function generateAdvancedData(scenarios, hours, variabilityLevel = 'medium') {
             co2Level = Math.max(0.01, Math.min(0.1, 
                 co2Level - co2Consumption + 0.0005 + (Math.random() - 0.5) * 0.0002));
             
-            // === MODELO CINÉTICO MEJORADO ===
+            // === MODELO CINÉTICO ULTRA-MEJORADO ===
             
-            // 1. Efecto de LUZ - CRÍTICO para fotosíntesis (basado en literatura científica)
-            // Óptimo: 80-200 μmol/m²/s, saturación ~400 μmol/m²/s
+            // 1. Efecto de LUZ - CRÍTICO con relación directa a concentración celular
             let lightEffect;
             if (lightIntensity === 0) {
-                lightEffect = 0.01; // Sin luz = casi sin crecimiento
-            } else if (lightIntensity < 50) {
-                lightEffect = lightIntensity / 50 * 0.3; // Muy limitado
-            } else if (lightIntensity > 400) {
-                lightEffect = 0.8 - (lightIntensity - 400) / 1000; // Fotoinhibición
-                lightEffect = Math.max(0.3, lightEffect);
+                lightEffect = 0.005; // Respiración mínima en oscuridad
+            } else if (lightIntensity < 30) {
+                lightEffect = (lightIntensity / 30) * 0.2; // Muy limitado
+            } else if (lightIntensity > 500) {
+                // Fotoinhibición graduales
+                lightEffect = 0.9 - Math.min(0.4, (lightIntensity - 500) / 1000);
             } else {
-                // Curva de Michaelis-Menten realista
-                lightEffect = lightIntensity / (lightIntensity + scenarioParams.Ks_light);
+                // Curva de saturación optimizada
+                lightEffect = (lightIntensity / (lightIntensity + scenarioParams.Ks_light)) * 
+                             (1 + 0.3 * Math.sin(lightIntensity / 100)); // Efecto no-lineal
             }
             
-            // 2. Efecto de TEMPERATURA - Basado en literatura (óptimo 28-35°C)
+            // 2. Efecto de TEMPERATURA - MÁS PRONUNCIADO
             let tempEffect;
-            if (currentTemp < 15 || currentTemp > 40) {
+            const tempDiff = Math.abs(currentTemp - scenarioParams.tempOptimal);
+            
+            if (currentTemp < 10 || currentTemp > 42) {
                 tempEffect = 0.01; // Letal
-            } else if (currentTemp < 20 || currentTemp > 38) {
-                tempEffect = 0.2; // Muy limitado
+            } else if (currentTemp < 18 || currentTemp > 38) {
+                tempEffect = 0.15; // Muy limitado
             } else {
-                // Curva optimizada para Chlorella vulgaris
-                const tempDiff = Math.abs(currentTemp - scenarioParams.tempOptimal);
-                tempEffect = Math.exp(-Math.pow(tempDiff / 5, 2));
+                // Curva de campana MÁS ESTRECHA para mayor sensibilidad
+                tempEffect = Math.exp(-Math.pow(tempDiff / 3.5, 2)); // Más sensible
+                
+                // Bonus por estar en rango óptimo
+                if (tempDiff < 2) {
+                    tempEffect *= 1.2; // 20% bonus en rango óptimo
+                }
             }
             
-            // 3. Efecto de pH - Basado en literatura (óptimo 8-9.5)
+            // 3. Efecto de pH - MÁS SENSIBLE
             let pHEffect;
-            if (currentpH < 6.0 || currentpH > 10.0) {
+            const pHDiff = Math.abs(currentpH - scenarioParams.pHOptimal);
+            
+            if (currentpH < 6.0 || currentpH > 10.5) {
                 pHEffect = 0.01; // Letal
-            } else if (currentpH < 7.0 || currentpH > 9.8) {
-                pHEffect = 0.3; // Muy limitado
+            } else if (currentpH < 6.5 || currentpH > 10.0) {
+                pHEffect = 0.2; // Muy limitado
             } else {
-                // Curva optimizada para pH alcalino (preferencia de Chlorella)
-                const pHDiff = Math.abs(currentpH - scenarioParams.pHOptimal);
-                pHEffect = Math.exp(-Math.pow(pHDiff / 1.2, 2));
+                // Curva optimizada para pH alcalino con mayor sensibilidad
+                pHEffect = Math.exp(-Math.pow(pHDiff / 0.8, 2)); // Más sensible
+                
+                // Bonus por pH alcalino óptimo (8.5-9.5)
+                if (currentpH >= 8.5 && currentpH <= 9.5) {
+                    pHEffect *= 1.3; // 30% bonus en pH óptimo
+                }
             }
             
             // 4. Efecto de NUTRIENTES
@@ -199,17 +211,31 @@ function generateAdvancedData(scenarios, hours, variabilityLevel = 'medium') {
             const biologicalNoise = (Math.random() - 0.5) * (scenarioParams.noiseLevel * 0.3);
             const actualGrowthRate = Math.max(0.001, mu + biologicalNoise);
             
-            // === CRECIMIENTO ACELERADO PARA MEJORES CORRELACIONES ===
+            // === CONCENTRACIÓN CELULAR DIRECTAMENTE CORRELACIONADA CON PAR ===
             
-            const growthIncrement = actualGrowthRate * biomass * 1.5; // Factor acelerado
-            const mortalityRate = 0.001 * biomass; // Mortalidad reducida
+            // Relación directa PAR -> células (basada en fotosíntesis)
+            let baseCellDensity = 1.5e6; // Densidad base
+            
+            // Factor de luz DIRECTO para concentración celular
+            let lightCellFactor = 1.0;
+            if (lightIntensity > 50) {
+                // Relación directa: más luz = más células (hasta saturación)
+                lightCellFactor = 1.0 + Math.min(1.5, lightIntensity / 200);
+            } else {
+                // Sin luz suficiente, densidad reducida
+                lightCellFactor = 0.3 + (lightIntensity / 50) * 0.7;
+            }
+            
+            // Factor de calidad celular basado en condiciones óptimas
+            const qualityFactor = Math.sqrt(tempEffect * pHEffect * nutrientEffect);
+            
+            // === CRECIMIENTO CON CORRELACIONES OPTIMIZADAS ===
+            
+            const growthIncrement = actualGrowthRate * biomass * 2.0; // Más acelerado
+            const mortalityRate = 0.0005 * biomass; // Mortalidad mínima
             
             const netGrowth = growthIncrement - mortalityRate;
             biomass = Math.max(0.001, Math.min(biomass + netGrowth, scenarioParams.Ki_biomass));
-            
-            // Concentración celular MÁS CORRELACIONADA con biomasa
-            const cellGrowthFactor = 2.0e6 + (biomass * 0.3e6);
-            cellConcentration = biomass * cellGrowthFactor;
             
             // Productividad
             const instantProductivity = netGrowth * 24;
