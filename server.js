@@ -17,42 +17,52 @@ if (!fs.existsSync(datasetsDir)) {
 }
 
 // Función avanzada para generar datos con modelo cinético completo
-function generateAdvancedData(scenarios, hours) {
+function generateAdvancedData(scenarios, hours, variabilityLevel = 'medium') {
     const data = [];
     
+    // Configurar multiplicadores de variabilidad
+    const variabilityConfig = {
+        low: { tempRange: 3, pHRange: 0.6, stressProb: 0.1, noiseLevel: 0.01 },
+        medium: { tempRange: 10, pHRange: 1.2, stressProb: 0.2, noiseLevel: 0.03 },
+        high: { tempRange: 15, pHRange: 1.8, stressProb: 0.4, noiseLevel: 0.05 },
+        extreme: { tempRange: 20, pHRange: 2.5, stressProb: 0.6, noiseLevel: 0.08 }
+    };
+    
+    const config = variabilityConfig[variabilityLevel] || variabilityConfig.medium;
+    
     for (let s = 1; s <= scenarios; s++) {
-        console.log(`Generando escenario ${s}/${scenarios}`);
+        console.log(`Generando escenario ${s}/${scenarios} con variabilidad ${variabilityLevel}`);
         
-        // Parámetros únicos por escenario
+        // Parámetros únicos por escenario con variabilidad configurable
         const scenarioParams = {
-            baseTemp: 20 + Math.random() * 10,        // 20-30°C
-            basePh: 6.8 + Math.random() * 1.2,        // 6.8-8.0
-            maxPAR: 400 + Math.random() * 600,        // 400-1000 μmol/m²/s
-            initialBiomass: 0.05 + Math.random() * 0.3, // 0.05-0.35 g/L
-            nutrientLevel: 0.5 + Math.random() * 0.5,  // 0.5-1.0
-            lightRegime: Math.random() > 0.5 ? 'continuous' : 'cyclic',
-            stressCondition: Math.random() > 0.8 ? 'high_temp' : 
-                            Math.random() > 0.6 ? 'low_pH' : 'normal',
-            // Parámetros kinéticos
-            muMax: 0.06 + Math.random() * 0.04,       // 0.06-0.10 h⁻¹
-            Ks_light: 200 + Math.random() * 200,      // 200-400 μmol/m²/s
-            Ks_nutrient: 0.05 + Math.random() * 0.1,  // 0.05-0.15 g/L
-            Ki_biomass: 3 + Math.random() * 2,        // 3-5 g/L
+            baseTemp: 15 + Math.random() * config.tempRange,        // Rango variable
+            basePh: 6.5 + Math.random() * config.pHRange,          // Rango variable
+            maxPAR: 200 + Math.random() * 800,                     // 200-1000 μmol/m²/s
+            initialBiomass: 0.02 + Math.random() * 0.5,            // 0.02-0.52 g/L
+            nutrientLevel: 0.3 + Math.random() * 0.7,              // 0.3-1.0
+            lightRegime: Math.random() > 0.3 ? 'continuous' : 'cyclic',
+            stressCondition: Math.random() > (1 - config.stressProb) ? 
+                            (Math.random() > 0.5 ? 'high_temp' : 'low_pH') : 'normal',
+            // Parámetros kinéticos con más variabilidad
+            muMax: 0.04 + Math.random() * 0.08,                   // 0.04-0.12 h⁻¹
+            Ks_light: 100 + Math.random() * 400,                  // 100-500 μmol/m²/s
+            Ks_nutrient: 0.02 + Math.random() * 0.15,             // 0.02-0.17 g/L
+            Ki_biomass: 2 + Math.random() * 4,                    // 2-6 g/L
             // Parámetros ambientales
-            tempOptimal: 25 + Math.random() * 5,      // 25-30°C
-            pHOptimal: 7.0 + Math.random() * 0.5,     // 7.0-7.5
-            // Variabilidad
-            noiseLevel: 0.02 + Math.random() * 0.03   // 2-5%
+            tempOptimal: 20 + Math.random() * 10,                 // 20-30°C
+            pHOptimal: 6.8 + Math.random() * 0.8,                 // 6.8-7.6
+            // Variabilidad configurable
+            noiseLevel: config.noiseLevel + Math.random() * config.noiseLevel
         };
         
         // Variables del estado del cultivo
         let biomass = scenarioParams.initialBiomass;
-        let cellConcentration = biomass * 2e6;
+        let cellConcentration = biomass * (1.5e6 + Math.random() * 1e6);
         let currentpH = scenarioParams.basePh;
         let currentTemp = scenarioParams.baseTemp;
         let nutrients = scenarioParams.nutrientLevel;
-        let oxygenLevel = 8.0; // mg/L
-        let co2Level = 0.04;   // %
+        let oxygenLevel = 6.0 + Math.random() * 4.0; // 6-10 mg/L
+        let co2Level = 0.02 + Math.random() * 0.06;   // 0.02-0.08%
         
         // Variables derivadas
         let totalProductivity = 0;
@@ -318,7 +328,7 @@ app.get('/test', (req, res) => {
 // Endpoint principal para generar dataset
 app.post('/generate-dataset', (req, res) => {
     try {
-        const { scenarios = 25, hoursPerScenario = 120 } = req.body;
+        const { scenarios = 25, hoursPerScenario = 120, variabilityLevel = 'medium' } = req.body;
         
         // Validar parámetros
         if (scenarios < 1 || scenarios > 100) {
@@ -335,9 +345,17 @@ app.post('/generate-dataset', (req, res) => {
             });
         }
         
-        console.log(`🚀 Generando ${scenarios} escenarios con ${hoursPerScenario} horas`);
+        const validVariability = ['low', 'medium', 'high', 'extreme'];
+        if (!validVariability.includes(variabilityLevel)) {
+            return res.status(400).json({ 
+                success: false, 
+                error: 'Nivel de variabilidad debe ser: low, medium, high, o extreme' 
+            });
+        }
         
-        const data = generateAdvancedData(scenarios, hoursPerScenario);
+        console.log(`🚀 Generando ${scenarios} escenarios con ${hoursPerScenario} horas, variabilidad: ${variabilityLevel}`);
+        
+        const data = generateAdvancedData(scenarios, hoursPerScenario, variabilityLevel);
         
         // Dividir datos
         const shuffled = data.sort(() => Math.random() - 0.5);
