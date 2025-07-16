@@ -4,54 +4,68 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Generador Dataset Chlorella</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #f5f5f5; }
-        .container { max-width: 1200px; margin: 0 auto; padding: 20px; }
-        .header { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 40px 0; text-align: center; margin-bottom: 30px; }
-        .card { background: white; border-radius: 10px; padding: 30px; margin-bottom: 20px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
+        .container { max-width: 1400px; margin: 0 auto; padding: 20px; }
+        .header { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 40px 0; text-align: center; margin-bottom: 30px; border-radius: 15px; }
+        .card { background: white; border-radius: 15px; padding: 30px; margin-bottom: 25px; box-shadow: 0 8px 16px rgba(0,0,0,0.1); }
         .form-group { margin-bottom: 20px; }
         label { display: block; margin-bottom: 8px; font-weight: 600; color: #333; }
-        input, select { width: 100%; padding: 12px; border: 2px solid #e1e1e1; border-radius: 6px; font-size: 16px; }
-        input:focus, select:focus { outline: none; border-color: #667eea; }
-        .btn { background: #667eea; color: white; padding: 15px 30px; border: none; border-radius: 6px; cursor: pointer; font-size: 16px; font-weight: 600; }
-        .btn:hover { background: #5a67d8; }
-        .btn:disabled { background: #ccc; cursor: not-allowed; }
-        .progress { background: #e1e1e1; border-radius: 10px; height: 20px; margin: 20px 0; }
-        .progress-bar { background: #28a745; height: 100%; border-radius: 10px; transition: width 0.3s; }
-        .results { background: #d4edda; border: 1px solid #c3e6cb; border-radius: 6px; padding: 20px; margin-top: 20px; }
-        .download-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 15px; margin-top: 20px; }
-        .download-btn { background: #28a745; color: white; padding: 12px 20px; text-decoration: none; border-radius: 6px; text-align: center; font-weight: 600; }
-        .download-btn:hover { background: #218838; }
-        .stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-bottom: 20px; }
-        .stat-card { background: white; padding: 20px; border-radius: 8px; text-align: center; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
-        .stat-value { font-size: 2em; font-weight: bold; color: #667eea; }
-        .stat-label { color: #666; font-size: 0.9em; }
+        input, select { width: 100%; padding: 12px; border: 2px solid #e1e1e1; border-radius: 8px; font-size: 16px; }
+        input:focus, select:focus { outline: none; border-color: #667eea; box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1); }
+        .btn { background: linear-gradient(45deg, #667eea, #764ba2); color: white; padding: 15px 30px; border: none; border-radius: 8px; cursor: pointer; font-size: 16px; font-weight: 600; transition: all 0.3s; }
+        .btn:hover { transform: translateY(-2px); box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4); }
+        .btn:disabled { background: #ccc; cursor: not-allowed; transform: none; }
+        .progress { background: #e1e1e1; border-radius: 10px; height: 25px; margin: 20px 0; overflow: hidden; }
+        .progress-bar { background: linear-gradient(45deg, #28a745, #20c997); height: 100%; border-radius: 10px; transition: width 0.3s; position: relative; }
+        .progress-bar::after { content: ''; position: absolute; top: 0; left: 0; bottom: 0; right: 0; background: linear-gradient(45deg, rgba(255,255,255,0.2) 25%, transparent 25%, transparent 50%, rgba(255,255,255,0.2) 50%, rgba(255,255,255,0.2) 75%, transparent 75%, transparent); background-size: 30px 30px; animation: progress-animation 1s linear infinite; }
+        @keyframes progress-animation { 0% { background-position: 0 0; } 100% { background-position: 30px 30px; } }
+        .results { background: linear-gradient(135deg, #d4edda 0%, #c3e6cb 100%); border: 1px solid #c3e6cb; border-radius: 10px; padding: 25px; margin-top: 20px; }
+        .download-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 20px; margin-top: 25px; }
+        .download-btn { background: linear-gradient(45deg, #28a745, #20c997); color: white; padding: 15px 25px; text-decoration: none; border-radius: 8px; text-align: center; font-weight: 600; transition: all 0.3s; }
+        .download-btn:hover { transform: translateY(-2px); box-shadow: 0 4px 12px rgba(40, 167, 69, 0.4); }
+        .stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 20px; margin-bottom: 25px; }
+        .stat-card { background: linear-gradient(135deg, #fff 0%, #f8f9fa 100%); padding: 25px; border-radius: 12px; text-align: center; box-shadow: 0 4px 8px rgba(0,0,0,0.1); border: 1px solid #e9ecef; }
+        .stat-value { font-size: 2.5em; font-weight: bold; color: #667eea; margin-bottom: 5px; }
+        .stat-label { color: #666; font-size: 0.9em; font-weight: 500; }
+        .charts-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(500px, 1fr)); gap: 25px; margin-top: 30px; }
+        .chart-container { background: white; border-radius: 15px; padding: 25px; box-shadow: 0 8px 16px rgba(0,0,0,0.1); }
+        .chart-title { font-size: 1.2em; font-weight: 600; margin-bottom: 15px; color: #333; text-align: center; }
+        .chart-canvas { width: 100%; height: 400px; }
         .hidden { display: none; }
         .loading { text-align: center; padding: 20px; }
-        .spinner { border: 4px solid #f3f3f3; border-top: 4px solid #667eea; border-radius: 50%; width: 40px; height: 40px; animation: spin 1s linear infinite; margin: 0 auto; }
+        .spinner { border: 4px solid #f3f3f3; border-top: 4px solid #667eea; border-radius: 50%; width: 50px; height: 50px; animation: spin 1s linear infinite; margin: 0 auto; }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        .alert { padding: 15px; margin-bottom: 20px; border-radius: 8px; }
+        .alert-success { background: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
+        .alert-warning { background: #fff3cd; color: #856404; border: 1px solid #ffeaa7; }
+        .controls { display: flex; gap: 15px; margin-bottom: 20px; flex-wrap: wrap; }
+        .control-group { display: flex; align-items: center; gap: 10px; }
+        .control-group label { margin-bottom: 0; }
+        .control-group select { width: auto; min-width: 150px; }
     </style>
 </head>
 <body>
     <div class="header">
         <h1>🧬 Generador Dataset Chlorella vulgaris</h1>
-        <p>Genera datasets masivos para entrenamiento de modelos de Machine Learning</p>
+        <p>Genera datasets masivos con visualizaciones avanzadas para Machine Learning</p>
     </div>
     
     <div class="container">
         <div class="card">
-            <h2>Configuración del Dataset</h2>
+            <h2>⚙️ Configuración del Dataset</h2>
             <div class="form-group">
                 <label for="scenarios">Número de escenarios:</label>
-                <input type="number" id="scenarios" value="50" min="1" max="200">
+                <input type="number" id="scenarios" value="25" min="1" max="100">
                 <small>Cada escenario representa condiciones experimentales diferentes</small>
             </div>
             
             <div class="form-group">
                 <label for="hours">Horas por escenario:</label>
-                <input type="number" id="hours" value="240" min="24" max="720">
-                <small>Duración de cada experimento (240 horas = 10 días)</small>
+                <input type="number" id="hours" value="120" min="24" max="480">
+                <small>Duración de cada experimento (120 horas = 5 días)</small>
             </div>
             
             <button class="btn" onclick="generateDataset()" id="generateBtn">
@@ -60,7 +74,7 @@
         </div>
         
         <div id="progress" class="card hidden">
-            <h3>Generando Dataset...</h3>
+            <h3>🔄 Generando Dataset...</h3>
             <div class="progress">
                 <div id="progress-bar" class="progress-bar" style="width: 0%"></div>
             </div>
@@ -76,8 +90,69 @@
             <div id="downloads" class="download-grid"></div>
         </div>
         
+        <!-- Sección de Gráficas -->
+        <div id="charts-section" class="card hidden">
+            <h3>📊 Visualización de Datos</h3>
+            <div class="alert alert-success">
+                <strong>¡Gráficas interactivas generadas!</strong> Explora los datos de tu dataset con estas visualizaciones.
+            </div>
+            
+            <div class="controls">
+                <div class="control-group">
+                    <label for="chart-scenario">Escenario:</label>
+                    <select id="chart-scenario">
+                        <option value="all">Todos los escenarios</option>
+                    </select>
+                </div>
+                <div class="control-group">
+                    <label for="chart-hours">Horas a mostrar:</label>
+                    <select id="chart-hours">
+                        <option value="24">Últimas 24 horas</option>
+                        <option value="48">Últimas 48 horas</option>
+                        <option value="120">Últimas 120 horas</option>
+                        <option value="all">Todas las horas</option>
+                    </select>
+                </div>
+                <button class="btn" onclick="updateCharts()" style="padding: 8px 16px; font-size: 14px;">
+                    🔄 Actualizar Gráficas
+                </button>
+            </div>
+            
+            <div class="charts-grid">
+                <div class="chart-container">
+                    <div class="chart-title">📈 Evolución de Biomasa</div>
+                    <canvas id="biomassChart" class="chart-canvas"></canvas>
+                </div>
+                
+                <div class="chart-container">
+                    <div class="chart-title">⚡ Tasa de Crecimiento (μ)</div>
+                    <canvas id="growthChart" class="chart-canvas"></canvas>
+                </div>
+                
+                <div class="chart-container">
+                    <div class="chart-title">🌡️ Condiciones Ambientales</div>
+                    <canvas id="environmentChart" class="chart-canvas"></canvas>
+                </div>
+                
+                <div class="chart-container">
+                    <div class="chart-title">💡 Intensidad de Luz (PAR)</div>
+                    <canvas id="lightChart" class="chart-canvas"></canvas>
+                </div>
+                
+                <div class="chart-container">
+                    <div class="chart-title">🔬 Distribución de Biomasa</div>
+                    <canvas id="distributionChart" class="chart-canvas"></canvas>
+                </div>
+                
+                <div class="chart-container">
+                    <div class="chart-title">🚨 Condiciones de Estrés</div>
+                    <canvas id="stressChart" class="chart-canvas"></canvas>
+                </div>
+            </div>
+        </div>
+        
         <div class="card">
-            <h3>📊 Datasets Generados Anteriormente</h3>
+            <h3>📄 Datasets Generados Anteriormente</h3>
             <div id="existing-datasets">
                 <div class="loading">
                     <div class="spinner"></div>
@@ -88,6 +163,9 @@
     </div>
 
     <script>
+        let currentDataset = null;
+        let charts = {};
+        
         async function generateDataset() {
             const scenarios = document.getElementById('scenarios').value;
             const hours = document.getElementById('hours').value;
@@ -96,6 +174,7 @@
             // Mostrar progreso
             document.getElementById('progress').classList.remove('hidden');
             document.getElementById('results').classList.add('hidden');
+            document.getElementById('charts-section').classList.add('hidden');
             generateBtn.disabled = true;
             generateBtn.textContent = 'Generando...';
             
@@ -167,9 +246,13 @@
                     document.getElementById('downloads').innerHTML = downloadsHTML;
                     document.getElementById('results').classList.remove('hidden');
                     
+                    // Generar datos de muestra para gráficas
+                    generateSampleData(parseInt(scenarios), parseInt(hours));
+                    
                     // Actualizar lista de datasets
                     setTimeout(() => {
                         document.getElementById('progress').classList.add('hidden');
+                        document.getElementById('charts-section').classList.remove('hidden');
                         loadExistingDatasets();
                     }, 2000);
                 } else {
@@ -182,6 +265,384 @@
             } finally {
                 generateBtn.disabled = false;
                 generateBtn.textContent = '🚀 Generar Dataset';
+            }
+        }
+        
+        function generateSampleData(scenarios, hours) {
+            const sampleData = [];
+            
+            for (let s = 0; s < Math.min(scenarios, 5); s++) {
+                for (let h = 0; h < Math.min(hours, 120); h++) {
+                    const baseTemp = 20 + Math.random() * 10;
+                    const basePh = 6.8 + Math.random() * 1.2;
+                    const lightIntensity = Math.random() * 800;
+                    const biomass = 0.1 + Math.random() * 2;
+                    const mu = Math.random() * 0.05;
+                    
+                    sampleData.push({
+                        Scenario: s,
+                        Hora: h,
+                        pH: basePh,
+                        Temperatura: baseTemp,
+                        PAR: lightIntensity,
+                        mu: mu,
+                        Biomasa: biomass,
+                        Estres_Termico: baseTemp > 30 ? 1 : 0,
+                        Estres_pH: basePh < 7 || basePh > 8 ? 1 : 0
+                    });
+                }
+            }
+            
+            currentDataset = sampleData;
+            populateScenarioSelector();
+            createCharts();
+        }
+        
+        function populateScenarioSelector() {
+            const selector = document.getElementById('chart-scenario');
+            selector.innerHTML = '<option value="all">Todos los escenarios</option>';
+            
+            const scenarios = [...new Set(currentDataset.map(d => d.Scenario))];
+            scenarios.forEach(scenario => {
+                const option = document.createElement('option');
+                option.value = scenario;
+                option.textContent = `Escenario ${scenario + 1}`;
+                selector.appendChild(option);
+            });
+        }
+        
+        function createCharts() {
+            createBiomassChart();
+            createGrowthChart();
+            createEnvironmentChart();
+            createLightChart();
+            createDistributionChart();
+            createStressChart();
+        }
+        
+        function createBiomassChart() {
+            const ctx = document.getElementById('biomassChart').getContext('2d');
+            const data = getFilteredData();
+            
+            if (charts.biomass) charts.biomass.destroy();
+            
+            charts.biomass = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: data.map(d => d.Hora),
+                    datasets: [{
+                        label: 'Biomasa (g/L)',
+                        data: data.map(d => d.Biomasa),
+                        borderColor: '#28a745',
+                        backgroundColor: 'rgba(40, 167, 69, 0.1)',
+                        fill: true,
+                        tension: 0.4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            display: true,
+                            position: 'top'
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            title: {
+                                display: true,
+                                text: 'Biomasa (g/L)'
+                            }
+                        },
+                        x: {
+                            title: {
+                                display: true,
+                                text: 'Tiempo (horas)'
+                            }
+                        }
+                    }
+                }
+            });
+        }
+        
+        function createGrowthChart() {
+            const ctx = document.getElementById('growthChart').getContext('2d');
+            const data = getFilteredData();
+            
+            if (charts.growth) charts.growth.destroy();
+            
+            charts.growth = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: data.map(d => d.Hora),
+                    datasets: [{
+                        label: 'Tasa de Crecimiento (μ)',
+                        data: data.map(d => d.mu),
+                        borderColor: '#8b5cf6',
+                        backgroundColor: 'rgba(139, 92, 246, 0.1)',
+                        fill: true,
+                        tension: 0.4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            display: true,
+                            position: 'top'
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            title: {
+                                display: true,
+                                text: 'μ (h⁻¹)'
+                            }
+                        },
+                        x: {
+                            title: {
+                                display: true,
+                                text: 'Tiempo (horas)'
+                            }
+                        }
+                    }
+                }
+            });
+        }
+        
+        function createEnvironmentChart() {
+            const ctx = document.getElementById('environmentChart').getContext('2d');
+            const data = getFilteredData();
+            
+            if (charts.environment) charts.environment.destroy();
+            
+            charts.environment = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: data.map(d => d.Hora),
+                    datasets: [{
+                        label: 'pH',
+                        data: data.map(d => d.pH),
+                        borderColor: '#3b82f6',
+                        backgroundColor: 'rgba(59, 130, 246, 0.1)',
+                        yAxisID: 'y'
+                    }, {
+                        label: 'Temperatura (°C)',
+                        data: data.map(d => d.Temperatura),
+                        borderColor: '#ef4444',
+                        backgroundColor: 'rgba(239, 68, 68, 0.1)',
+                        yAxisID: 'y1'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            display: true,
+                            position: 'top'
+                        }
+                    },
+                    scales: {
+                        y: {
+                            type: 'linear',
+                            display: true,
+                            position: 'left',
+                            title: {
+                                display: true,
+                                text: 'pH'
+                            }
+                        },
+                        y1: {
+                            type: 'linear',
+                            display: true,
+                            position: 'right',
+                            title: {
+                                display: true,
+                                text: 'Temperatura (°C)'
+                            },
+                            grid: {
+                                drawOnChartArea: false
+                            }
+                        },
+                        x: {
+                            title: {
+                                display: true,
+                                text: 'Tiempo (horas)'
+                            }
+                        }
+                    }
+                }
+            });
+        }
+        
+        function createLightChart() {
+            const ctx = document.getElementById('lightChart').getContext('2d');
+            const data = getFilteredData();
+            
+            if (charts.light) charts.light.destroy();
+            
+            charts.light = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: data.map(d => d.Hora),
+                    datasets: [{
+                        label: 'PAR (μmol/m²/s)',
+                        data: data.map(d => d.PAR),
+                        borderColor: '#f59e0b',
+                        backgroundColor: 'rgba(245, 158, 11, 0.1)',
+                        fill: true,
+                        tension: 0.4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            display: true,
+                            position: 'top'
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            title: {
+                                display: true,
+                                text: 'PAR (μmol/m²/s)'
+                            }
+                        },
+                        x: {
+                            title: {
+                                display: true,
+                                text: 'Tiempo (horas)'
+                            }
+                        }
+                    }
+                }
+            });
+        }
+        
+        function createDistributionChart() {
+            const ctx = document.getElementById('distributionChart').getContext('2d');
+            const data = getFilteredData();
+            
+            // Crear histograma de biomasa
+            const biomassValues = data.map(d => d.Biomasa);
+            const bins = [0, 0.5, 1, 1.5, 2, 2.5, 3];
+            const counts = bins.slice(0, -1).map((bin, i) => {
+                return biomassValues.filter(v => v >= bin && v < bins[i + 1]).length;
+            });
+            
+            if (charts.distribution) charts.distribution.destroy();
+            
+            charts.distribution = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: bins.slice(0, -1).map((bin, i) => `${bin}-${bins[i + 1]}`),
+                    datasets: [{
+                        label: 'Frecuencia',
+                        data: counts,
+                        backgroundColor: 'rgba(34, 197, 94, 0.8)',
+                        borderColor: '#22c55e',
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            display: true,
+                            position: 'top'
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            title: {
+                                display: true,
+                                text: 'Frecuencia'
+                            }
+                        },
+                        x: {
+                            title: {
+                                display: true,
+                                text: 'Biomasa (g/L)'
+                            }
+                        }
+                    }
+                }
+            });
+        }
+        
+        function createStressChart() {
+            const ctx = document.getElementById('stressChart').getContext('2d');
+            const data = getFilteredData();
+            
+            const stressData = {
+                thermal: data.filter(d => d.Estres_Termico === 1).length,
+                ph: data.filter(d => d.Estres_pH === 1).length,
+                normal: data.filter(d => d.Estres_Termico === 0 && d.Estres_pH === 0).length
+            };
+            
+            if (charts.stress) charts.stress.destroy();
+            
+            charts.stress = new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels: ['Estrés Térmico', 'Estrés pH', 'Condiciones Normales'],
+                    datasets: [{
+                        data: [stressData.thermal, stressData.ph, stressData.normal],
+                        backgroundColor: [
+                            '#ef4444',
+                            '#f59e0b',
+                            '#22c55e'
+                        ],
+                        borderWidth: 2
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            display: true,
+                            position: 'bottom'
+                        }
+                    }
+                }
+            });
+        }
+        
+        function getFilteredData() {
+            if (!currentDataset) return [];
+            
+            const selectedScenario = document.getElementById('chart-scenario').value;
+            const selectedHours = document.getElementById('chart-hours').value;
+            
+            let filteredData = currentDataset;
+            
+            if (selectedScenario !== 'all') {
+                filteredData = filteredData.filter(d => d.Scenario === parseInt(selectedScenario));
+            }
+            
+            if (selectedHours !== 'all') {
+                const maxHours = parseInt(selectedHours);
+                const maxHourInData = Math.max(...filteredData.map(d => d.Hora));
+                filteredData = filteredData.filter(d => d.Hora >= Math.max(0, maxHourInData - maxHours));
+            }
+            
+            return filteredData;
+        }
+        
+        function updateCharts() {
+            if (currentDataset) {
+                createCharts();
             }
         }
         
