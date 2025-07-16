@@ -198,6 +198,9 @@ function displayDownloadOptions(serverData) {
                 <button class="btn" onclick="generateDatabase()" id="generateBtn">
                     🚀 Generar Base de Datos
                 </button>
+                <button class="btn" onclick="testServer()" id="testBtn" style="margin-left: 15px; background: linear-gradient(45deg, #17a2b8, #138496);">
+                    🔧 Test Servidor
+                </button>
             </div>
         </div>
         
@@ -287,6 +290,31 @@ function displayDownloadOptions(serverData) {
         let currentDataset = null;
         let charts = {};
         let dataStats = null;
+        
+        // Función para probar el servidor
+        async function testServer() {
+            const testBtn = document.getElementById('testBtn');
+            testBtn.disabled = true;
+            testBtn.textContent = 'Probando...';
+            
+            try {
+                const response = await fetch('/test');
+                if (response.ok) {
+                    const data = await response.json();
+                    alert('✅ Servidor funcionando correctamente!\n' + 
+                          'Mensaje: ' + data.message + '\n' +
+                          'Timestamp: ' + data.timestamp);
+                } else {
+                    alert('❌ Error en el servidor: ' + response.status);
+                }
+            } catch (error) {
+                alert('❌ Error conectando con el servidor: ' + error.message);
+                console.error('Error de conexión:', error);
+            } finally {
+                testBtn.disabled = false;
+                testBtn.textContent = '🔧 Test Servidor';
+            }
+        }
         
         async function generateDatabase() {
             const scenarios = parseInt(document.getElementById('scenarios').value);
