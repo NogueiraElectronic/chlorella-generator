@@ -33,23 +33,23 @@ function generateAdvancedData(scenarios, hours, variabilityLevel = 'medium') {
     for (let s = 1; s <= scenarios; s++) {
         console.log(`Generando escenario ${s}/${scenarios} con variabilidad ${variabilityLevel}`);
         
-        // Parámetros únicos por escenario con variabilidad configurable
+        // Parámetros únicos por escenario BASADOS EN INVESTIGACIÓN CIENTÍFICA
         const scenarioParams = {
-            baseTemp: 15 + Math.random() * config.tempRange,
-            basePh: 6.5 + Math.random() * config.pHRange,
-            maxPAR: 200 + Math.random() * 800,
-            initialBiomass: 0.02 + Math.random() * 0.5,
-            nutrientLevel: 0.3 + Math.random() * 0.7,
-            lightRegime: Math.random() > 0.3 ? 'continuous' : 'cyclic',
+            baseTemp: 22 + Math.random() * 13,        // 22-35°C (óptimo científico)
+            basePh: 7.0 + Math.random() * 2.5,        // 7.0-9.5 (óptimo pH 8-9)
+            maxPAR: 50 + Math.random() * 350,         // 50-400 μmol/m²/s (óptimo científico)
+            initialBiomass: 0.01 + Math.random() * 0.3,
+            nutrientLevel: 0.2 + Math.random() * 0.8,
+            lightRegime: Math.random() > 0.4 ? 'continuous' : 'cyclic',
             stressCondition: Math.random() > (1 - config.stressProb) ? 
                             (Math.random() > 0.5 ? 'high_temp' : 'low_pH') : 'normal',
-            muMax: 0.04 + Math.random() * 0.08,
-            Ks_light: 100 + Math.random() * 400,
-            Ks_nutrient: 0.02 + Math.random() * 0.15,
-            Ki_biomass: 2 + Math.random() * 4,
-            tempOptimal: 20 + Math.random() * 10,
-            pHOptimal: 6.8 + Math.random() * 0.8,
-            noiseLevel: config.noiseLevel + Math.random() * config.noiseLevel
+            muMax: 0.05 + Math.random() * 0.1,        // 0.05-0.15 h⁻¹ (realista)
+            Ks_light: 80 + Math.random() * 120,       // 80-200 μmol/m²/s (basado en literatura)
+            Ks_nutrient: 0.01 + Math.random() * 0.08,
+            Ki_biomass: 1.5 + Math.random() * 3.5,    // 1.5-5.0 g/L
+            tempOptimal: 28 + Math.random() * 7,      // 28-35°C (óptimo científico)
+            pHOptimal: 8.0 + Math.random() * 1.5,     // 8.0-9.5 (óptimo científico)
+            noiseLevel: config.noiseLevel
         };
         
         // Variables del estado del cultivo
@@ -124,30 +124,43 @@ function generateAdvancedData(scenarios, hours, variabilityLevel = 'medium') {
             
             // === MODELO CINÉTICO MEJORADO ===
             
-            // 1. Efecto de LUZ
-            const lightEffect = lightIntensity > 0 ? 
-                Math.min(1.0, lightIntensity / (lightIntensity + scenarioParams.Ks_light)) : 0.01;
-            
-            // 2. Efecto de TEMPERATURA
-            const tempDiff = Math.abs(currentTemp - scenarioParams.tempOptimal);
-            let tempEffect;
-            if (currentTemp < 10 || currentTemp > 45) {
-                tempEffect = 0.01;
-            } else if (currentTemp < 15 || currentTemp > 40) {
-                tempEffect = 0.1;
+            // 1. Efecto de LUZ - CRÍTICO para fotosíntesis (basado en literatura científica)
+            // Óptimo: 80-200 μmol/m²/s, saturación ~400 μmol/m²/s
+            let lightEffect;
+            if (lightIntensity === 0) {
+                lightEffect = 0.01; // Sin luz = casi sin crecimiento
+            } else if (lightIntensity < 50) {
+                lightEffect = lightIntensity / 50 * 0.3; // Muy limitado
+            } else if (lightIntensity > 400) {
+                lightEffect = 0.8 - (lightIntensity - 400) / 1000; // Fotoinhibición
+                lightEffect = Math.max(0.3, lightEffect);
             } else {
-                tempEffect = Math.exp(-Math.pow(tempDiff / 4, 2));
+                // Curva de Michaelis-Menten realista
+                lightEffect = lightIntensity / (lightIntensity + scenarioParams.Ks_light);
             }
             
-            // 3. Efecto de pH
-            const pHDiff = Math.abs(currentpH - scenarioParams.pHOptimal);
-            let pHEffect;
-            if (currentpH < 5.5 || currentpH > 9.5) {
-                pHEffect = 0.01;
-            } else if (currentpH < 6.0 || currentpH > 9.0) {
-                pHEffect = 0.1;
+            // 2. Efecto de TEMPERATURA - Basado en literatura (óptimo 28-35°C)
+            let tempEffect;
+            if (currentTemp < 15 || currentTemp > 40) {
+                tempEffect = 0.01; // Letal
+            } else if (currentTemp < 20 || currentTemp > 38) {
+                tempEffect = 0.2; // Muy limitado
             } else {
-                pHEffect = Math.exp(-Math.pow(pHDiff / 0.6, 2));
+                // Curva optimizada para Chlorella vulgaris
+                const tempDiff = Math.abs(currentTemp - scenarioParams.tempOptimal);
+                tempEffect = Math.exp(-Math.pow(tempDiff / 5, 2));
+            }
+            
+            // 3. Efecto de pH - Basado en literatura (óptimo 8-9.5)
+            let pHEffect;
+            if (currentpH < 6.0 || currentpH > 10.0) {
+                pHEffect = 0.01; // Letal
+            } else if (currentpH < 7.0 || currentpH > 9.8) {
+                pHEffect = 0.3; // Muy limitado
+            } else {
+                // Curva optimizada para pH alcalino (preferencia de Chlorella)
+                const pHDiff = Math.abs(currentpH - scenarioParams.pHOptimal);
+                pHEffect = Math.exp(-Math.pow(pHDiff / 1.2, 2));
             }
             
             // 4. Efecto de NUTRIENTES
@@ -164,13 +177,22 @@ function generateAdvancedData(scenarios, hours, variabilityLevel = 'medium') {
             const co2Effect = lightIntensity > 0 ? 
                 Math.min(1.0, co2Level / 0.025) : 1.0;
             
-            // Combinar todos los efectos
-            let combinedEffect = lightEffect * tempEffect * pHEffect * 
-                               nutrientEffect * densityInhibition * oxygenEffect * co2Effect;
+            // Combinar efectos de forma REALISTA
+            // La luz es ESENCIAL - sin luz no hay fotosíntesis
+            let combinedEffect = lightEffect * tempEffect * pHEffect * nutrientEffect;
             
-            combinedEffect = Math.max(0.001, combinedEffect);
+            // Solo agregar otros efectos si hay fotosíntesis activa
+            if (lightIntensity > 0) {
+                combinedEffect *= densityInhibition * oxygenEffect * co2Effect;
+            } else {
+                // En oscuridad, solo respiración (consumo)
+                combinedEffect = 0.005 * tempEffect; // Respiración mínima
+            }
             
-            // Tasa específica de crecimiento
+            // Asegurar efecto mínimo pero biológicamente relevante
+            combinedEffect = Math.max(0.001, Math.min(1.0, combinedEffect));
+            
+            // Tasa específica de crecimiento MÁS SENSIBLE A LUZ
             const mu = scenarioParams.muMax * combinedEffect;
             
             // Aplicar ruido biológico
