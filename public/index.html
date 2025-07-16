@@ -41,6 +41,7 @@
             font-size: 16px; 
             font-weight: 600; 
             margin: 10px; 
+            transition: transform 0.2s;
         }
         .btn:hover { transform: translateY(-2px); }
         .btn:disabled { background: #ccc; cursor: not-allowed; transform: none; }
@@ -73,6 +74,7 @@
             text-decoration: none; 
             text-align: center; 
             font-weight: 600; 
+            transition: background 0.2s;
         }
         .download-btn:hover { background: #218838; }
         .charts { 
@@ -103,6 +105,7 @@
         }
         .alert-success { background: #d4edda; color: #155724; border-color: #28a745; }
         .alert-error { background: #f8d7da; color: #721c24; border-color: #dc3545; }
+        .alert-info { background: #d1ecf1; color: #0c5460; border-color: #17a2b8; }
         .loading { text-align: center; padding: 20px; }
         .spinner { 
             border: 4px solid #f3f3f3; 
@@ -111,7 +114,7 @@
             width: 40px; 
             height: 40px; 
             animation: spin 1s linear infinite; 
-            margin: 0 auto; 
+            margin: 0 auto 20px; 
         }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
         .correlations { 
@@ -129,6 +132,16 @@
         }
         .correlation-value { font-size: 1.4em; font-weight: bold; color: #667eea; }
         .correlation-label { font-size: 0.9em; color: #666; }
+        .debug { 
+            background: #f8f9fa; 
+            padding: 10px; 
+            border-radius: 5px; 
+            font-family: monospace; 
+            font-size: 12px; 
+            margin: 10px 0; 
+            max-height: 200px; 
+            overflow-y: auto; 
+        }
     </style>
 </head>
 <body>
@@ -143,16 +156,24 @@
             <h2>⚙️ Configuración</h2>
             <div class="form-group">
                 <label for="scenarios">Número de escenarios:</label>
-                <input type="number" id="scenarios" value="25" min="5" max="100">
+                <input type="number" id="scenarios" value="5" min="1" max="50">
+                <small>Recomendado: 5-25 para pruebas</small>
             </div>
             <div class="form-group">
                 <label for="hours">Horas por escenario:</label>
-                <input type="number" id="hours" value="120" min="24" max="480">
+                <input type="number" id="hours" value="48" min="24" max="240">
+                <small>Recomendado: 48-120 horas</small>
             </div>
             <div style="text-align: center;">
-                <button class="btn" onclick="generateDatabase()">🚀 Generar Dataset</button>
+                <button class="btn" onclick="generateDatabase()" id="generateBtn">🚀 Generar Dataset</button>
                 <button class="btn btn-test" onclick="testServer()">🔧 Test Servidor</button>
             </div>
+        </div>
+        
+        <!-- Debug info -->
+        <div id="debug" class="card hidden">
+            <h3>🔍 Debug Info</h3>
+            <div id="debugContent" class="debug"></div>
         </div>
         
         <!-- Resultados -->
@@ -164,19 +185,8 @@
         
         <!-- Gráficas -->
         <div id="charts-section" class="card hidden">
-            <h2>📊 Análisis Avanzado de Datos</h2>
-            
-            <!-- Pestañas de análisis -->
-            <div style="display: flex; gap: 10px; margin-bottom: 20px; flex-wrap: wrap;">
-                <button class="btn" onclick="showAnalysis('basic')" id="btn-basic">📈 Básico</button>
-                <button class="btn" onclick="showAnalysis('advanced')" id="btn-advanced">🔬 Avanzado</button>
-                <button class="btn" onclick="showAnalysis('correlations')" id="btn-correlations">🔗 Correlaciones</button>
-                <button class="btn" onclick="showAnalysis('composition')" id="btn-composition">🧪 Composición</button>
-                <button class="btn" onclick="showAnalysis('efficiency')" id="btn-efficiency">⚡ Eficiencias</button>
-            </div>
-            
-            <!-- Análisis Básico -->
-            <div id="analysis-basic" class="charts">
+            <h2>📊 Análisis de Datos</h2>
+            <div id="charts" class="charts">
                 <div class="chart-container">
                     <div class="chart-title">Evolución de Biomasa</div>
                     <canvas id="biomassChart" class="chart-canvas"></canvas>
@@ -186,100 +196,28 @@
                     <canvas id="environmentChart" class="chart-canvas"></canvas>
                 </div>
                 <div class="chart-container">
-                    <div class="chart-title">Intensidad de Luz</div>
-                    <canvas id="lightChart" class="chart-canvas"></canvas>
+                    <div class="chart-title">Distribución de pH</div>
+                    <canvas id="pHChart" class="chart-canvas"></canvas>
                 </div>
                 <div class="chart-container">
-                    <div class="chart-title">Distribución de Biomasa</div>
-                    <canvas id="distributionChart" class="chart-canvas"></canvas>
-                </div>
-            </div>
-            
-            <!-- Análisis Avanzado -->
-            <div id="analysis-advanced" class="charts hidden">
-                <div class="chart-container">
-                    <div class="chart-title">Efectos en el Crecimiento</div>
-                    <canvas id="effectsChart" class="chart-canvas"></canvas>
-                </div>
-                <div class="chart-container">
-                    <div class="chart-title">Fases de Crecimiento</div>
-                    <canvas id="phasesChart" class="chart-canvas"></canvas>
-                </div>
-                <div class="chart-container">
-                    <div class="chart-title">Oxígeno y CO₂</div>
-                    <canvas id="gasesChart" class="chart-canvas"></canvas>
-                </div>
-                <div class="chart-container">
-                    <div class="chart-title">Indicadores de Estrés</div>
-                    <canvas id="stressChart" class="chart-canvas"></canvas>
-                </div>
-            </div>
-            
-            <!-- Análisis de Correlaciones -->
-            <div id="analysis-correlations" class="hidden">
-                <div class="charts">
-                    <div class="chart-container">
-                        <div class="chart-title">Correlaciones Principales</div>
-                        <canvas id="correlationChart" class="chart-canvas"></canvas>
-                    </div>
-                    <div class="chart-container">
-                        <div class="chart-title">Matriz de Correlaciones</div>
-                        <canvas id="matrixChart" class="chart-canvas"></canvas>
-                    </div>
-                </div>
-                <h3>🔗 Correlaciones Detalladas</h3>
-                <div id="correlations" class="correlations"></div>
-            </div>
-            
-            <!-- Análisis de Composición -->
-            <div id="analysis-composition" class="charts hidden">
-                <div class="chart-container">
-                    <div class="chart-title">Composición Bioquímica</div>
-                    <canvas id="compositionChart" class="chart-canvas"></canvas>
-                </div>
-                <div class="chart-container">
-                    <div class="chart-title">Evolución de Clorofila</div>
-                    <canvas id="chlorophyllChart" class="chart-canvas"></canvas>
-                </div>
-                <div class="chart-container">
-                    <div class="chart-title">Proteínas vs Lípidos</div>
-                    <canvas id="proteinLipidChart" class="chart-canvas"></canvas>
-                </div>
-                <div class="chart-container">
-                    <div class="chart-title">Calidad Nutricional</div>
-                    <canvas id="nutritionalChart" class="chart-canvas"></canvas>
-                </div>
-            </div>
-            
-            <!-- Análisis de Eficiencias -->
-            <div id="analysis-efficiency" class="charts hidden">
-                <div class="chart-container">
-                    <div class="chart-title">Eficiencia Fotosintética</div>
-                    <canvas id="photosyntheticChart" class="chart-canvas"></canvas>
-                </div>
-                <div class="chart-container">
-                    <div class="chart-title">Productividad Acumulada</div>
+                    <div class="chart-title">Productividad vs Tiempo</div>
                     <canvas id="productivityChart" class="chart-canvas"></canvas>
                 </div>
-                <div class="chart-container">
-                    <div class="chart-title">Uso de Nutrientes</div>
-                    <canvas id="nutrientUseChart" class="chart-canvas"></canvas>
-                </div>
-                <div class="chart-container">
-                    <div class="chart-title">Rendimiento por Condición</div>
-                    <canvas id="conditionYieldChart" class="chart-canvas"></canvas>
-                </div>
             </div>
+            
+            <h3>🔗 Correlaciones</h3>
+            <div id="correlations" class="correlations"></div>
         </div>
         
-        <!-- Loading y mensajes -->
+        <!-- Loading -->
         <div id="loading" class="card hidden">
             <div class="loading">
                 <div class="spinner"></div>
-                <p>Generando dataset...</p>
+                <p id="loadingText">Generando dataset...</p>
             </div>
         </div>
         
+        <!-- Mensajes -->
         <div id="messages"></div>
     </div>
 
@@ -288,6 +226,22 @@
         let currentDataset = null;
         let charts = {};
         let serverData = null;
+        let debugMode = true;
+        
+        // Función para debug
+        function debugLog(message, data = null) {
+            if (debugMode) {
+                console.log(message, data);
+                const debugContent = document.getElementById('debugContent');
+                const timestamp = new Date().toLocaleTimeString();
+                debugContent.innerHTML += `[${timestamp}] ${message}\n`;
+                if (data) {
+                    debugContent.innerHTML += `   Data: ${JSON.stringify(data, null, 2)}\n`;
+                }
+                debugContent.scrollTop = debugContent.scrollHeight;
+                document.getElementById('debug').classList.remove('hidden');
+            }
+        }
         
         // Función para mostrar mensajes
         function showMessage(message, type = 'success') {
@@ -298,26 +252,32 @@
             messagesDiv.appendChild(alertDiv);
             
             setTimeout(() => {
-                alertDiv.remove();
+                if (alertDiv.parentNode) {
+                    alertDiv.remove();
+                }
             }, 5000);
         }
         
         // Función para test del servidor
         async function testServer() {
-            console.log('🔧 Testing servidor...');
+            debugLog('🔧 Testing servidor...');
             
             try {
+                showMessage('🔧 Probando conexión con servidor...', 'info');
+                
                 const response = await fetch('/test');
+                debugLog('Respuesta del test:', { status: response.status, ok: response.ok });
+                
                 if (response.ok) {
                     const data = await response.json();
                     showMessage(`✅ Servidor OK: ${data.message}`, 'success');
-                    console.log('✅ Test exitoso:', data);
+                    debugLog('✅ Test exitoso:', data);
                 } else {
                     throw new Error(`HTTP ${response.status}`);
                 }
             } catch (error) {
                 showMessage(`❌ Error del servidor: ${error.message}`, 'error');
-                console.error('❌ Error:', error);
+                debugLog('❌ Error:', error);
             }
         }
         
@@ -326,80 +286,150 @@
             const scenarios = parseInt(document.getElementById('scenarios').value);
             const hours = parseInt(document.getElementById('hours').value);
             
-            console.log(`🚀 Generando ${scenarios} escenarios con ${hours} horas`);
+            // Validaciones
+            if (scenarios < 1 || scenarios > 50) {
+                showMessage('❌ El número de escenarios debe estar entre 1 y 50', 'error');
+                return;
+            }
             
-            // Mostrar loading
+            if (hours < 24 || hours > 240) {
+                showMessage('❌ Las horas deben estar entre 24 y 240', 'error');
+                return;
+            }
+            
+            debugLog(`🚀 Generando ${scenarios} escenarios con ${hours} horas`);
+            
+            // Deshabilitar botón y mostrar loading
+            document.getElementById('generateBtn').disabled = true;
             document.getElementById('loading').classList.remove('hidden');
             document.getElementById('results').classList.add('hidden');
             document.getElementById('charts-section').classList.add('hidden');
             
             try {
                 // Llamar al servidor
-                console.log('📡 Llamando al servidor...');
+                debugLog('📡 Llamando al servidor...');
+                document.getElementById('loadingText').textContent = 'Enviando solicitud al servidor...';
+                
                 const response = await fetch('/generate-dataset', {
                     method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
+                    headers: { 
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json'
+                    },
                     body: JSON.stringify({
                         scenarios: scenarios,
                         hoursPerScenario: hours
                     })
-                });
+            </script>
+</body>
+</html>
                 
-                console.log('📡 Respuesta:', response.status);
+                debugLog('📡 Respuesta del servidor:', { 
+                    status: response.status, 
+                    ok: response.ok,
+                    headers: response.headers
+                });
                 
                 if (!response.ok) {
                     const errorText = await response.text();
+                    debugLog('Error del servidor:', errorText);
                     throw new Error(`Servidor: ${response.status} - ${errorText}`);
                 }
                 
+                document.getElementById('loadingText').textContent = 'Procesando datos...';
                 const data = await response.json();
-                console.log('📊 Datos recibidos:', data);
+                debugLog('📊 Datos recibidos:', data);
                 
                 if (!data.success) {
-                    throw new Error(data.error || 'Error desconocido');
+                    throw new Error(data.error || 'Error desconocido del servidor');
                 }
                 
-                // Guardar datos
+                // Guardar datos del servidor
                 serverData = data;
                 
                 // Obtener muestra para gráficas
-                const folderName = data.outputDir.split('/').pop();
-                console.log('📈 Obteniendo muestra...');
-                
-                try {
-                    const sampleResponse = await fetch(`/sample-data/${folderName}`);
-                    if (sampleResponse.ok) {
-                        currentDataset = await sampleResponse.json();
-                        console.log('📈 Muestra obtenida:', currentDataset.length, 'registros');
-                    }
-                } catch (sampleError) {
-                    console.warn('⚠️ Error obteniendo muestra:', sampleError);
-                }
+                document.getElementById('loadingText').textContent = 'Obteniendo muestra de datos...';
+                await getSampleData();
                 
                 // Mostrar resultados
                 displayResults();
-                createCharts();
-                calculateCorrelations();
                 
-                // Mostrar secciones
+                // Crear gráficas si hay datos
+                if (currentDataset && Array.isArray(currentDataset) && currentDataset.length > 0) {
+                    createCharts();
+                    calculateCorrelations();
+                    document.getElementById('charts-section').classList.remove('hidden');
+                } else {
+                    showMessage('⚠️ Dataset generado pero no se pueden mostrar gráficas', 'info');
+                }
+                
                 document.getElementById('results').classList.remove('hidden');
-                document.getElementById('charts-section').classList.remove('hidden');
-                
                 showMessage('✅ Dataset generado exitosamente', 'success');
                 
             } catch (error) {
-                console.error('❌ Error:', error);
+                debugLog('❌ Error:', error);
                 showMessage(`❌ Error: ${error.message}`, 'error');
             } finally {
                 document.getElementById('loading').classList.add('hidden');
+                document.getElementById('generateBtn').disabled = false;
+            }
+        }
+        
+        // Función para obtener muestra de datos
+        async function getSampleData() {
+            if (!serverData || !serverData.outputDir) {
+                debugLog('⚠️ No hay outputDir en serverData');
+                return;
+            }
+            
+            try {
+                const folderName = serverData.outputDir.split('/').pop() || serverData.outputDir.split('\\').pop();
+                debugLog('📈 Obteniendo muestra del folder:', folderName);
+                
+                const sampleResponse = await fetch(`/sample-data/${folderName}`);
+                debugLog('Respuesta sample-data:', { 
+                    status: sampleResponse.status, 
+                    ok: sampleResponse.ok 
+                });
+                
+                if (sampleResponse.ok) {
+                    const sampleData = await sampleResponse.json();
+                    debugLog('📈 Estructura de muestra recibida:', {
+                        keys: Object.keys(sampleData),
+                        dataLength: sampleData.data ? sampleData.data.length : 'no data key',
+                        sampleSize: sampleData.sampleSize,
+                        totalRows: sampleData.totalRows
+                    });
+                    
+                    // Verificar si los datos están en la propiedad 'data'
+                    if (sampleData.data && Array.isArray(sampleData.data)) {
+                        currentDataset = sampleData.data;
+                        debugLog('✅ Dataset cargado correctamente:', currentDataset.length, 'registros');
+                    } else if (Array.isArray(sampleData)) {
+                        currentDataset = sampleData;
+                        debugLog('✅ Dataset cargado (array directo):', currentDataset.length, 'registros');
+                    } else {
+                        debugLog('⚠️ Formato de datos inesperado');
+                        currentDataset = null;
+                    }
+                } else {
+                    const errorText = await sampleResponse.text();
+                    debugLog('⚠️ Error obteniendo muestra:', errorText);
+                }
+            } catch (sampleError) {
+                debugLog('⚠️ Error en getSampleData:', sampleError);
             }
         }
         
         // Función para mostrar resultados
         function displayResults() {
-            if (!serverData || !serverData.stats) return;
+            if (!serverData || !serverData.stats) {
+                debugLog('⚠️ No hay stats en serverData');
+                return;
+            }
             
             const stats = serverData.stats;
+            debugLog('Mostrando estadísticas:', stats);
             
             // Mostrar estadísticas
             document.getElementById('stats').innerHTML = `
@@ -413,7 +443,7 @@
                 </div>
                 <div class="stat-card">
                     <div class="stat-value">${stats.trainingPoints.toLocaleString()}</div>
-                    <div class="stat-label">Entrenamiento</div>
+                    <div class="stat-label">Entrenamiento (70%)</div>
                 </div>
                 <div class="stat-card">
                     <div class="stat-value">${stats.biomassRange.max.toFixed(2)}</div>
@@ -422,84 +452,116 @@
             `;
             
             // Botones de descarga
-            const folderName = serverData.outputDir.split('/').pop();
+            const folderName = serverData.outputDir.split('/').pop() || serverData.outputDir.split('\\').pop();
             document.getElementById('downloads').innerHTML = `
                 <a href="/download/${folderName}/complete_dataset.csv" class="download-btn" download>
-                    📊 Dataset Completo
+                    📊 Dataset Completo (${stats.totalPoints.toLocaleString()} registros)
                 </a>
                 <a href="/download/${folderName}/training_data.csv" class="download-btn" download>
-                    🎯 Entrenamiento
+                    🎯 Entrenamiento (${stats.trainingPoints.toLocaleString()} registros)
                 </a>
                 <a href="/download/${folderName}/validation_data.csv" class="download-btn" download>
-                    🔍 Validación
+                    🔍 Validación (${stats.validationPoints.toLocaleString()} registros)
                 </a>
                 <a href="/download/${folderName}/test_data.csv" class="download-btn" download>
-                    🧪 Prueba
+                    🧪 Prueba (${stats.testPoints.toLocaleString()} registros)
                 </a>
             `;
         }
         
         // Función para crear gráficas
         function createCharts() {
-            if (!currentDataset || currentDataset.length === 0) {
-                console.warn('⚠️ No hay datos para gráficas');
+            if (!currentDataset || !Array.isArray(currentDataset) || currentDataset.length === 0) {
+                debugLog('⚠️ No hay datos válidos para gráficas');
+                showMessage('⚠️ No se pueden crear gráficas: datos no válidos', 'info');
                 return;
             }
             
-            console.log('📊 Creando gráficas...');
+            debugLog('📊 Creando gráficas con', currentDataset.length, 'registros');
+            debugLog('Ejemplo de registro:', currentDataset[0]);
             
-            // Gráfica de biomasa
-            const biomassCtx = document.getElementById('biomassChart').getContext('2d');
-            const scenarios = [...new Set(currentDataset.map(d => d.Scenario))].slice(0, 5);
+            try {
+                // Gráfica de biomasa
+                createBiomassChart();
+                
+                // Gráfica ambiental
+                createEnvironmentChart();
+                
+                // Gráfica de pH
+                createPHChart();
+                
+                // Gráfica de productividad
+                createProductivityChart();
+                
+                debugLog('✅ Todas las gráficas creadas exitosamente');
+                
+            } catch (error) {
+                debugLog('❌ Error creando gráficas:', error);
+                showMessage(`❌ Error creando gráficas: ${error.message}`, 'error');
+            }
+        }
+        
+        function createBiomassChart() {
+            const ctx = document.getElementById('biomassChart').getContext('2d');
             
-            if (charts.biomass) charts.biomass.destroy();
+            // Destruir gráfica anterior si existe
+            if (charts.biomass) {
+                charts.biomass.destroy();
+            }
             
-            charts.biomass = new Chart(biomassCtx, {
+            // Obtener datos de biomasa por tiempo (primeros 200 puntos)
+            const data = currentDataset.slice(0, 200);
+            
+            charts.biomass = new Chart(ctx, {
                 type: 'line',
                 data: {
-                    datasets: scenarios.map(scenario => ({
-                        label: `Escenario ${scenario}`,
-                        data: currentDataset.filter(d => d.Scenario === scenario).map(d => ({
-                            x: d.Time_h,
-                            y: d.Biomass_g_L
-                        })),
-                        borderColor: `hsl(${scenario * 60}, 70%, 50%)`,
-                        tension: 0.4
-                    }))
+                    labels: data.map(d => d.Time_h || 0),
+                    datasets: [{
+                        label: 'Biomasa (g/L)',
+                        data: data.map(d => d.Biomass_g_L || 0),
+                        borderColor: '#667eea',
+                        backgroundColor: 'rgba(102, 126, 234, 0.1)',
+                        tension: 0.4,
+                        fill: true
+                    }]
                 },
                 options: {
                     responsive: true,
                     maintainAspectRatio: false,
                     scales: {
                         x: { 
-                            type: 'linear',
                             title: { display: true, text: 'Tiempo (h)' }
                         },
                         y: { 
-                            title: { display: true, text: 'Biomasa (g/L)' }
+                            title: { display: true, text: 'Biomasa (g/L)' },
+                            beginAtZero: true
                         }
                     }
                 }
             });
+        }
+        
+        function createEnvironmentChart() {
+            const ctx = document.getElementById('environmentChart').getContext('2d');
             
-            // Gráfica ambiental
-            const envCtx = document.getElementById('environmentChart').getContext('2d');
-            const sampleData = currentDataset.slice(0, 200);
+            if (charts.environment) {
+                charts.environment.destroy();
+            }
             
-            if (charts.environment) charts.environment.destroy();
+            const data = currentDataset.slice(0, 100);
             
-            charts.environment = new Chart(envCtx, {
+            charts.environment = new Chart(ctx, {
                 type: 'line',
                 data: {
-                    labels: sampleData.map(d => d.Time_h),
+                    labels: data.map(d => d.Time_h || 0),
                     datasets: [{
                         label: 'pH',
-                        data: sampleData.map(d => d.pH),
+                        data: data.map(d => d.pH || 7),
                         borderColor: '#3b82f6',
                         yAxisID: 'y'
                     }, {
                         label: 'Temperatura (°C)',
-                        data: sampleData.map(d => d.Temperature_C),
+                        data: data.map(d => d.Temperature_C || 25),
                         borderColor: '#ef4444',
                         yAxisID: 'y1'
                     }]
@@ -513,75 +575,55 @@
                             type: 'linear',
                             display: true,
                             position: 'left',
-                            title: { display: true, text: 'pH' }
+                            title: { display: true, text: 'pH' },
+                            min: 6,
+                            max: 9
                         },
                         y1: {
                             type: 'linear',
                             display: true,
                             position: 'right',
                             title: { display: true, text: 'Temp (°C)' },
-                            grid: { drawOnChartArea: false }
+                            grid: { drawOnChartArea: false },
+                            min: 15,
+                            max: 35
                         }
                     }
                 }
             });
+        }
+        
+        function createPHChart() {
+            const ctx = document.getElementById('pHChart').getContext('2d');
             
-            // Gráfica de luz
-            const lightCtx = document.getElementById('lightChart').getContext('2d');
-            const lightData = currentDataset.slice(0, 100);
+            if (charts.pH) {
+                charts.pH.destroy();
+            }
             
-            if (charts.light) charts.light.destroy();
-            
-            charts.light = new Chart(lightCtx, {
-                type: 'line',
-                data: {
-                    labels: lightData.map(d => d.Time_h),
-                    datasets: [{
-                        label: 'PAR (μmol/m²/s)',
-                        data: lightData.map(d => d.PAR_umol_m2_s),
-                        borderColor: '#f59e0b',
-                        backgroundColor: 'rgba(245, 158, 11, 0.2)',
-                        fill: true
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    scales: {
-                        x: { title: { display: true, text: 'Tiempo (h)' } },
-                        y: { 
-                            beginAtZero: true,
-                            title: { display: true, text: 'PAR (μmol/m²/s)' }
-                        }
-                    }
-                }
-            });
-            
-            // Gráfica de distribución
-            const distCtx = document.getElementById('distributionChart').getContext('2d');
-            const biomassValues = currentDataset.map(d => d.Biomass_g_L);
-            const bins = [0, 0.5, 1, 1.5, 2, 2.5, 3, 3.5, 4];
+            // Crear histograma de pH
+            const pHValues = currentDataset.map(d => d.pH || 7);
+            const bins = [6.0, 6.5, 7.0, 7.5, 8.0, 8.5, 9.0];
             const counts = bins.slice(0, -1).map((bin, i) => 
-                biomassValues.filter(v => v >= bin && v < bins[i + 1]).length
+                pHValues.filter(v => v >= bin && v < bins[i + 1]).length
             );
             
-            if (charts.distribution) charts.distribution.destroy();
-            
-            charts.distribution = new Chart(distCtx, {
+            charts.pH = new Chart(ctx, {
                 type: 'bar',
                 data: {
                     labels: bins.slice(0, -1).map((bin, i) => `${bin}-${bins[i + 1]}`),
                     datasets: [{
                         label: 'Frecuencia',
                         data: counts,
-                        backgroundColor: 'rgba(102, 126, 234, 0.8)'
+                        backgroundColor: 'rgba(102, 126, 234, 0.8)',
+                        borderColor: '#667eea',
+                        borderWidth: 1
                     }]
                 },
                 options: {
                     responsive: true,
                     maintainAspectRatio: false,
                     scales: {
-                        x: { title: { display: true, text: 'Biomasa (g/L)' } },
+                        x: { title: { display: true, text: 'Rango de pH' } },
                         y: { 
                             beginAtZero: true,
                             title: { display: true, text: 'Frecuencia' }
@@ -591,47 +633,95 @@
             });
         }
         
+        function createProductivityChart() {
+            const ctx = document.getElementById('productivityChart').getContext('2d');
+            
+            if (charts.productivity) {
+                charts.productivity.destroy();
+            }
+            
+            const data = currentDataset.slice(0, 150);
+            
+            charts.productivity = new Chart(ctx, {
+                type: 'scatter',
+                data: {
+                    datasets: [{
+                        label: 'Productividad vs Tiempo',
+                        data: data.map(d => ({
+                            x: d.Time_h || 0,
+                            y: d.Instantaneous_Productivity_g_L_d || 0
+                        })),
+                        backgroundColor: 'rgba(102, 126, 234, 0.6)',
+                        borderColor: '#667eea'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        x: { 
+                            title: { display: true, text: 'Tiempo (h)' }
+                        },
+                        y: { 
+                            title: { display: true, text: 'Productividad (g/L/día)' },
+                            beginAtZero: true
+                        }
+                    }
+                }
+            });
+        }
+        
         // Función para calcular correlaciones
         function calculateCorrelations() {
-            if (!currentDataset || currentDataset.length === 0) return;
+            if (!currentDataset || !Array.isArray(currentDataset) || currentDataset.length === 0) {
+                debugLog('⚠️ No hay datos para correlaciones');
+                return;
+            }
             
-            const correlations = [
-                {
-                    name: 'pH - Biomasa',
-                    value: calculateCorrelation(
-                        currentDataset.map(d => d.pH),
-                        currentDataset.map(d => d.Biomass_g_L)
-                    )
-                },
-                {
-                    name: 'Temperatura - Crecimiento',
-                    value: calculateCorrelation(
-                        currentDataset.map(d => d.Temperature_C),
-                        currentDataset.map(d => d.Growth_Rate_h)
-                    )
-                },
-                {
-                    name: 'Luz - Biomasa',
-                    value: calculateCorrelation(
-                        currentDataset.map(d => d.PAR_umol_m2_s),
-                        currentDataset.map(d => d.Biomass_g_L)
-                    )
-                },
-                {
-                    name: 'Biomasa - Productividad',
-                    value: calculateCorrelation(
-                        currentDataset.map(d => d.Biomass_g_L),
-                        currentDataset.map(d => d.Growth_Rate_h)
-                    )
-                }
-            ];
-            
-            document.getElementById('correlations').innerHTML = correlations.map(corr => `
-                <div class="correlation-item">
-                    <div class="correlation-value">${corr.value.toFixed(3)}</div>
-                    <div class="correlation-label">${corr.name}</div>
-                </div>
-            `).join('');
+            try {
+                const correlations = [
+                    {
+                        name: 'pH - Biomasa',
+                        value: calculateCorrelation(
+                            currentDataset.map(d => d.pH || 7),
+                            currentDataset.map(d => d.Biomass_g_L || 0)
+                        )
+                    },
+                    {
+                        name: 'Temperatura - Crecimiento',
+                        value: calculateCorrelation(
+                            currentDataset.map(d => d.Temperature_C || 25),
+                            currentDataset.map(d => d.Growth_Rate_mu_h || 0)
+                        )
+                    },
+                    {
+                        name: 'Luz - Biomasa',
+                        value: calculateCorrelation(
+                            currentDataset.map(d => d.PAR_umol_m2_s || 0),
+                            currentDataset.map(d => d.Biomass_g_L || 0)
+                        )
+                    },
+                    {
+                        name: 'Biomasa - Productividad',
+                        value: calculateCorrelation(
+                            currentDataset.map(d => d.Biomass_g_L || 0),
+                            currentDataset.map(d => d.Instantaneous_Productivity_g_L_d || 0)
+                        )
+                    }
+                ];
+                
+                document.getElementById('correlations').innerHTML = correlations.map(corr => `
+                    <div class="correlation-item">
+                        <div class="correlation-value">${corr.value.toFixed(3)}</div>
+                        <div class="correlation-label">${corr.name}</div>
+                    </div>
+                `).join('');
+                
+                debugLog('✅ Correlaciones calculadas:', correlations);
+                
+            } catch (error) {
+                debugLog('❌ Error calculando correlaciones:', error);
+            }
         }
         
         // Función para calcular correlación de Pearson
@@ -639,31 +729,55 @@
             const n = Math.min(x.length, y.length);
             if (n < 2) return 0;
             
-            const sumX = x.reduce((a, b) => a + b, 0);
-            const sumY = y.reduce((a, b) => a + b, 0);
-            const sumXY = x.reduce((sum, xi, i) => sum + xi * y[i], 0);
-            const sumX2 = x.reduce((sum, xi) => sum + xi * xi, 0);
-            const sumY2 = y.reduce((sum, yi) => sum + yi * yi, 0);
+            // Filtrar valores válidos
+            const validPairs = [];
+            for (let i = 0; i < n; i++) {
+                if (!isNaN(x[i]) && !isNaN(y[i]) && isFinite(x[i]) && isFinite(y[i])) {
+                    validPairs.push([x[i], y[i]]);
+                }
+            }
             
-            const numerator = n * sumXY - sumX * sumY;
-            const denominator = Math.sqrt((n * sumX2 - sumX * sumX) * (n * sumY2 - sumY * sumY));
+            if (validPairs.length < 2) return 0;
+            
+            const validX = validPairs.map(p => p[0]);
+            const validY = validPairs.map(p => p[1]);
+            const len = validPairs.length;
+            
+            const sumX = validX.reduce((a, b) => a + b, 0);
+            const sumY = validY.reduce((a, b) => a + b, 0);
+            const sumXY = validPairs.reduce((sum, pair) => sum + pair[0] * pair[1], 0);
+            const sumX2 = validX.reduce((sum, xi) => sum + xi * xi, 0);
+            const sumY2 = validY.reduce((sum, yi) => sum + yi * yi, 0);
+            
+            const numerator = len * sumXY - sumX * sumY;
+            const denominator = Math.sqrt((len * sumX2 - sumX * sumX) * (len * sumY2 - sumY * sumY));
             
             return denominator === 0 ? 0 : numerator / denominator;
         }
         
         // Inicialización
         document.addEventListener('DOMContentLoaded', function() {
-            console.log('🎯 Aplicación cargada');
+            debugLog('🎯 Aplicación cargada');
             
-            // Test automático
+            // Test automático del servidor
             setTimeout(testServer, 1000);
+            
+            // Limpiar debug cada 10 minutos
+            setInterval(() => {
+                const debugContent = document.getElementById('debugContent');
+                if (debugContent && debugContent.innerHTML.length > 10000) {
+                    debugContent.innerHTML = '[Debug limpiado]\n';
+                }
+            }, 600000);
         });
         
-        // Captura de errores
+        // Captura de errores globales
         window.addEventListener('error', function(e) {
-            console.error('🚨 Error JavaScript:', e.message);
+            debugLog('🚨 Error JavaScript:', e);
             showMessage(`🚨 Error: ${e.message}`, 'error');
         });
-    </script>
-</body>
-</html>
+        
+        window.addEventListener('unhandledrejection', function(e) {
+            debugLog('🚨 Promise rechazada:', e.reason);
+            showMessage(`🚨 Error: ${e.reason}`, 'error');
+        });
