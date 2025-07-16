@@ -43,12 +43,12 @@ function generateAdvancedData(scenarios, hours, variabilityLevel = 'medium') {
             lightRegime: Math.random() > 0.4 ? 'continuous' : 'cyclic',
             stressCondition: Math.random() > (1 - config.stressProb) ? 
                             (Math.random() > 0.5 ? 'high_temp' : 'low_pH') : 'normal',
-            muMax: 0.05 + Math.random() * 0.1,        // 0.05-0.15 h⁻¹ (realista)
-            Ks_light: 80 + Math.random() * 120,       // 80-200 μmol/m²/s (basado en literatura)
-            Ks_nutrient: 0.01 + Math.random() * 0.08,
-            Ki_biomass: 1.5 + Math.random() * 3.5,    // 1.5-5.0 g/L
-            tempOptimal: 28 + Math.random() * 7,      // 28-35°C (óptimo científico)
-            pHOptimal: 8.0 + Math.random() * 1.5,     // 8.0-9.5 (óptimo científico)
+            muMax: 0.08 + Math.random() * 0.15,       // 0.08-0.23 h⁻¹ (más realista para correlaciones)
+            Ks_light: 60 + Math.random() * 80,        // 60-140 μmol/m²/s (más sensible)
+            Ks_nutrient: 0.005 + Math.random() * 0.04, // Más limitante
+            Ki_biomass: 0.8 + Math.random() * 2.2,    // 0.8-3.0 g/L (menor capacidad de carga)
+            tempOptimal: 28 + Math.random() * 7,      // 28-35°C
+            pHOptimal: 8.0 + Math.random() * 1.5,     // 8.0-9.5
             noiseLevel: config.noiseLevel
         };
         
@@ -195,20 +195,20 @@ function generateAdvancedData(scenarios, hours, variabilityLevel = 'medium') {
             // Tasa específica de crecimiento MÁS SENSIBLE A LUZ
             const mu = scenarioParams.muMax * combinedEffect;
             
-            // Aplicar ruido biológico
-            const biologicalNoise = (Math.random() - 0.5) * (scenarioParams.noiseLevel * 0.5);
+            // Aplicar ruido biológico REDUCIDO para correlaciones más claras
+            const biologicalNoise = (Math.random() - 0.5) * (scenarioParams.noiseLevel * 0.3);
             const actualGrowthRate = Math.max(0.001, mu + biologicalNoise);
             
-            // === CRECIMIENTO ===
+            // === CRECIMIENTO ACELERADO PARA MEJORES CORRELACIONES ===
             
-            const growthIncrement = actualGrowthRate * biomass * 0.8;
-            const mortalityRate = 0.002 * biomass;
+            const growthIncrement = actualGrowthRate * biomass * 1.5; // Factor acelerado
+            const mortalityRate = 0.001 * biomass; // Mortalidad reducida
             
             const netGrowth = growthIncrement - mortalityRate;
             biomass = Math.max(0.001, Math.min(biomass + netGrowth, scenarioParams.Ki_biomass));
             
-            // Concentración celular
-            const cellGrowthFactor = 1.8e6 + (biomass * 0.2e6);
+            // Concentración celular MÁS CORRELACIONADA con biomasa
+            const cellGrowthFactor = 2.0e6 + (biomass * 0.3e6);
             cellConcentration = biomass * cellGrowthFactor;
             
             // Productividad
