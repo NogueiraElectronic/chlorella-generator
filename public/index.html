@@ -3,238 +3,255 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Generador Base de Datos Chlorella</title>
+    <title>Generador Chlorella</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
-        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); min-height: 100vh; }
-        .container { max-width: 1400px; margin: 0 auto; padding: 20px; }
+        body { 
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); 
+            min-height: 100vh; 
+        }
+        .container { max-width: 1200px; margin: 0 auto; padding: 20px; }
         .header { color: white; padding: 40px 0; text-align: center; margin-bottom: 30px; }
         .header h1 { font-size: 2.5em; margin-bottom: 10px; text-shadow: 2px 2px 4px rgba(0,0,0,0.3); }
-        .header p { font-size: 1.2em; opacity: 0.9; }
-        .card { background: white; border-radius: 20px; padding: 30px; margin-bottom: 25px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); }
-        .card-header { display: flex; align-items: center; gap: 15px; margin-bottom: 25px; padding-bottom: 15px; border-bottom: 2px solid #f0f0f0; }
-        .card-header h2 { color: #333; font-size: 1.5em; }
-        .card-icon { font-size: 2em; }
-        .form-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 25px; }
+        .card { 
+            background: white; 
+            border-radius: 15px; 
+            padding: 30px; 
+            margin-bottom: 25px; 
+            box-shadow: 0 8px 20px rgba(0,0,0,0.1); 
+        }
         .form-group { margin-bottom: 20px; }
         label { display: block; margin-bottom: 8px; font-weight: 600; color: #333; }
-        input, select { width: 100%; padding: 15px; border: 2px solid #e1e1e1; border-radius: 10px; font-size: 16px; transition: all 0.3s; }
-        input:focus, select:focus { outline: none; border-color: #667eea; box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1); }
-        .btn { background: linear-gradient(45deg, #667eea, #764ba2); color: white; padding: 18px 35px; border: none; border-radius: 12px; cursor: pointer; font-size: 18px; font-weight: 600; transition: all 0.3s; box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3); }
-        .btn:hover { transform: translateY(-3px); box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4); }
-        .btn:disabled { background: #ccc; cursor: not-allowed; transform: none; box-shadow: none; }
-        .btn-test { background: linear-gradient(45deg, #17a2b8, #138496); margin-left: 15px; }
-        .progress { background: #e1e1e1; border-radius: 15px; height: 30px; margin: 25px 0; overflow: hidden; position: relative; }
-        .progress-bar { background: linear-gradient(45deg, #28a745, #20c997); height: 100%; border-radius: 15px; transition: width 0.3s; position: relative; }
-        .progress-text { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); font-weight: bold; color: #333; z-index: 10; }
-        .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px; margin-bottom: 30px; }
-        .stat-card { background: linear-gradient(135deg, #fff 0%, #f8f9fa 100%); padding: 25px; border-radius: 15px; text-align: center; box-shadow: 0 5px 15px rgba(0,0,0,0.1); transition: all 0.3s; }
-        .stat-card:hover { transform: translateY(-5px); }
-        .stat-value { font-size: 2.5em; font-weight: bold; margin-bottom: 5px; background: linear-gradient(45deg, #667eea, #764ba2); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
-        .stat-label { color: #666; font-size: 0.9em; font-weight: 500; }
-        .download-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px; margin-top: 30px; }
-        .download-card { background: linear-gradient(135deg, #28a745, #20c997); color: white; padding: 25px; border-radius: 15px; text-align: center; text-decoration: none; transition: all 0.3s; cursor: pointer; }
-        .download-card:hover { transform: translateY(-3px); box-shadow: 0 10px 25px rgba(40, 167, 69, 0.3); }
-        .download-icon { font-size: 2.5em; margin-bottom: 10px; }
-        .download-title { font-size: 1.2em; font-weight: 600; margin-bottom: 5px; }
-        .download-desc { font-size: 0.9em; opacity: 0.9; }
-        .charts-container { display: grid; grid-template-columns: repeat(auto-fit, minmax(500px, 1fr)); gap: 30px; margin-top: 30px; }
-        .chart-card { background: white; border-radius: 20px; padding: 25px; box-shadow: 0 8px 20px rgba(0,0,0,0.1); }
-        .chart-title { font-size: 1.3em; font-weight: 600; color: #333; margin-bottom: 15px; text-align: center; }
-        .chart-canvas { width: 100%; height: 350px; max-height: 350px; }
-        .alert { padding: 20px; margin-bottom: 25px; border-radius: 15px; border-left: 5px solid; }
+        input { 
+            width: 100%; 
+            padding: 12px; 
+            border: 2px solid #e1e1e1; 
+            border-radius: 8px; 
+            font-size: 16px; 
+        }
+        .btn { 
+            background: linear-gradient(45deg, #667eea, #764ba2); 
+            color: white; 
+            padding: 15px 30px; 
+            border: none; 
+            border-radius: 8px; 
+            cursor: pointer; 
+            font-size: 16px; 
+            font-weight: 600; 
+            margin: 10px; 
+        }
+        .btn:hover { transform: translateY(-2px); }
+        .btn:disabled { background: #ccc; cursor: not-allowed; transform: none; }
+        .btn-test { background: linear-gradient(45deg, #17a2b8, #138496); }
+        .stats { 
+            display: grid; 
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); 
+            gap: 20px; 
+            margin: 20px 0; 
+        }
+        .stat-card { 
+            background: #f8f9fa; 
+            padding: 20px; 
+            border-radius: 10px; 
+            text-align: center; 
+        }
+        .stat-value { font-size: 2em; font-weight: bold; color: #667eea; }
+        .stat-label { color: #666; font-size: 0.9em; }
+        .downloads { 
+            display: grid; 
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); 
+            gap: 15px; 
+            margin: 20px 0; 
+        }
+        .download-btn { 
+            background: #28a745; 
+            color: white; 
+            padding: 15px; 
+            border-radius: 8px; 
+            text-decoration: none; 
+            text-align: center; 
+            font-weight: 600; 
+        }
+        .download-btn:hover { background: #218838; }
+        .charts { 
+            display: grid; 
+            grid-template-columns: repeat(auto-fit, minmax(500px, 1fr)); 
+            gap: 20px; 
+            margin: 20px 0; 
+        }
+        .chart-container { 
+            background: white; 
+            padding: 20px; 
+            border-radius: 10px; 
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1); 
+        }
+        .chart-title { 
+            font-size: 1.2em; 
+            font-weight: 600; 
+            margin-bottom: 15px; 
+            text-align: center; 
+        }
+        .chart-canvas { width: 100%; height: 300px; }
+        .hidden { display: none; }
+        .alert { 
+            padding: 15px; 
+            margin: 15px 0; 
+            border-radius: 8px; 
+            border-left: 4px solid; 
+        }
         .alert-success { background: #d4edda; color: #155724; border-color: #28a745; }
         .alert-error { background: #f8d7da; color: #721c24; border-color: #dc3545; }
-        .hidden { display: none; }
-        .loading { text-align: center; padding: 30px; }
-        .spinner { border: 4px solid #f3f3f3; border-top: 4px solid #667eea; border-radius: 50%; width: 60px; height: 60px; animation: spin 1s linear infinite; margin: 0 auto 20px; }
+        .loading { text-align: center; padding: 20px; }
+        .spinner { 
+            border: 4px solid #f3f3f3; 
+            border-top: 4px solid #667eea; 
+            border-radius: 50%; 
+            width: 40px; 
+            height: 40px; 
+            animation: spin 1s linear infinite; 
+            margin: 0 auto; 
+        }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
-        .correlation-summary { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-top: 20px; }
-        .correlation-item { background: white; padding: 15px; border-radius: 10px; border-left: 4px solid #667eea; }
-        .correlation-value { font-size: 1.3em; font-weight: bold; color: #667eea; }
+        .correlations { 
+            display: grid; 
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); 
+            gap: 15px; 
+            margin: 20px 0; 
+        }
+        .correlation-item { 
+            background: white; 
+            padding: 15px; 
+            border-radius: 8px; 
+            border-left: 4px solid #667eea; 
+            text-align: center; 
+        }
+        .correlation-value { font-size: 1.4em; font-weight: bold; color: #667eea; }
         .correlation-label { font-size: 0.9em; color: #666; }
     </style>
 </head>
 <body>
     <div class="header">
-        <h1>🧬 Generador Base de Datos Chlorella vulgaris</h1>
-        <p>Genera datasets científicos de alta calidad para investigación biotecnológica</p>
+        <h1>🧬 Generador Dataset Chlorella vulgaris</h1>
+        <p>Genera datasets científicos de alta calidad</p>
     </div>
     
     <div class="container">
         <!-- Configuración -->
         <div class="card">
-            <div class="card-header">
-                <span class="card-icon">⚙️</span>
-                <h2>Configuración de la Base de Datos</h2>
+            <h2>⚙️ Configuración</h2>
+            <div class="form-group">
+                <label for="scenarios">Número de escenarios:</label>
+                <input type="number" id="scenarios" value="25" min="5" max="100">
             </div>
-            
-            <div class="form-grid">
-                <div class="form-group">
-                    <label for="scenarios">Número de Escenarios:</label>
-                    <input type="number" id="scenarios" value="25" min="5" max="100">
-                    <small>Condiciones experimentales diferentes</small>
-                </div>
-                <div class="form-group">
-                    <label for="hours">Horas por Escenario:</label>
-                    <input type="number" id="hours" value="120" min="24" max="480">
-                    <small>Duración del experimento (120h = 5 días)</small>
-                </div>
+            <div class="form-group">
+                <label for="hours">Horas por escenario:</label>
+                <input type="number" id="hours" value="120" min="24" max="480">
             </div>
-            
-            <div style="text-align: center; margin-top: 20px;">
-                <button class="btn" onclick="generateDatabase()" id="generateBtn">
-                    🚀 Generar Base de Datos
-                </button>
-                <button class="btn btn-test" onclick="testServer()" id="testBtn">
-                    🔧 Test Servidor
-                </button>
-            </div>
-        </div>
-        
-        <!-- Progreso -->
-        <div id="progress" class="card hidden">
-            <div class="card-header">
-                <span class="card-icon">🔄</span>
-                <h2>Generando Base de Datos</h2>
-            </div>
-            <div class="progress">
-                <div id="progress-bar" class="progress-bar" style="width: 0%"></div>
-                <div class="progress-text" id="progress-text">Iniciando...</div>
-            </div>
-            <div class="loading">
-                <div class="spinner"></div>
-                <p id="stage-info">Preparando generación de datos...</p>
+            <div style="text-align: center;">
+                <button class="btn" onclick="generateDatabase()">🚀 Generar Dataset</button>
+                <button class="btn btn-test" onclick="testServer()">🔧 Test Servidor</button>
             </div>
         </div>
         
         <!-- Resultados -->
         <div id="results" class="card hidden">
-            <div class="card-header">
-                <span class="card-icon">✅</span>
-                <h2>Base de Datos Generada</h2>
-            </div>
-            
-            <div class="alert alert-success">
-                <strong>¡Éxito!</strong> Base de datos científica generada con validación automática de calidad.
-            </div>
-            
-            <div id="stats" class="stats-grid"></div>
-            <div id="downloads" class="download-grid"></div>
+            <h2>✅ Resultados</h2>
+            <div id="stats" class="stats"></div>
+            <div id="downloads" class="downloads"></div>
         </div>
         
-        <!-- Visualizaciones -->
+        <!-- Gráficas -->
         <div id="charts-section" class="card hidden">
-            <div class="card-header">
-                <span class="card-icon">📈</span>
-                <h2>Visualización de Datos</h2>
-            </div>
-            
-            <div class="alert alert-success">
-                <strong>Gráficas de Validación:</strong> Verifica la calidad y distribución de tus datos generados.
-            </div>
-            
-            <div class="charts-container">
-                <div class="chart-card">
-                    <div class="chart-title">📈 Evolución de Biomasa</div>
+            <h2>📊 Visualizaciones</h2>
+            <div class="charts">
+                <div class="chart-container">
+                    <div class="chart-title">Evolución de Biomasa</div>
                     <canvas id="biomassChart" class="chart-canvas"></canvas>
                 </div>
-                
-                <div class="chart-card">
-                    <div class="chart-title">🌡️ Condiciones Ambientales</div>
+                <div class="chart-container">
+                    <div class="chart-title">Condiciones Ambientales</div>
                     <canvas id="environmentChart" class="chart-canvas"></canvas>
                 </div>
-                
-                <div class="chart-card">
-                    <div class="chart-title">💡 Intensidad de Luz</div>
+                <div class="chart-container">
+                    <div class="chart-title">Intensidad de Luz</div>
                     <canvas id="lightChart" class="chart-canvas"></canvas>
                 </div>
-                
-                <div class="chart-card">
-                    <div class="chart-title">📊 Distribución de Biomasa</div>
+                <div class="chart-container">
+                    <div class="chart-title">Distribución de Biomasa</div>
                     <canvas id="distributionChart" class="chart-canvas"></canvas>
                 </div>
             </div>
             
-            <div class="card" style="margin-top: 30px;">
-                <h3>🔗 Análisis de Correlaciones</h3>
-                <div id="correlation-results" class="correlation-summary"></div>
+            <h3>🔗 Correlaciones</h3>
+            <div id="correlations" class="correlations"></div>
+        </div>
+        
+        <!-- Loading y mensajes -->
+        <div id="loading" class="card hidden">
+            <div class="loading">
+                <div class="spinner"></div>
+                <p>Generando dataset...</p>
             </div>
         </div>
+        
+        <div id="messages"></div>
     </div>
 
     <script>
+        // Variables globales
         let currentDataset = null;
         let charts = {};
         let serverData = null;
         
-        // Función para probar el servidor
+        // Función para mostrar mensajes
+        function showMessage(message, type = 'success') {
+            const messagesDiv = document.getElementById('messages');
+            const alertDiv = document.createElement('div');
+            alertDiv.className = `alert alert-${type}`;
+            alertDiv.innerHTML = message;
+            messagesDiv.appendChild(alertDiv);
+            
+            setTimeout(() => {
+                alertDiv.remove();
+            }, 5000);
+        }
+        
+        // Función para test del servidor
         async function testServer() {
-            const testBtn = document.getElementById('testBtn');
-            testBtn.disabled = true;
-            testBtn.textContent = 'Probando...';
+            console.log('🔧 Testing servidor...');
             
             try {
-                console.log('Probando servidor...');
                 const response = await fetch('/test');
-                
                 if (response.ok) {
                     const data = await response.json();
-                    alert('✅ Servidor funcionando correctamente!\n' + 
-                          'Mensaje: ' + data.message + '\n' +
-                          'Tiempo: ' + data.time);
-                    console.log('Test exitoso:', data);
+                    showMessage(`✅ Servidor OK: ${data.message}`, 'success');
+                    console.log('✅ Test exitoso:', data);
                 } else {
-                    alert('❌ Error en el servidor: ' + response.status);
+                    throw new Error(`HTTP ${response.status}`);
                 }
             } catch (error) {
-                alert('❌ Error conectando con el servidor: ' + error.message);
-                console.error('Error de conexión:', error);
-            } finally {
-                testBtn.disabled = false;
-                testBtn.textContent = '🔧 Test Servidor';
+                showMessage(`❌ Error del servidor: ${error.message}`, 'error');
+                console.error('❌ Error:', error);
             }
         }
         
-        // Función para generar base de datos
+        // Función principal para generar dataset
         async function generateDatabase() {
             const scenarios = parseInt(document.getElementById('scenarios').value);
             const hours = parseInt(document.getElementById('hours').value);
-            const generateBtn = document.getElementById('generateBtn');
             
-            console.log('Iniciando generación con:', scenarios, 'escenarios,', hours, 'horas');
+            console.log(`🚀 Generando ${scenarios} escenarios con ${hours} horas`);
             
-            // Mostrar progreso
-            document.getElementById('progress').classList.remove('hidden');
+            // Mostrar loading
+            document.getElementById('loading').classList.remove('hidden');
             document.getElementById('results').classList.add('hidden');
             document.getElementById('charts-section').classList.add('hidden');
-            generateBtn.disabled = true;
-            generateBtn.textContent = 'Generando...';
-            
-            const progressBar = document.getElementById('progress-bar');
-            const progressText = document.getElementById('progress-text');
-            const stageInfo = document.getElementById('stage-info');
-            
-            const stages = [
-                'Inicializando parámetros...',
-                'Generando escenarios...',
-                'Aplicando modelos cinéticos...',
-                'Calculando correlaciones...',
-                'Guardando archivos...'
-            ];
             
             try {
-                // Simular progreso
-                for (let i = 0; i < stages.length; i++) {
-                    stageInfo.textContent = stages[i];
-                    progressText.textContent = `Etapa ${i + 1} de ${stages.length}`;
-                    progressBar.style.width = `${(i + 1) / stages.length * 80}%`;
-                    await new Promise(resolve => setTimeout(resolve, 500));
-                }
-                
                 // Llamar al servidor
-                console.log('Enviando petición al servidor...');
+                console.log('📡 Llamando al servidor...');
                 const response = await fetch('/generate-dataset', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
@@ -244,80 +261,53 @@
                     })
                 });
                 
-                console.log('Respuesta del servidor:', response.status);
+                console.log('📡 Respuesta:', response.status);
                 
                 if (!response.ok) {
                     const errorText = await response.text();
-                    throw new Error(`Error del servidor: ${errorText}`);
+                    throw new Error(`Servidor: ${response.status} - ${errorText}`);
                 }
                 
                 const data = await response.json();
-                console.log('Datos recibidos:', data);
+                console.log('📊 Datos recibidos:', data);
                 
                 if (!data.success) {
                     throw new Error(data.error || 'Error desconocido');
                 }
                 
-                // Completar progreso
-                progressBar.style.width = '100%';
-                progressText.textContent = '¡Completado!';
-                stageInfo.textContent = 'Base de datos generada exitosamente';
-                
-                // Guardar datos del servidor
+                // Guardar datos
                 serverData = data;
                 
-                // Obtener muestra de datos
+                // Obtener muestra para gráficas
                 const folderName = data.outputDir.split('/').pop();
-                console.log('Obteniendo muestra de datos...');
+                console.log('📈 Obteniendo muestra...');
                 
                 try {
                     const sampleResponse = await fetch(`/sample-data/${folderName}`);
                     if (sampleResponse.ok) {
                         currentDataset = await sampleResponse.json();
-                        console.log('Muestra obtenida:', currentDataset.length, 'registros');
-                    } else {
-                        console.warn('No se pudo obtener muestra');
-                        currentDataset = [];
+                        console.log('📈 Muestra obtenida:', currentDataset.length, 'registros');
                     }
                 } catch (sampleError) {
-                    console.warn('Error obteniendo muestra:', sampleError);
-                    currentDataset = [];
+                    console.warn('⚠️ Error obteniendo muestra:', sampleError);
                 }
                 
                 // Mostrar resultados
                 displayResults();
+                createCharts();
+                calculateCorrelations();
                 
                 // Mostrar secciones
                 document.getElementById('results').classList.remove('hidden');
                 document.getElementById('charts-section').classList.remove('hidden');
                 
-                // Crear gráficas
-                if (currentDataset && currentDataset.length > 0) {
-                    createCharts();
-                    performCorrelationAnalysis();
-                }
-                
-                // Ocultar progreso después de 2 segundos
-                setTimeout(() => {
-                    document.getElementById('progress').classList.add('hidden');
-                }, 2000);
+                showMessage('✅ Dataset generado exitosamente', 'success');
                 
             } catch (error) {
-                console.error('Error completo:', error);
-                progressText.textContent = 'Error: ' + error.message;
-                progressBar.style.width = '0%';
-                progressBar.style.background = '#dc3545';
-                stageInfo.textContent = 'Error en la generación';
-                
-                // Mostrar error en pantalla
-                const errorDiv = document.createElement('div');
-                errorDiv.className = 'alert alert-error';
-                errorDiv.innerHTML = `<strong>Error:</strong> ${error.message}`;
-                document.getElementById('progress').appendChild(errorDiv);
-                
+                console.error('❌ Error:', error);
+                showMessage(`❌ Error: ${error.message}`, 'error');
             } finally {
-                generateBtn.disabled = false;
-                generateBtn.textContent = '🚀 Generar Base de Datos';
+                document.getElementById('loading').classList.add('hidden');
             }
         }
         
@@ -328,18 +318,14 @@
             const stats = serverData.stats;
             
             // Mostrar estadísticas
-            const statsHTML = `
+            document.getElementById('stats').innerHTML = `
                 <div class="stat-card">
                     <div class="stat-value">${stats.totalPoints.toLocaleString()}</div>
-                    <div class="stat-label">Total de Registros</div>
+                    <div class="stat-label">Total Registros</div>
                 </div>
                 <div class="stat-card">
                     <div class="stat-value">${stats.scenarios}</div>
                     <div class="stat-label">Escenarios</div>
-                </div>
-                <div class="stat-card">
-                    <div class="stat-value">${stats.duration}h</div>
-                    <div class="stat-label">Duración</div>
                 </div>
                 <div class="stat-card">
                     <div class="stat-value">${stats.trainingPoints.toLocaleString()}</div>
@@ -347,116 +333,78 @@
                 </div>
                 <div class="stat-card">
                     <div class="stat-value">${stats.biomassRange.max.toFixed(2)}</div>
-                    <div class="stat-label">Biomasa Máxima (g/L)</div>
-                </div>
-                <div class="stat-card">
-                    <div class="stat-value">${stats.qualityMetrics.completeness}%</div>
-                    <div class="stat-label">Completitud</div>
+                    <div class="stat-label">Biomasa Máx (g/L)</div>
                 </div>
             `;
-            
-            document.getElementById('stats').innerHTML = statsHTML;
             
             // Botones de descarga
             const folderName = serverData.outputDir.split('/').pop();
-            const downloadsHTML = `
-                <div class="download-card" onclick="downloadFile('${folderName}', 'complete_dataset.csv')">
-                    <div class="download-icon">📊</div>
-                    <div class="download-title">Dataset Completo</div>
-                    <div class="download-desc">Todos los datos generados</div>
-                </div>
-                <div class="download-card" onclick="downloadFile('${folderName}', 'training_data.csv')">
-                    <div class="download-icon">🎯</div>
-                    <div class="download-title">Datos de Entrenamiento</div>
-                    <div class="download-desc">70% de los datos</div>
-                </div>
-                <div class="download-card" onclick="downloadFile('${folderName}', 'validation_data.csv')">
-                    <div class="download-icon">🔍</div>
-                    <div class="download-title">Datos de Validación</div>
-                    <div class="download-desc">15% de los datos</div>
-                </div>
-                <div class="download-card" onclick="downloadFile('${folderName}', 'test_data.csv')">
-                    <div class="download-icon">🧪</div>
-                    <div class="download-title">Datos de Prueba</div>
-                    <div class="download-desc">15% de los datos</div>
-                </div>
+            document.getElementById('downloads').innerHTML = `
+                <a href="/download/${folderName}/complete_dataset.csv" class="download-btn" download>
+                    📊 Dataset Completo
+                </a>
+                <a href="/download/${folderName}/training_data.csv" class="download-btn" download>
+                    🎯 Entrenamiento
+                </a>
+                <a href="/download/${folderName}/validation_data.csv" class="download-btn" download>
+                    🔍 Validación
+                </a>
+                <a href="/download/${folderName}/test_data.csv" class="download-btn" download>
+                    🧪 Prueba
+                </a>
             `;
-            
-            document.getElementById('downloads').innerHTML = downloadsHTML;
-        }
-        
-        // Función para descargar archivos
-        function downloadFile(folder, filename) {
-            const link = document.createElement('a');
-            link.href = `/download/${folder}/${filename}`;
-            link.download = filename;
-            link.click();
         }
         
         // Función para crear gráficas
         function createCharts() {
             if (!currentDataset || currentDataset.length === 0) {
-                console.warn('No hay datos para crear gráficas');
+                console.warn('⚠️ No hay datos para gráficas');
                 return;
             }
             
-            console.log('Creando gráficas con', currentDataset.length, 'registros');
+            console.log('📊 Creando gráficas...');
             
-            createBiomassChart();
-            createEnvironmentChart();
-            createLightChart();
-            createDistributionChart();
-        }
-        
-        // Gráfica de biomasa
-        function createBiomassChart() {
-            const ctx = document.getElementById('biomassChart').getContext('2d');
-            
-            // Filtrar datos por escenario
+            // Gráfica de biomasa
+            const biomassCtx = document.getElementById('biomassChart').getContext('2d');
             const scenarios = [...new Set(currentDataset.map(d => d.Scenario))].slice(0, 5);
-            const datasets = scenarios.map(scenario => {
-                const data = currentDataset.filter(d => d.Scenario === scenario);
-                return {
-                    label: `Escenario ${scenario}`,
-                    data: data.map(d => ({ x: d.Time_h, y: d.Biomass_g_L })),
-                    borderColor: `hsl(${scenario * 60}, 70%, 50%)`,
-                    backgroundColor: `hsla(${scenario * 60}, 70%, 50%, 0.1)`,
-                    tension: 0.4
-                };
-            });
             
             if (charts.biomass) charts.biomass.destroy();
             
-            charts.biomass = new Chart(ctx, {
+            charts.biomass = new Chart(biomassCtx, {
                 type: 'line',
-                data: { datasets },
+                data: {
+                    datasets: scenarios.map(scenario => ({
+                        label: `Escenario ${scenario}`,
+                        data: currentDataset.filter(d => d.Scenario === scenario).map(d => ({
+                            x: d.Time_h,
+                            y: d.Biomass_g_L
+                        })),
+                        borderColor: `hsl(${scenario * 60}, 70%, 50%)`,
+                        tension: 0.4
+                    }))
+                },
                 options: {
                     responsive: true,
                     maintainAspectRatio: false,
-                    plugins: {
-                        legend: { display: true, position: 'top' }
-                    },
                     scales: {
-                        x: {
+                        x: { 
                             type: 'linear',
-                            title: { display: true, text: 'Tiempo (horas)' }
+                            title: { display: true, text: 'Tiempo (h)' }
                         },
-                        y: {
+                        y: { 
                             title: { display: true, text: 'Biomasa (g/L)' }
                         }
                     }
                 }
             });
-        }
-        
-        // Gráfica de condiciones ambientales
-        function createEnvironmentChart() {
-            const ctx = document.getElementById('environmentChart').getContext('2d');
+            
+            // Gráfica ambiental
+            const envCtx = document.getElementById('environmentChart').getContext('2d');
             const sampleData = currentDataset.slice(0, 200);
             
             if (charts.environment) charts.environment.destroy();
             
-            charts.environment = new Chart(ctx, {
+            charts.environment = new Chart(envCtx, {
                 type: 'line',
                 data: {
                     labels: sampleData.map(d => d.Time_h),
@@ -464,27 +412,20 @@
                         label: 'pH',
                         data: sampleData.map(d => d.pH),
                         borderColor: '#3b82f6',
-                        backgroundColor: 'rgba(59, 130, 246, 0.1)',
                         yAxisID: 'y'
                     }, {
                         label: 'Temperatura (°C)',
                         data: sampleData.map(d => d.Temperature_C),
                         borderColor: '#ef4444',
-                        backgroundColor: 'rgba(239, 68, 68, 0.1)',
                         yAxisID: 'y1'
                     }]
                 },
                 options: {
                     responsive: true,
                     maintainAspectRatio: false,
-                    plugins: {
-                        legend: { display: true, position: 'top' }
-                    },
                     scales: {
-                        x: {
-                            title: { display: true, text: 'Tiempo (horas)' }
-                        },
-                        y: {
+                        x: { title: { display: true, text: 'Tiempo (h)' } },
+                        y: { 
                             type: 'linear',
                             display: true,
                             position: 'left',
@@ -494,28 +435,26 @@
                             type: 'linear',
                             display: true,
                             position: 'right',
-                            title: { display: true, text: 'Temperatura (°C)' },
+                            title: { display: true, text: 'Temp (°C)' },
                             grid: { drawOnChartArea: false }
                         }
                     }
                 }
             });
-        }
-        
-        // Gráfica de luz
-        function createLightChart() {
-            const ctx = document.getElementById('lightChart').getContext('2d');
-            const sampleData = currentDataset.slice(0, 100);
+            
+            // Gráfica de luz
+            const lightCtx = document.getElementById('lightChart').getContext('2d');
+            const lightData = currentDataset.slice(0, 100);
             
             if (charts.light) charts.light.destroy();
             
-            charts.light = new Chart(ctx, {
+            charts.light = new Chart(lightCtx, {
                 type: 'line',
                 data: {
-                    labels: sampleData.map(d => d.Time_h),
+                    labels: lightData.map(d => d.Time_h),
                     datasets: [{
                         label: 'PAR (μmol/m²/s)',
-                        data: sampleData.map(d => d.PAR_umol_m2_s),
+                        data: lightData.map(d => d.PAR_umol_m2_s),
                         borderColor: '#f59e0b',
                         backgroundColor: 'rgba(245, 158, 11, 0.2)',
                         fill: true
@@ -524,57 +463,42 @@
                 options: {
                     responsive: true,
                     maintainAspectRatio: false,
-                    plugins: {
-                        legend: { display: true, position: 'top' }
-                    },
                     scales: {
-                        x: {
-                            title: { display: true, text: 'Tiempo (horas)' }
-                        },
-                        y: {
+                        x: { title: { display: true, text: 'Tiempo (h)' } },
+                        y: { 
                             beginAtZero: true,
                             title: { display: true, text: 'PAR (μmol/m²/s)' }
                         }
                     }
                 }
             });
-        }
-        
-        // Gráfica de distribución
-        function createDistributionChart() {
-            const ctx = document.getElementById('distributionChart').getContext('2d');
             
+            // Gráfica de distribución
+            const distCtx = document.getElementById('distributionChart').getContext('2d');
             const biomassValues = currentDataset.map(d => d.Biomass_g_L);
             const bins = [0, 0.5, 1, 1.5, 2, 2.5, 3, 3.5, 4];
-            const counts = bins.slice(0, -1).map((bin, i) => {
-                return biomassValues.filter(v => v >= bin && v < bins[i + 1]).length;
-            });
+            const counts = bins.slice(0, -1).map((bin, i) => 
+                biomassValues.filter(v => v >= bin && v < bins[i + 1]).length
+            );
             
             if (charts.distribution) charts.distribution.destroy();
             
-            charts.distribution = new Chart(ctx, {
+            charts.distribution = new Chart(distCtx, {
                 type: 'bar',
                 data: {
                     labels: bins.slice(0, -1).map((bin, i) => `${bin}-${bins[i + 1]}`),
                     datasets: [{
                         label: 'Frecuencia',
                         data: counts,
-                        backgroundColor: 'rgba(102, 126, 234, 0.8)',
-                        borderColor: '#667eea',
-                        borderWidth: 1
+                        backgroundColor: 'rgba(102, 126, 234, 0.8)'
                     }]
                 },
                 options: {
                     responsive: true,
                     maintainAspectRatio: false,
-                    plugins: {
-                        legend: { display: false }
-                    },
                     scales: {
-                        x: {
-                            title: { display: true, text: 'Biomasa (g/L)' }
-                        },
-                        y: {
+                        x: { title: { display: true, text: 'Biomasa (g/L)' } },
+                        y: { 
                             beginAtZero: true,
                             title: { display: true, text: 'Frecuencia' }
                         }
@@ -583,8 +507,8 @@
             });
         }
         
-        // Análisis de correlaciones
-        function performCorrelationAnalysis() {
+        // Función para calcular correlaciones
+        function calculateCorrelations() {
             if (!currentDataset || currentDataset.length === 0) return;
             
             const correlations = [
@@ -617,3 +541,45 @@
                     )
                 }
             ];
+            
+            document.getElementById('correlations').innerHTML = correlations.map(corr => `
+                <div class="correlation-item">
+                    <div class="correlation-value">${corr.value.toFixed(3)}</div>
+                    <div class="correlation-label">${corr.name}</div>
+                </div>
+            `).join('');
+        }
+        
+        // Función para calcular correlación de Pearson
+        function calculateCorrelation(x, y) {
+            const n = Math.min(x.length, y.length);
+            if (n < 2) return 0;
+            
+            const sumX = x.reduce((a, b) => a + b, 0);
+            const sumY = y.reduce((a, b) => a + b, 0);
+            const sumXY = x.reduce((sum, xi, i) => sum + xi * y[i], 0);
+            const sumX2 = x.reduce((sum, xi) => sum + xi * xi, 0);
+            const sumY2 = y.reduce((sum, yi) => sum + yi * yi, 0);
+            
+            const numerator = n * sumXY - sumX * sumY;
+            const denominator = Math.sqrt((n * sumX2 - sumX * sumX) * (n * sumY2 - sumY * sumY));
+            
+            return denominator === 0 ? 0 : numerator / denominator;
+        }
+        
+        // Inicialización
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('🎯 Aplicación cargada');
+            
+            // Test automático
+            setTimeout(testServer, 1000);
+        });
+        
+        // Captura de errores
+        window.addEventListener('error', function(e) {
+            console.error('🚨 Error JavaScript:', e.message);
+            showMessage(`🚨 Error: ${e.message}`, 'error');
+        });
+    </script>
+</body>
+</html>
