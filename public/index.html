@@ -629,7 +629,7 @@
             if (charts.light) charts.light.destroy();
             
             // Tomar datos de un escenario con ciclo día/noche para ver patrones
-            const cyclicScenario = currentDataset
+            let cyclicScenario = currentDataset
                 .filter(d => d.Light_Regime === 'cyclic')
                 .slice(0, 100);
             
@@ -641,7 +641,7 @@
             cyclicScenario.sort((a, b) => (a.Time_h || 0) - (b.Time_h || 0));
             
             charts.light = new Chart(ctx, {
-                type: 'area',
+                type: 'line',
                 data: {
                     labels: cyclicScenario.map(d => d.Time_h || 0),
                     datasets: [{
