@@ -90,22 +90,22 @@ function generateAdvancedData(scenarios, hours, variabilityLevel = 'medium') {
     for (let s = 1; s <= scenarios; s++) {
         console.log(`Generando escenario ${s}/${scenarios} con variabilidad ${variabilityLevel}`);
         
-        // Parámetros únicos por escenario BALANCEADOS
+        // Parámetros únicos por escenario BASADOS EN INVESTIGACIÓN CIENTÍFICA
         const scenarioParams = {
-            baseTemp: 24 + Math.random() * 8,         // 24-32°C (rango más estrecho)
-            basePh: 7.5 + Math.random() * 1.5,        // 7.5-9.0 (rango más estrecho)  
-            maxPAR: 100 + Math.random() * 200,        // 100-300 μmol/m²/s (rango balanceado)
-            initialBiomass: 0.05 + Math.random() * 0.15, // 0.05-0.20 (más uniforme)
-            nutrientLevel: 0.4 + Math.random() * 0.4,  // 0.4-0.8 (rango balanceado)
+            baseTemp: 22 + Math.random() * 13,        // 22-35°C (óptimo científico)
+            basePh: 7.0 + Math.random() * 2.5,        // 7.0-9.5 (óptimo pH 8-9)
+            maxPAR: 50 + Math.random() * 350,         // 50-400 μmol/m²/s (óptimo científico)
+            initialBiomass: 0.01 + Math.random() * 0.3,
+            nutrientLevel: 0.2 + Math.random() * 0.8,
             lightRegime: Math.random() > 0.4 ? 'continuous' : 'cyclic',
             stressCondition: Math.random() > (1 - config.stressProb) ? 
                             (Math.random() > 0.5 ? 'high_temp' : 'low_pH') : 'normal',
-            muMax: 0.10 + Math.random() * 0.08,       // 0.10-0.18 h⁻¹ (más balanceado)
-            Ks_light: 80 + Math.random() * 60,        // 80-140 μmol/m²/s
-            Ks_nutrient: 0.02 + Math.random() * 0.03, // 0.02-0.05 (más balanceado)
-            Ki_biomass: 1.2 + Math.random() * 1.6,    // 1.2-2.8 g/L (capacidades similares)
-            tempOptimal: 28 + Math.random() * 4,      // 28-32°C (rango más estrecho)
-            pHOptimal: 8.0 + Math.random() * 1.0,     // 8.0-9.0 (rango más estrecho)
+            muMax: 0.08 + Math.random() * 0.15,       // 0.08-0.23 h⁻¹ (más realista para correlaciones)
+            Ks_light: 60 + Math.random() * 80,        // 60-140 μmol/m²/s (más sensible)
+            Ks_nutrient: 0.005 + Math.random() * 0.04, // Más limitante
+            Ki_biomass: 0.8 + Math.random() * 2.2,    // 0.8-3.0 g/L (menor capacidad de carga)
+            tempOptimal: 28 + Math.random() * 7,      // 28-35°C
+            pHOptimal: 8.0 + Math.random() * 1.5,     // 8.0-9.5
             noiseLevel: config.noiseLevel
         };
         
@@ -181,61 +181,85 @@ function generateAdvancedData(scenarios, hours, variabilityLevel = 'medium') {
             
             // === MODELO CINÉTICO ULTRA-MEJORADO ===
             
-            // 1. Efecto de LUZ - MEJORADO para correlación positiva fuerte
+            // 1. Efecto de LUZ - CRÍTICO con relación directa a concentración celular
             let lightEffect;
             if (lightIntensity === 0) {
-                lightEffect = 0.02; // Mínimo en oscuridad
-            } else if (lightIntensity < 50) {
-                lightEffect = 0.1 + (lightIntensity / 50) * 0.3; // Gradual
+                lightEffect = 0.005; // Respiración mínima en oscuridad
+            } else if (lightIntensity < 30) {
+                lightEffect = (lightIntensity / 30) * 0.2; // Muy limitado
+            } else if (lightIntensity > 500) {
+                // Fotoinhibición gradual
+                lightEffect = 0.9 - Math.min(0.4, (lightIntensity - 500) / 1000);
             } else {
-                // Relación MÁS DIRECTA: PAR alto = crecimiento alto
-                lightEffect = Math.min(0.95, 0.4 + (lightIntensity / 300) * 0.55);
+                // Curva de saturación optimizada
+                lightEffect = (lightIntensity / (lightIntensity + scenarioParams.Ks_light)) * 
+                             (1 + 0.3 * Math.sin(lightIntensity / 100)); // Efecto no-lineal
             }
             
-            // 2. Efecto de TEMPERATURA - MÁS GRADUAL
-            const tempDiff = Math.abs(currentTemp - scenarioParams.tempOptimal);
+            // 2. Efecto de TEMPERATURA - MÁS PRONUNCIADO
             let tempEffect;
+            const tempDiff = Math.abs(currentTemp - scenarioParams.tempOptimal);
             
-            if (currentTemp < 20 || currentTemp > 35) {
-                tempEffect = 0.3; // Reducido pero no letal
+            if (currentTemp < 10 || currentTemp > 42) {
+                tempEffect = 0.01; // Letal
+            } else if (currentTemp < 18 || currentTemp > 38) {
+                tempEffect = 0.15; // Muy limitado
             } else {
-                // Curva MÁS SUAVE para menor dominancia
-                tempEffect = 0.5 + 0.5 * Math.exp(-Math.pow(tempDiff / 6, 2)); // Más gradual
+                // Curva de campana MÁS ESTRECHA para mayor sensibilidad
+                tempEffect = Math.exp(-Math.pow(tempDiff / 3.5, 2)); // Más sensible
+                
+                // Bonus por estar en rango óptimo
+                if (tempDiff < 2) {
+                    tempEffect *= 1.2; // 20% bonus en rango óptimo
+                }
             }
             
-            // 3. Efecto de pH - MÁS GRADUAL
-            const pHDiff = Math.abs(currentpH - scenarioParams.pHOptimal);
+            // 3. Efecto de pH - MÁS SENSIBLE
             let pHEffect;
+            const pHDiff = Math.abs(currentpH - scenarioParams.pHOptimal);
             
-            if (currentpH < 6.5 || currentpH > 9.5) {
-                pHEffect = 0.3; // Reducido pero no letal
+            if (currentpH < 6.0 || currentpH > 10.5) {
+                pHEffect = 0.01; // Letal
+            } else if (currentpH < 6.5 || currentpH > 10.0) {
+                pHEffect = 0.2; // Muy limitado
             } else {
-                // Curva MÁS SUAVE
-                pHEffect = 0.6 + 0.4 * Math.exp(-Math.pow(pHDiff / 1.5, 2)); // Más gradual
+                // Curva optimizada para pH alcalino con mayor sensibilidad
+                pHEffect = Math.exp(-Math.pow(pHDiff / 0.8, 2)); // Más sensible
+                
+                // Bonus por pH alcalino óptimo (8.5-9.5)
+                if (currentpH >= 8.5 && currentpH <= 9.5) {
+                    pHEffect *= 1.3; // 30% bonus en pH óptimo
+                }
             }
             
-            // 4. Efecto de NUTRIENTES - Más balanceado
-            const nutrientEffect = 0.4 + 0.6 * (nutrients / (nutrients + scenarioParams.Ks_nutrient));
+            // 4. Efecto de NUTRIENTES - Más limitante
+            const nutrientEffect = Math.pow(nutrients / (nutrients + scenarioParams.Ks_nutrient), 1.5);
             
-            // 5. Inhibición por DENSIDAD - Más gradual
-            const densityInhibition = 0.3 + 0.7 * Math.exp(-biomass / scenarioParams.Ki_biomass);
+            // 5. Inhibición por DENSIDAD - Más realista
+            const densityInhibition = Math.exp(-biomass / scenarioParams.Ki_biomass);
             
-            // 6. Efecto del OXÍGENO - Menos crítico
-            const oxygenEffect = 0.7 + 0.3 * Math.min(1.0, oxygenLevel / 8);
+            // 6. Efecto del OXÍGENO - Más crítico
+            const oxygenEffect = oxygenLevel > 2 ? 
+                Math.min(1.0, (oxygenLevel - 1) / 7) : 0.01;
             
-            // 7. Efecto del CO2 - Menos crítico
-            const co2Effect = 0.8 + 0.2 * Math.min(1.0, co2Level / 0.05);
+            // 7. Efecto del CO2 - Más importante para fotosíntesis
+            const co2Effect = lightIntensity > 0 ? 
+                Math.min(1.0, co2Level / 0.025) : 1.0;
             
-            // === COMBINAR EFECTOS DE FORMA BALANCEADA ===
+            // Combinar efectos de forma REALISTA
+            // La luz es ESENCIAL - sin luz no hay fotosíntesis
+            let combinedEffect = lightEffect * tempEffect * pHEffect * nutrientEffect;
             
-            // La luz es el factor PRINCIPAL pero no el único
-            let combinedEffect = lightEffect * tempEffect * pHEffect * nutrientEffect * densityInhibition;
+            // Solo agregar otros efectos si hay fotosíntesis activa
+            if (lightIntensity > 0) {
+                combinedEffect *= densityInhibition * oxygenEffect * co2Effect;
+            } else {
+                // En oscuridad, solo respiración (consumo)
+                combinedEffect = 0.005 * tempEffect; // Respiración mínima
+            }
             
-            // Otros efectos son moduladores, no limitantes absolutos
-            combinedEffect *= oxygenEffect * co2Effect;
-            
-            // Asegurar rango razonable
-            combinedEffect = Math.max(0.05, Math.min(1.0, combinedEffect));
+            // Asegurar efecto mínimo pero biológicamente relevante
+            combinedEffect = Math.max(0.001, Math.min(1.0, combinedEffect));
             
             // Tasa específica de crecimiento MÁS SENSIBLE A LUZ
             const mu = scenarioParams.muMax * combinedEffect;
@@ -252,19 +276,31 @@ function generateAdvancedData(scenarios, hours, variabilityLevel = 'medium') {
             const netGrowth = growthIncrement - mortalityRate;
             biomass = Math.max(0.001, Math.min(biomass + netGrowth, scenarioParams.Ki_biomass));
             
-            // === CONCENTRACIÓN CELULAR FUERTEMENTE CORRELACIONADA CON PAR ===
+            // === CONCENTRACIÓN CELULAR DIRECTAMENTE CORRELACIONADA CON PAR ===
             
-            // Base proporcional a biomasa
-            let baseCells = biomass * 2.0e6;
+            // Relación directa PAR -> células (basada en fotosíntesis)
+            let baseCellDensity = 1.5e6; // Densidad base
             
-            // Factor de PAR DIRECTO y fuerte
-            const parFactor = Math.min(2.0, 0.5 + (lightIntensity / 150)); // 0.5 a 2.5x
+            // Factor de luz DIRECTO para concentración celular
+            let lightCellFactor = 1.0;
+            if (lightIntensity > 50) {
+                // Relación directa: más luz = más células (hasta saturación)
+                lightCellFactor = 1.0 + Math.min(1.5, lightIntensity / 200);
+            } else {
+                // Sin luz suficiente, densidad reducida
+                lightCellFactor = 0.3 + (lightIntensity / 50) * 0.7;
+            }
             
-            // Factor de calidad (otras condiciones)
-            const qualityFactor = 0.7 + 0.3 * Math.sqrt(tempEffect * pHEffect);
+            // Factor de calidad celular basado en condiciones óptimas
+            const qualityFactor = Math.sqrt(tempEffect * pHEffect * nutrientEffect);
             
-            // Concentración final con correlación PAR fuerte
-            cellConcentration = baseCells * parFactor * qualityFactor;
+            // Concentración celular MEJORADA
+            const cellGrowthFactor = baseCellDensity * lightCellFactor * qualityFactor;
+            cellConcentration = biomass * cellGrowthFactor;
+            
+            // Asegurar correlación PAR-células más fuerte
+            const parBonus = Math.min(0.5, lightIntensity / 400);
+            cellConcentration *= (1 + parBonus);
             
             // Productividad
             const instantProductivity = netGrowth * 24;
