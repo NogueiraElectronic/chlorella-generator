@@ -177,7 +177,8 @@
         
         <!-- Gráficas -->
         <div id="charts-section" class="card hidden">
-            <h2>📊 Análisis de Datos</h2>
+            <h2>📊 Análisis Avanzado de Datos</h2>
+            
             <div id="charts" class="charts">
                 <div class="chart-container">
                     <div class="chart-title">📈 Evolución Completa de Biomasa por Escenario</div>
@@ -370,7 +371,7 @@
                 
                 // Crear gráficas si hay datos
                 if (currentDataset && Array.isArray(currentDataset) && currentDataset.length > 0) {
-                    createCharts();
+                    createAllCharts();
                     document.getElementById('charts-section').classList.remove('hidden');
                 } else {
                     showMessage('⚠️ Dataset generado pero no se pueden mostrar gráficas', 'info');
@@ -480,8 +481,8 @@
             `;
         }
         
-        // Función para crear gráficas
-        function createCharts() {
+        // Función principal para crear todas las gráficas
+        function createAllCharts() {
             if (!currentDataset || !Array.isArray(currentDataset) || currentDataset.length === 0) {
                 debugLog('⚠️ No hay datos válidos para gráficas');
                 showMessage('⚠️ No se pueden crear gráficas: datos no válidos', 'info');
@@ -493,7 +494,7 @@
             try {
                 // Esperar un poco para que el DOM esté listo
                 setTimeout(() => {
-                    // Nuevas gráficas mejoradas
+                    // Nuevas gráficas avanzadas
                     createBiomassCompleteChart();
                     createBiomassHoursChart();
                     createVariabilityChart();
@@ -508,7 +509,7 @@
                     analyzeDatasetQuality();
                     
                     debugLog('✅ Todas las gráficas y análisis creados exitosamente');
-                }, 100);
+                }, 200);
                 
             } catch (error) {
                 debugLog('❌ Error creando gráficas:', error);
@@ -516,7 +517,7 @@
             }
         }
         
-        // === NUEVAS FUNCIONES DE ANÁLISIS AVANZADO ===
+        // === FUNCIONES DE GRÁFICAS AVANZADAS ===
         
         function createBiomassCompleteChart() {
             const ctx = document.getElementById('biomassCompleteChart').getContext('2d');
@@ -533,7 +534,8 @@
                 type: 'line',
                 data: {
                     datasets: scenarios.map((scenario, index) => {
-                        const scenarioData = currentDataset.filter(d => d.Scenario === scenario);
+                        const scenarioData = currentDataset.filter(d => d.Scenario === scenario)
+                            .sort((a, b) => a.Time_h - b.Time_h);
                         return {
                             label: `Escenario ${scenario}`,
                             data: scenarioData.map(d => ({
@@ -578,8 +580,7 @@
             // Crear gráfica de dispersión para ver patrón temporal
             const allData = currentDataset.map(d => ({
                 x: d.Time_h || 0,
-                y: d.Biomass_g_L || 0,
-                scenario: d.Scenario
+                y: d.Biomass_g_L || 0
             }));
             
             charts.biomassHours = new Chart(ctx, {
@@ -588,11 +589,7 @@
                     datasets: [{
                         label: 'Biomasa por Hora',
                         data: allData,
-                        backgroundColor: (ctx) => {
-                            const scenario = ctx.parsed?.scenario || 1;
-                            const colors = ['#667eea40', '#f093fb40', '#4facfe40', '#43e97b40', '#fa709a40'];
-                            return colors[scenario % colors.length];
-                        },
+                        backgroundColor: 'rgba(102, 126, 234, 0.4)',
                         borderColor: '#667eea',
                         pointRadius: 2,
                         pointHoverRadius: 5
@@ -630,14 +627,15 @@
                 const hourData = currentDataset.filter(d => d.Time_h === hour);
                 const biomassValues = hourData.map(d => d.Biomass_g_L);
                 
+                if (biomassValues.length === 0) return null;
+                
                 return {
                     hour: hour,
                     mean: biomassValues.reduce((a, b) => a + b, 0) / biomassValues.length,
                     min: Math.min(...biomassValues),
-                    max: Math.max(...biomassValues),
-                    std: calculateStandardDeviation(biomassValues)
+                    max: Math.max(...biomassValues)
                 };
-            });
+            }).filter(s => s !== null);
             
             charts.variability = new Chart(ctx, {
                 type: 'line',
@@ -680,6 +678,145 @@
             });
         }
         
+        function createEnvironmentChart() {
+            const ctx = document.getElementById('environmentChart').getContext('2d');
+            
+            if (charts.environment) {
+                charts.environment.destroy();
+            }
+            
+            const data = currentDataset.slice(0, 100);
+            
+            charts.environment = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: data.map(d => d.Time_h || 0),
+                    datasets: [{
+                        label: 'pH',
+                        data: data.map(d => d.pH || 7),
+                        borderColor: '#3b82f6',
+                        yAxisID: 'y'
+                    }, {
+                        label: 'Temperatura (°C)',
+                        data: data.map(d => d.Temperature_C || 25),
+                        borderColor: '#ef4444',
+                        yAxisID: 'y1'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: true, position: 'top' }
+                    },
+                    scales: {
+                        x: { title: { display: true, text: 'Tiempo (h)' } },
+                        y: { 
+                            type: 'linear',
+                            display: true,
+                            position: 'left',
+                            title: { display: true, text: 'pH' },
+                            min: 6,
+                            max: 9
+                        },
+                        y1: {
+                            type: 'linear',
+                            display: true,
+                            position: 'right',
+                            title: { display: true, text: 'Temp (°C)' },
+                            grid: { drawOnChartArea: false },
+                            min: 15,
+                            max: 35
+                        }
+                    }
+                }
+            });
+        }
+        
+        function createPHChart() {
+            const ctx = document.getElementById('pHChart').getContext('2d');
+            
+            if (charts.pH) {
+                charts.pH.destroy();
+            }
+            
+            // Crear histograma de pH
+            const pHValues = currentDataset.map(d => d.pH || 7);
+            const bins = [6.0, 6.5, 7.0, 7.5, 8.0, 8.5, 9.0];
+            const counts = bins.slice(0, -1).map((bin, i) => 
+                pHValues.filter(v => v >= bin && v < bins[i + 1]).length
+            );
+            
+            charts.pH = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: bins.slice(0, -1).map((bin, i) => `${bin}-${bins[i + 1]}`),
+                    datasets: [{
+                        label: 'Frecuencia',
+                        data: counts,
+                        backgroundColor: 'rgba(102, 126, 234, 0.8)',
+                        borderColor: '#667eea',
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: true, position: 'top' }
+                    },
+                    scales: {
+                        x: { title: { display: true, text: 'Rango de pH' } },
+                        y: { 
+                            beginAtZero: true,
+                            title: { display: true, text: 'Frecuencia' }
+                        }
+                    }
+                }
+            });
+        }
+        
+        function createProductivityChart() {
+            const ctx = document.getElementById('productivityChart').getContext('2d');
+            
+            if (charts.productivity) {
+                charts.productivity.destroy();
+            }
+            
+            const data = currentDataset.slice(0, 150);
+            
+            charts.productivity = new Chart(ctx, {
+                type: 'scatter',
+                data: {
+                    datasets: [{
+                        label: 'Productividad vs Tiempo',
+                        data: data.map(d => ({
+                            x: d.Time_h || 0,
+                            y: d.Instantaneous_Productivity_g_L_d || 0
+                        })),
+                        backgroundColor: 'rgba(102, 126, 234, 0.6)',
+                        borderColor: '#667eea'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: true, position: 'top' }
+                    },
+                    scales: {
+                        x: { 
+                            title: { display: true, text: 'Tiempo (h)' }
+                        },
+                        y: { 
+                            title: { display: true, text: 'Productividad (g/L/día)' },
+                            beginAtZero: true
+                        }
+                    }
+                }
+            });
+        }
+        
         function createCorrelationMatrix() {
             const ctx = document.getElementById('correlationMatrixChart').getContext('2d');
             
@@ -702,7 +839,7 @@
                 variables.map(varY => calculateCorrelation(varX.data, varY.data))
             );
             
-            // Crear heatmap
+            // Crear datos para heatmap
             const data = [];
             for (let i = 0; i < variables.length; i++) {
                 for (let j = 0; j < variables.length; j++) {
@@ -720,8 +857,8 @@
                     datasets: [{
                         label: 'Correlación',
                         data: data,
-                        backgroundColor: (ctx) => {
-                            const value = ctx.parsed?.v || 0;
+                        backgroundColor: function(context) {
+                            const value = context.parsed?.v || 0;
                             const intensity = Math.abs(value);
                             if (value > 0) {
                                 return `rgba(102, 126, 234, ${intensity})`;
@@ -780,78 +917,87 @@
             });
         }
         
+        // === FUNCIONES DE ANÁLISIS ===
+        
         function analyzeDatasetQuality() {
-            // Análisis de calidad del dataset
-            const scenarios = [...new Set(currentDataset.map(d => d.Scenario))];
-            const timeRange = {
-                min: Math.min(...currentDataset.map(d => d.Time_h || 0)),
-                max: Math.max(...currentDataset.map(d => d.Time_h || 0))
-            };
-            
-            const biomassValues = currentDataset.map(d => d.Biomass_g_L || 0);
-            const biomassStats = {
-                min: Math.min(...biomassValues),
-                max: Math.max(...biomassValues),
-                mean: biomassValues.reduce((a, b) => a + b, 0) / biomassValues.length,
-                std: calculateStandardDeviation(biomassValues),
-                cv: calculateStandardDeviation(biomassValues) / (biomassValues.reduce((a, b) => a + b, 0) / biomassValues.length) * 100
-            };
-            
-            // Calcular variabilidad temporal
-            const temporalVariability = calculateTemporalVariability();
-            
-            // Calcular diversidad de condiciones
-            const conditionDiversity = calculateConditionDiversity();
-            
-            // Mostrar métricas de calidad
-            document.getElementById('quality-analysis').innerHTML = `
-                <div class="stat-card">
-                    <div class="stat-value">${scenarios.length}</div>
-                    <div class="stat-label">Escenarios Únicos</div>
-                </div>
-                <div class="stat-card">
-                    <div class="stat-value">${timeRange.max}</div>
-                    <div class="stat-label">Duración Máx (h)</div>
-                </div>
-                <div class="stat-card">
-                    <div class="stat-value">${biomassStats.cv.toFixed(1)}%</div>
-                    <div class="stat-label">Coef. Variación Biomasa</div>
-                </div>
-                <div class="stat-card">
-                    <div class="stat-value">${temporalVariability.toFixed(3)}</div>
-                    <div class="stat-label">Variabilidad Temporal</div>
-                </div>
-            `;
-            
-            // Mostrar métricas de variabilidad
-            const pHValues = currentDataset.map(d => d.pH || 7);
-            const tempValues = currentDataset.map(d => d.Temperature_C || 25);
-            const parValues = currentDataset.map(d => d.PAR_umol_m2_s || 0);
-            
-            document.getElementById('variability-metrics').innerHTML = `
-                <div class="stat-card">
-                    <div class="stat-value">${calculateStandardDeviation(pHValues).toFixed(3)}</div>
-                    <div class="stat-label">Desv. Est. pH</div>
-                </div>
-                <div class="stat-card">
-                    <div class="stat-value">${calculateStandardDeviation(tempValues).toFixed(2)}°C</div>
-                    <div class="stat-label">Desv. Est. Temperatura</div>
-                </div>
-                <div class="stat-card">
-                    <div class="stat-value">${calculateStandardDeviation(parValues).toFixed(1)}</div>
-                    <div class="stat-label">Desv. Est. PAR</div>
-                </div>
-                <div class="stat-card">
-                    <div class="stat-value">${conditionDiversity.toFixed(2)}</div>
-                    <div class="stat-label">Índice Diversidad</div>
-                </div>
-            `;
-            
-            // Generar recomendaciones
-            generateRecommendations(biomassStats, temporalVariability, conditionDiversity, scenarios.length);
+            try {
+                // Análisis de calidad del dataset
+                const scenarios = [...new Set(currentDataset.map(d => d.Scenario))];
+                const timeRange = {
+                    min: Math.min(...currentDataset.map(d => d.Time_h || 0)),
+                    max: Math.max(...currentDataset.map(d => d.Time_h || 0))
+                };
+                
+                const biomassValues = currentDataset.map(d => d.Biomass_g_L || 0);
+                const biomassStats = {
+                    min: Math.min(...biomassValues),
+                    max: Math.max(...biomassValues),
+                    mean: biomassValues.reduce((a, b) => a + b, 0) / biomassValues.length,
+                    std: calculateStandardDeviation(biomassValues),
+                    cv: calculateStandardDeviation(biomassValues) / (biomassValues.reduce((a, b) => a + b, 0) / biomassValues.length) * 100
+                };
+                
+                // Calcular variabilidad temporal
+                const temporalVariability = calculateTemporalVariability();
+                
+                // Calcular diversidad de condiciones
+                const conditionDiversity = calculateConditionDiversity();
+                
+                // Mostrar métricas de calidad
+                document.getElementById('quality-analysis').innerHTML = `
+                    <div class="stat-card">
+                        <div class="stat-value">${scenarios.length}</div>
+                        <div class="stat-label">Escenarios Únicos</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value">${timeRange.max}</div>
+                        <div class="stat-label">Duración Máx (h)</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value">${biomassStats.cv.toFixed(1)}%</div>
+                        <div class="stat-label">Coef. Variación Biomasa</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value">${temporalVariability.toFixed(3)}</div>
+                        <div class="stat-label">Variabilidad Temporal</div>
+                    </div>
+                `;
+                
+                // Mostrar métricas de variabilidad
+                const pHValues = currentDataset.map(d => d.pH || 7);
+                const tempValues = currentDataset.map(d => d.Temperature_C || 25);
+                const parValues = currentDataset.map(d => d.PAR_umol_m2_s || 0);
+                
+                document.getElementById('variability-metrics').innerHTML = `
+                    <div class="stat-card">
+                        <div class="stat-value">${calculateStandardDeviation(pHValues).toFixed(3)}</div>
+                        <div class="stat-label">Desv. Est. pH</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value">${calculateStandardDeviation(tempValues).toFixed(2)}°C</div>
+                        <div class="stat-label">Desv. Est. Temperatura</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value">${calculateStandardDeviation(parValues).toFixed(1)}</div>
+                        <div class="stat-label">Desv. Est. PAR</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value">${conditionDiversity.toFixed(2)}</div>
+                        <div class="stat-label">Índice Diversidad</div>
+                    </div>
+                `;
+                
+                // Generar recomendaciones
+                generateRecommendations(biomassStats, temporalVariability, conditionDiversity, scenarios.length);
+                
+            } catch (error) {
+                debugLog('❌ Error en análisis de calidad:', error);
+                showMessage('⚠️ Error analizando calidad del dataset', 'error');
+            }
         }
         
         function calculateStandardDeviation(values) {
+            if (values.length === 0) return 0;
             const mean = values.reduce((a, b) => a + b, 0) / values.length;
             const squaredDiffs = values.map(value => Math.pow(value - mean, 2));
             const avgSquaredDiff = squaredDiffs.reduce((a, b) => a + b, 0) / values.length;
@@ -859,25 +1005,33 @@
         }
         
         function calculateTemporalVariability() {
-            // Medir qué tan bien distribuidos están los datos en el tiempo
-            const timePoints = currentDataset.map(d => d.Time_h || 0);
-            const uniqueTimes = [...new Set(timePoints)];
-            const timeDistribution = uniqueTimes.map(time => 
-                timePoints.filter(t => t === time).length
-            );
-            return calculateStandardDeviation(timeDistribution) / (timeDistribution.reduce((a, b) => a + b, 0) / timeDistribution.length);
+            try {
+                // Medir qué tan bien distribuidos están los datos en el tiempo
+                const timePoints = currentDataset.map(d => d.Time_h || 0);
+                const uniqueTimes = [...new Set(timePoints)];
+                const timeDistribution = uniqueTimes.map(time => 
+                    timePoints.filter(t => t === time).length
+                );
+                return calculateStandardDeviation(timeDistribution) / (timeDistribution.reduce((a, b) => a + b, 0) / timeDistribution.length);
+            } catch (error) {
+                return 0;
+            }
         }
         
         function calculateConditionDiversity() {
-            // Índice de diversidad de condiciones experimentales
-            const stressConditions = currentDataset.map(d => d.Stress_Condition || 'normal');
-            const lightRegimes = currentDataset.map(d => d.Light_Regime || 'continuous');
-            
-            const stressUnique = [...new Set(stressConditions)].length;
-            const lightUnique = [...new Set(lightRegimes)].length;
-            
-            // Shannon diversity index simplificado
-            return Math.log(stressUnique) + Math.log(lightUnique);
+            try {
+                // Índice de diversidad de condiciones experimentales
+                const stressConditions = currentDataset.map(d => d.Stress_Condition || 'normal');
+                const lightRegimes = currentDataset.map(d => d.Light_Regime || 'continuous');
+                
+                const stressUnique = [...new Set(stressConditions)].length;
+                const lightUnique = [...new Set(lightRegimes)].length;
+                
+                // Shannon diversity index simplificado
+                return Math.log(stressUnique) + Math.log(lightUnique);
+            } catch (error) {
+                return 0;
+            }
         }
         
         function generateRecommendations(biomassStats, temporalVariability, conditionDiversity, numScenarios) {
@@ -904,8 +1058,8 @@
             recommendations.push("🤖 <strong>Para Machine Learning:</strong> Considerar normalización de variables y validación cruzada temporal");
             recommendations.push("📈 <strong>Variables clave:</strong> PAR, pH y temperatura muestran las mejores correlaciones con biomasa");
             
-            if (recommendations.length === 0) {
-                recommendations.push("✅ <strong>Dataset de alta calidad:</strong> Los datos muestran buena diversidad y distribución para entrenamiento");
+            if (recommendations.length === 6) {
+                recommendations.unshift("✅ <strong>Dataset de alta calidad:</strong> Los datos muestran buena diversidad y distribución para entrenamiento");
             }
             
             document.getElementById('recommendations').innerHTML = `
@@ -938,199 +1092,36 @@
             
             return Math.max(1, score);
         }
-            const ctx = document.getElementById('biomassChart').getContext('2d');
+        
+        // Función para calcular correlación de Pearson
+        function calculateCorrelation(x, y) {
+            const n = Math.min(x.length, y.length);
+            if (n < 2) return 0;
             
-            // Destruir gráfica anterior si existe
-            if (charts.biomass) {
-                charts.biomass.destroy();
+            // Filtrar valores válidos
+            const validPairs = [];
+            for (let i = 0; i < n; i++) {
+                if (!isNaN(x[i]) && !isNaN(y[i]) && isFinite(x[i]) && isFinite(y[i])) {
+                    validPairs.push([x[i], y[i]]);
+                }
             }
             
-            // Obtener datos de biomasa por tiempo (primeros 200 puntos)
-            const data = currentDataset.slice(0, 200);
+            if (validPairs.length < 2) return 0;
             
-            charts.biomass = new Chart(ctx, {
-                type: 'line',
-                data: {
-                    labels: data.map(d => d.Time_h || 0),
-                    datasets: [{
-                        label: 'Biomasa (g/L)',
-                        data: data.map(d => d.Biomass_g_L || 0),
-                        borderColor: '#667eea',
-                        backgroundColor: 'rgba(102, 126, 234, 0.1)',
-                        tension: 0.4,
-                        fill: true
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: {
-                        legend: {
-                            display: true,
-                            position: 'top'
-                        }
-                    },
-                    scales: {
-                        x: { 
-                            title: { display: true, text: 'Tiempo (h)' }
-                        },
-                        y: { 
-                            title: { display: true, text: 'Biomasa (g/L)' },
-                            beginAtZero: true
-                        }
-                    }
-                }
-            });
-        }
-        
-        // === FUNCIONES DE GRÁFICAS EXISTENTES (ACTUALIZADAS) ===
-        
-        function createEnvironmentChart() {
-            const ctx = document.getElementById('environmentChart').getContext('2d');
+            const validX = validPairs.map(p => p[0]);
+            const validY = validPairs.map(p => p[1]);
+            const len = validPairs.length;
             
-            if (charts.environment) {
-                charts.environment.destroy();
-            }
+            const sumX = validX.reduce((a, b) => a + b, 0);
+            const sumY = validY.reduce((a, b) => a + b, 0);
+            const sumXY = validPairs.reduce((sum, pair) => sum + pair[0] * pair[1], 0);
+            const sumX2 = validX.reduce((sum, xi) => sum + xi * xi, 0);
+            const sumY2 = validY.reduce((sum, yi) => sum + yi * yi, 0);
             
-            const data = currentDataset.slice(0, 100);
+            const numerator = len * sumXY - sumX * sumY;
+            const denominator = Math.sqrt((len * sumX2 - sumX * sumX) * (len * sumY2 - sumY * sumY));
             
-            charts.environment = new Chart(ctx, {
-                type: 'line',
-                data: {
-                    labels: data.map(d => d.Time_h || 0),
-                    datasets: [{
-                        label: 'pH',
-                        data: data.map(d => d.pH || 7),
-                        borderColor: '#3b82f6',
-                        yAxisID: 'y'
-                    }, {
-                        label: 'Temperatura (°C)',
-                        data: data.map(d => d.Temperature_C || 25),
-                        borderColor: '#ef4444',
-                        yAxisID: 'y1'
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: {
-                        legend: {
-                            display: true,
-                            position: 'top'
-                        }
-                    },
-                    scales: {
-                        x: { title: { display: true, text: 'Tiempo (h)' } },
-                        y: { 
-                            type: 'linear',
-                            display: true,
-                            position: 'left',
-                            title: { display: true, text: 'pH' },
-                            min: 6,
-                            max: 9
-                        },
-                        y1: {
-                            type: 'linear',
-                            display: true,
-                            position: 'right',
-                            title: { display: true, text: 'Temp (°C)' },
-                            grid: { drawOnChartArea: false },
-                            min: 15,
-                            max: 35
-                        }
-                    }
-                }
-            });
-        }
-        
-        function createPHChart() {
-            const ctx = document.getElementById('pHChart').getContext('2d');
-            
-            if (charts.pH) {
-                charts.pH.destroy();
-            }
-            
-            // Crear histograma de pH
-            const pHValues = currentDataset.map(d => d.pH || 7);
-            const bins = [6.0, 6.5, 7.0, 7.5, 8.0, 8.5, 9.0];
-            const counts = bins.slice(0, -1).map((bin, i) => 
-                pHValues.filter(v => v >= bin && v < bins[i + 1]).length
-            );
-            
-            charts.pH = new Chart(ctx, {
-                type: 'bar',
-                data: {
-                    labels: bins.slice(0, -1).map((bin, i) => `${bin}-${bins[i + 1]}`),
-                    datasets: [{
-                        label: 'Frecuencia',
-                        data: counts,
-                        backgroundColor: 'rgba(102, 126, 234, 0.8)',
-                        borderColor: '#667eea',
-                        borderWidth: 1
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: {
-                        legend: {
-                            display: true,
-                            position: 'top'
-                        }
-                    },
-                    scales: {
-                        x: { title: { display: true, text: 'Rango de pH' } },
-                        y: { 
-                            beginAtZero: true,
-                            title: { display: true, text: 'Frecuencia' }
-                        }
-                    }
-                }
-            });
-        }
-        
-        function createProductivityChart() {
-            const ctx = document.getElementById('productivityChart').getContext('2d');
-            
-            if (charts.productivity) {
-                charts.productivity.destroy();
-            }
-            
-            const data = currentDataset.slice(0, 150);
-            
-            charts.productivity = new Chart(ctx, {
-                type: 'scatter',
-                data: {
-                    datasets: [{
-                        label: 'Productividad vs Tiempo',
-                        data: data.map(d => ({
-                            x: d.Time_h || 0,
-                            y: d.Instantaneous_Productivity_g_L_d || 0
-                        })),
-                        backgroundColor: 'rgba(102, 126, 234, 0.6)',
-                        borderColor: '#667eea'
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: {
-                        legend: {
-                            display: true,
-                            position: 'top'
-                        }
-                    },
-                    scales: {
-                        x: { 
-                            title: { display: true, text: 'Tiempo (h)' }
-                        },
-                        y: { 
-                            title: { display: true, text: 'Productividad (g/L/día)' },
-                            beginAtZero: true
-                        }
-                    }
-                }
-            });
+            return denominator === 0 ? 0 : numerator / denominator;
         }
         
         // Inicialización cuando la página carga
@@ -1154,7 +1145,7 @@
         
         // Mensaje de confirmación de carga
         console.log('✅ JavaScript cargado correctamente');
-        console.log('🧬 Generador Chlorella listo');
+        console.log('🧬 Generador Chlorella listo para usar');
     </script>
 </body>
 </html>
