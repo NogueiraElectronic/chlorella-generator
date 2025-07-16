@@ -164,8 +164,19 @@
         
         <!-- Gráficas -->
         <div id="charts-section" class="card hidden">
-            <h2>📊 Visualizaciones</h2>
-            <div class="charts">
+            <h2>📊 Análisis Avanzado de Datos</h2>
+            
+            <!-- Pestañas de análisis -->
+            <div style="display: flex; gap: 10px; margin-bottom: 20px; flex-wrap: wrap;">
+                <button class="btn" onclick="showAnalysis('basic')" id="btn-basic">📈 Básico</button>
+                <button class="btn" onclick="showAnalysis('advanced')" id="btn-advanced">🔬 Avanzado</button>
+                <button class="btn" onclick="showAnalysis('correlations')" id="btn-correlations">🔗 Correlaciones</button>
+                <button class="btn" onclick="showAnalysis('composition')" id="btn-composition">🧪 Composición</button>
+                <button class="btn" onclick="showAnalysis('efficiency')" id="btn-efficiency">⚡ Eficiencias</button>
+            </div>
+            
+            <!-- Análisis Básico -->
+            <div id="analysis-basic" class="charts">
                 <div class="chart-container">
                     <div class="chart-title">Evolución de Biomasa</div>
                     <canvas id="biomassChart" class="chart-canvas"></canvas>
@@ -184,8 +195,81 @@
                 </div>
             </div>
             
-            <h3>🔗 Correlaciones</h3>
-            <div id="correlations" class="correlations"></div>
+            <!-- Análisis Avanzado -->
+            <div id="analysis-advanced" class="charts hidden">
+                <div class="chart-container">
+                    <div class="chart-title">Efectos en el Crecimiento</div>
+                    <canvas id="effectsChart" class="chart-canvas"></canvas>
+                </div>
+                <div class="chart-container">
+                    <div class="chart-title">Fases de Crecimiento</div>
+                    <canvas id="phasesChart" class="chart-canvas"></canvas>
+                </div>
+                <div class="chart-container">
+                    <div class="chart-title">Oxígeno y CO₂</div>
+                    <canvas id="gasesChart" class="chart-canvas"></canvas>
+                </div>
+                <div class="chart-container">
+                    <div class="chart-title">Indicadores de Estrés</div>
+                    <canvas id="stressChart" class="chart-canvas"></canvas>
+                </div>
+            </div>
+            
+            <!-- Análisis de Correlaciones -->
+            <div id="analysis-correlations" class="hidden">
+                <div class="charts">
+                    <div class="chart-container">
+                        <div class="chart-title">Correlaciones Principales</div>
+                        <canvas id="correlationChart" class="chart-canvas"></canvas>
+                    </div>
+                    <div class="chart-container">
+                        <div class="chart-title">Matriz de Correlaciones</div>
+                        <canvas id="matrixChart" class="chart-canvas"></canvas>
+                    </div>
+                </div>
+                <h3>🔗 Correlaciones Detalladas</h3>
+                <div id="correlations" class="correlations"></div>
+            </div>
+            
+            <!-- Análisis de Composición -->
+            <div id="analysis-composition" class="charts hidden">
+                <div class="chart-container">
+                    <div class="chart-title">Composición Bioquímica</div>
+                    <canvas id="compositionChart" class="chart-canvas"></canvas>
+                </div>
+                <div class="chart-container">
+                    <div class="chart-title">Evolución de Clorofila</div>
+                    <canvas id="chlorophyllChart" class="chart-canvas"></canvas>
+                </div>
+                <div class="chart-container">
+                    <div class="chart-title">Proteínas vs Lípidos</div>
+                    <canvas id="proteinLipidChart" class="chart-canvas"></canvas>
+                </div>
+                <div class="chart-container">
+                    <div class="chart-title">Calidad Nutricional</div>
+                    <canvas id="nutritionalChart" class="chart-canvas"></canvas>
+                </div>
+            </div>
+            
+            <!-- Análisis de Eficiencias -->
+            <div id="analysis-efficiency" class="charts hidden">
+                <div class="chart-container">
+                    <div class="chart-title">Eficiencia Fotosintética</div>
+                    <canvas id="photosyntheticChart" class="chart-canvas"></canvas>
+                </div>
+                <div class="chart-container">
+                    <div class="chart-title">Productividad Acumulada</div>
+                    <canvas id="productivityChart" class="chart-canvas"></canvas>
+                </div>
+                <div class="chart-container">
+                    <div class="chart-title">Uso de Nutrientes</div>
+                    <canvas id="nutrientUseChart" class="chart-canvas"></canvas>
+                </div>
+                <div class="chart-container">
+                    <div class="chart-title">Rendimiento por Condición</div>
+                    <canvas id="conditionYieldChart" class="chart-canvas"></canvas>
+                </div>
+            </div>
         </div>
         
         <!-- Loading y mensajes -->
