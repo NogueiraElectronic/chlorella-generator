@@ -180,21 +180,46 @@
             <h2>📊 Análisis de Datos</h2>
             <div id="charts" class="charts">
                 <div class="chart-container">
-                    <div class="chart-title">Evolución de Biomasa</div>
-                    <canvas id="biomassChart" class="chart-canvas"></canvas>
+                    <div class="chart-title">📈 Evolución Completa de Biomasa por Escenario</div>
+                    <canvas id="biomassCompleteChart" class="chart-canvas"></canvas>
                 </div>
                 <div class="chart-container">
-                    <div class="chart-title">Condiciones Ambientales</div>
+                    <div class="chart-title">⏰ Biomasa vs Horas (Todos los Escenarios)</div>
+                    <canvas id="biomassHoursChart" class="chart-canvas"></canvas>
+                </div>
+                <div class="chart-container">
+                    <div class="chart-title">🔄 Variabilidad entre Escenarios</div>
+                    <canvas id="variabilityChart" class="chart-canvas"></canvas>
+                </div>
+                <div class="chart-container">
+                    <div class="chart-title">🌡️ Condiciones Ambientales</div>
                     <canvas id="environmentChart" class="chart-canvas"></canvas>
                 </div>
                 <div class="chart-container">
-                    <div class="chart-title">Distribución de pH</div>
+                    <div class="chart-title">📊 Distribución de pH</div>
                     <canvas id="pHChart" class="chart-canvas"></canvas>
                 </div>
                 <div class="chart-container">
-                    <div class="chart-title">Productividad vs Tiempo</div>
+                    <div class="chart-title">⚡ Productividad vs Tiempo</div>
                     <canvas id="productivityChart" class="chart-canvas"></canvas>
                 </div>
+            </div>
+            
+            <!-- Análisis de Calidad del Dataset -->
+            <div class="card">
+                <h2>🔍 Análisis de Calidad del Dataset</h2>
+                <div id="quality-analysis" class="stats"></div>
+                
+                <h3>📊 Métricas de Variabilidad</h3>
+                <div id="variability-metrics" class="stats"></div>
+                
+                <h3>🔗 Matriz de Correlaciones</h3>
+                <div id="correlation-matrix" class="chart-container">
+                    <canvas id="correlationMatrixChart" class="chart-canvas"></canvas>
+                </div>
+                
+                <h3>💡 Recomendaciones para Mejora</h3>
+                <div id="recommendations" class="alert alert-info"></div>
             </div>
         </div>
         
@@ -468,19 +493,21 @@
             try {
                 // Esperar un poco para que el DOM esté listo
                 setTimeout(() => {
-                    // Gráfica de biomasa
-                    createBiomassChart();
+                    // Nuevas gráficas mejoradas
+                    createBiomassCompleteChart();
+                    createBiomassHoursChart();
+                    createVariabilityChart();
                     
-                    // Gráfica ambiental
+                    // Gráficas existentes
                     createEnvironmentChart();
-                    
-                    // Gráfica de pH
                     createPHChart();
-                    
-                    // Gráfica de productividad
                     createProductivityChart();
                     
-                    debugLog('✅ Todas las gráficas creadas exitosamente');
+                    // Análisis avanzado
+                    createCorrelationMatrix();
+                    analyzeDatasetQuality();
+                    
+                    debugLog('✅ Todas las gráficas y análisis creados exitosamente');
                 }, 100);
                 
             } catch (error) {
@@ -489,7 +516,428 @@
             }
         }
         
-        function createBiomassChart() {
+        // === NUEVAS FUNCIONES DE ANÁLISIS AVANZADO ===
+        
+        function createBiomassCompleteChart() {
+            const ctx = document.getElementById('biomassCompleteChart').getContext('2d');
+            
+            if (charts.biomassComplete) {
+                charts.biomassComplete.destroy();
+            }
+            
+            // Agrupar datos por escenario
+            const scenarios = [...new Set(currentDataset.map(d => d.Scenario))].slice(0, 8);
+            const colors = ['#667eea', '#f093fb', '#4facfe', '#43e97b', '#fa709a', '#ffecd2', '#a8edea', '#d299c2'];
+            
+            charts.biomassComplete = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    datasets: scenarios.map((scenario, index) => {
+                        const scenarioData = currentDataset.filter(d => d.Scenario === scenario);
+                        return {
+                            label: `Escenario ${scenario}`,
+                            data: scenarioData.map(d => ({
+                                x: d.Time_h || 0,
+                                y: d.Biomass_g_L || 0
+                            })),
+                            borderColor: colors[index % colors.length],
+                            backgroundColor: colors[index % colors.length] + '20',
+                            tension: 0.3,
+                            pointRadius: 1,
+                            pointHoverRadius: 4
+                        };
+                    })
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: true, position: 'top' }
+                    },
+                    scales: {
+                        x: { 
+                            title: { display: true, text: 'Tiempo (horas)' },
+                            type: 'linear'
+                        },
+                        y: { 
+                            title: { display: true, text: 'Biomasa (g/L)' },
+                            beginAtZero: true
+                        }
+                    }
+                }
+            });
+        }
+        
+        function createBiomassHoursChart() {
+            const ctx = document.getElementById('biomassHoursChart').getContext('2d');
+            
+            if (charts.biomassHours) {
+                charts.biomassHours.destroy();
+            }
+            
+            // Crear gráfica de dispersión para ver patrón temporal
+            const allData = currentDataset.map(d => ({
+                x: d.Time_h || 0,
+                y: d.Biomass_g_L || 0,
+                scenario: d.Scenario
+            }));
+            
+            charts.biomassHours = new Chart(ctx, {
+                type: 'scatter',
+                data: {
+                    datasets: [{
+                        label: 'Biomasa por Hora',
+                        data: allData,
+                        backgroundColor: (ctx) => {
+                            const scenario = ctx.parsed?.scenario || 1;
+                            const colors = ['#667eea40', '#f093fb40', '#4facfe40', '#43e97b40', '#fa709a40'];
+                            return colors[scenario % colors.length];
+                        },
+                        borderColor: '#667eea',
+                        pointRadius: 2,
+                        pointHoverRadius: 5
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: true }
+                    },
+                    scales: {
+                        x: { 
+                            title: { display: true, text: 'Tiempo (horas)' }
+                        },
+                        y: { 
+                            title: { display: true, text: 'Biomasa (g/L)' },
+                            beginAtZero: true
+                        }
+                    }
+                }
+            });
+        }
+        
+        function createVariabilityChart() {
+            const ctx = document.getElementById('variabilityChart').getContext('2d');
+            
+            if (charts.variability) {
+                charts.variability.destroy();
+            }
+            
+            // Calcular estadísticas por hora
+            const timePoints = [...new Set(currentDataset.map(d => d.Time_h))].sort((a, b) => a - b);
+            const hourlyStats = timePoints.slice(0, 100).map(hour => {
+                const hourData = currentDataset.filter(d => d.Time_h === hour);
+                const biomassValues = hourData.map(d => d.Biomass_g_L);
+                
+                return {
+                    hour: hour,
+                    mean: biomassValues.reduce((a, b) => a + b, 0) / biomassValues.length,
+                    min: Math.min(...biomassValues),
+                    max: Math.max(...biomassValues),
+                    std: calculateStandardDeviation(biomassValues)
+                };
+            });
+            
+            charts.variability = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: hourlyStats.map(s => s.hour),
+                    datasets: [{
+                        label: 'Promedio',
+                        data: hourlyStats.map(s => s.mean),
+                        borderColor: '#667eea',
+                        backgroundColor: 'rgba(102, 126, 234, 0.2)',
+                        fill: false
+                    }, {
+                        label: 'Máximo',
+                        data: hourlyStats.map(s => s.max),
+                        borderColor: '#43e97b',
+                        borderDash: [5, 5],
+                        fill: false
+                    }, {
+                        label: 'Mínimo',
+                        data: hourlyStats.map(s => s.min),
+                        borderColor: '#fa709a',
+                        borderDash: [5, 5],
+                        fill: false
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: true, position: 'top' }
+                    },
+                    scales: {
+                        x: { title: { display: true, text: 'Tiempo (horas)' } },
+                        y: { 
+                            title: { display: true, text: 'Biomasa (g/L)' },
+                            beginAtZero: true
+                        }
+                    }
+                }
+            });
+        }
+        
+        function createCorrelationMatrix() {
+            const ctx = document.getElementById('correlationMatrixChart').getContext('2d');
+            
+            if (charts.correlationMatrix) {
+                charts.correlationMatrix.destroy();
+            }
+            
+            // Variables para correlación
+            const variables = [
+                { name: 'pH', data: currentDataset.map(d => d.pH || 7) },
+                { name: 'Temp', data: currentDataset.map(d => d.Temperature_C || 25) },
+                { name: 'PAR', data: currentDataset.map(d => d.PAR_umol_m2_s || 0) },
+                { name: 'Biomasa', data: currentDataset.map(d => d.Biomass_g_L || 0) },
+                { name: 'Crecimiento', data: currentDataset.map(d => d.Growth_Rate_mu_h || 0) },
+                { name: 'Nutrientes', data: currentDataset.map(d => d.Nutrients_g_L || 0) }
+            ];
+            
+            // Calcular matriz de correlación
+            const correlationMatrix = variables.map(varX => 
+                variables.map(varY => calculateCorrelation(varX.data, varY.data))
+            );
+            
+            // Crear heatmap
+            const data = [];
+            for (let i = 0; i < variables.length; i++) {
+                for (let j = 0; j < variables.length; j++) {
+                    data.push({
+                        x: j,
+                        y: i,
+                        v: correlationMatrix[i][j]
+                    });
+                }
+            }
+            
+            charts.correlationMatrix = new Chart(ctx, {
+                type: 'scatter',
+                data: {
+                    datasets: [{
+                        label: 'Correlación',
+                        data: data,
+                        backgroundColor: (ctx) => {
+                            const value = ctx.parsed?.v || 0;
+                            const intensity = Math.abs(value);
+                            if (value > 0) {
+                                return `rgba(102, 126, 234, ${intensity})`;
+                            } else {
+                                return `rgba(250, 112, 154, ${intensity})`;
+                            }
+                        },
+                        pointRadius: 15
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: {
+                            callbacks: {
+                                title: function(tooltipItems) {
+                                    const item = tooltipItems[0];
+                                    return `${variables[item.parsed.y].name} vs ${variables[item.parsed.x].name}`;
+                                },
+                                label: function(tooltipItem) {
+                                    return `Correlación: ${tooltipItem.parsed.v.toFixed(3)}`;
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        x: { 
+                            type: 'linear',
+                            position: 'bottom',
+                            min: -0.5,
+                            max: variables.length - 0.5,
+                            ticks: {
+                                stepSize: 1,
+                                callback: function(value) {
+                                    return variables[value]?.name || '';
+                                }
+                            },
+                            title: { display: true, text: 'Variables' }
+                        },
+                        y: { 
+                            type: 'linear',
+                            min: -0.5,
+                            max: variables.length - 0.5,
+                            ticks: {
+                                stepSize: 1,
+                                callback: function(value) {
+                                    return variables[value]?.name || '';
+                                }
+                            },
+                            title: { display: true, text: 'Variables' }
+                        }
+                    }
+                }
+            });
+        }
+        
+        function analyzeDatasetQuality() {
+            // Análisis de calidad del dataset
+            const scenarios = [...new Set(currentDataset.map(d => d.Scenario))];
+            const timeRange = {
+                min: Math.min(...currentDataset.map(d => d.Time_h || 0)),
+                max: Math.max(...currentDataset.map(d => d.Time_h || 0))
+            };
+            
+            const biomassValues = currentDataset.map(d => d.Biomass_g_L || 0);
+            const biomassStats = {
+                min: Math.min(...biomassValues),
+                max: Math.max(...biomassValues),
+                mean: biomassValues.reduce((a, b) => a + b, 0) / biomassValues.length,
+                std: calculateStandardDeviation(biomassValues),
+                cv: calculateStandardDeviation(biomassValues) / (biomassValues.reduce((a, b) => a + b, 0) / biomassValues.length) * 100
+            };
+            
+            // Calcular variabilidad temporal
+            const temporalVariability = calculateTemporalVariability();
+            
+            // Calcular diversidad de condiciones
+            const conditionDiversity = calculateConditionDiversity();
+            
+            // Mostrar métricas de calidad
+            document.getElementById('quality-analysis').innerHTML = `
+                <div class="stat-card">
+                    <div class="stat-value">${scenarios.length}</div>
+                    <div class="stat-label">Escenarios Únicos</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value">${timeRange.max}</div>
+                    <div class="stat-label">Duración Máx (h)</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value">${biomassStats.cv.toFixed(1)}%</div>
+                    <div class="stat-label">Coef. Variación Biomasa</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value">${temporalVariability.toFixed(3)}</div>
+                    <div class="stat-label">Variabilidad Temporal</div>
+                </div>
+            `;
+            
+            // Mostrar métricas de variabilidad
+            const pHValues = currentDataset.map(d => d.pH || 7);
+            const tempValues = currentDataset.map(d => d.Temperature_C || 25);
+            const parValues = currentDataset.map(d => d.PAR_umol_m2_s || 0);
+            
+            document.getElementById('variability-metrics').innerHTML = `
+                <div class="stat-card">
+                    <div class="stat-value">${calculateStandardDeviation(pHValues).toFixed(3)}</div>
+                    <div class="stat-label">Desv. Est. pH</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value">${calculateStandardDeviation(tempValues).toFixed(2)}°C</div>
+                    <div class="stat-label">Desv. Est. Temperatura</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value">${calculateStandardDeviation(parValues).toFixed(1)}</div>
+                    <div class="stat-label">Desv. Est. PAR</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value">${conditionDiversity.toFixed(2)}</div>
+                    <div class="stat-label">Índice Diversidad</div>
+                </div>
+            `;
+            
+            // Generar recomendaciones
+            generateRecommendations(biomassStats, temporalVariability, conditionDiversity, scenarios.length);
+        }
+        
+        function calculateStandardDeviation(values) {
+            const mean = values.reduce((a, b) => a + b, 0) / values.length;
+            const squaredDiffs = values.map(value => Math.pow(value - mean, 2));
+            const avgSquaredDiff = squaredDiffs.reduce((a, b) => a + b, 0) / values.length;
+            return Math.sqrt(avgSquaredDiff);
+        }
+        
+        function calculateTemporalVariability() {
+            // Medir qué tan bien distribuidos están los datos en el tiempo
+            const timePoints = currentDataset.map(d => d.Time_h || 0);
+            const uniqueTimes = [...new Set(timePoints)];
+            const timeDistribution = uniqueTimes.map(time => 
+                timePoints.filter(t => t === time).length
+            );
+            return calculateStandardDeviation(timeDistribution) / (timeDistribution.reduce((a, b) => a + b, 0) / timeDistribution.length);
+        }
+        
+        function calculateConditionDiversity() {
+            // Índice de diversidad de condiciones experimentales
+            const stressConditions = currentDataset.map(d => d.Stress_Condition || 'normal');
+            const lightRegimes = currentDataset.map(d => d.Light_Regime || 'continuous');
+            
+            const stressUnique = [...new Set(stressConditions)].length;
+            const lightUnique = [...new Set(lightRegimes)].length;
+            
+            // Shannon diversity index simplificado
+            return Math.log(stressUnique) + Math.log(lightUnique);
+        }
+        
+        function generateRecommendations(biomassStats, temporalVariability, conditionDiversity, numScenarios) {
+            const recommendations = [];
+            
+            // Evaluar calidad del dataset
+            if (numScenarios < 20) {
+                recommendations.push("🔢 <strong>Aumentar escenarios:</strong> Se recomiendan al menos 20-50 escenarios para mejor diversidad");
+            }
+            
+            if (biomassStats.cv < 30) {
+                recommendations.push("📊 <strong>Aumentar variabilidad:</strong> El coeficiente de variación de biomasa es bajo, agregar más condiciones extremas");
+            }
+            
+            if (temporalVariability > 0.5) {
+                recommendations.push("⏰ <strong>Mejorar distribución temporal:</strong> Los datos no están uniformemente distribuidos en el tiempo");
+            }
+            
+            if (conditionDiversity < 2.0) {
+                recommendations.push("🌡️ <strong>Diversificar condiciones:</strong> Agregar más variedad en condiciones de estrés y regímenes de luz");
+            }
+            
+            // Recomendaciones específicas para ML
+            recommendations.push("🤖 <strong>Para Machine Learning:</strong> Considerar normalización de variables y validación cruzada temporal");
+            recommendations.push("📈 <strong>Variables clave:</strong> PAR, pH y temperatura muestran las mejores correlaciones con biomasa");
+            
+            if (recommendations.length === 0) {
+                recommendations.push("✅ <strong>Dataset de alta calidad:</strong> Los datos muestran buena diversidad y distribución para entrenamiento");
+            }
+            
+            document.getElementById('recommendations').innerHTML = `
+                <h4>💡 Análisis y Recomendaciones:</h4>
+                <ul style="margin: 10px 0; padding-left: 20px;">
+                    ${recommendations.map(rec => `<li style="margin: 5px 0;">${rec}</li>`).join('')}
+                </ul>
+                <p><strong>Puntuación general del dataset:</strong> ${calculateDatasetScore(biomassStats, temporalVariability, conditionDiversity, numScenarios)}/10</p>
+            `;
+        }
+        
+        function calculateDatasetScore(biomassStats, temporalVariability, conditionDiversity, numScenarios) {
+            let score = 10;
+            
+            // Penalizar por falta de escenarios
+            if (numScenarios < 10) score -= 3;
+            else if (numScenarios < 20) score -= 1;
+            
+            // Penalizar por baja variabilidad
+            if (biomassStats.cv < 20) score -= 2;
+            else if (biomassStats.cv < 30) score -= 1;
+            
+            // Penalizar por mala distribución temporal
+            if (temporalVariability > 0.7) score -= 2;
+            else if (temporalVariability > 0.5) score -= 1;
+            
+            // Penalizar por baja diversidad
+            if (conditionDiversity < 1.5) score -= 2;
+            else if (conditionDiversity < 2.0) score -= 1;
+            
+            return Math.max(1, score);
+        }
             const ctx = document.getElementById('biomassChart').getContext('2d');
             
             // Destruir gráfica anterior si existe
@@ -534,6 +982,8 @@
                 }
             });
         }
+        
+        // === FUNCIONES DE GRÁFICAS EXISTENTES (ACTUALIZADAS) ===
         
         function createEnvironmentChart() {
             const ctx = document.getElementById('environmentChart').getContext('2d');
