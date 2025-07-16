@@ -1,641 +1,941 @@
-// server.js - Versión corregida para Railway
-const express = require('express');
-const fs = require('fs');
-const path = require('path');
-
-const app = express();
-const PORT = process.env.PORT || 3000;
-
-// Middleware básico
-app.use(express.json({ limit: '50mb' }));
-app.use(express.static('public'));
-
-// Crear directorio para datasets
-const datasetsDir = path.join(__dirname, 'generated_datasets');
-if (!fs.existsSync(datasetsDir)) {
-    fs.mkdirSync(datasetsDir, { recursive: true });
-}
-
-// Función avanzada para generar datos con modelo cinético completo
-function generateAdvancedData(scenarios, hours, variabilityLevel = 'medium') {
-    const data = [];
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Generador Chlorella</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { 
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); 
+            min-height: 100vh; 
+        }
+        .container { max-width: 1200px; margin: 0 auto; padding: 20px; }
+        .header { color: white; padding: 40px 0; text-align: center; margin-bottom: 30px; }
+        .header h1 { font-size: 2.5em; margin-bottom: 10px; text-shadow: 2px 2px 4px rgba(0,0,0,0.3); }
+        .card { 
+            background: white; 
+            border-radius: 15px; 
+            padding: 30px; 
+            margin-bottom: 25px; 
+            box-shadow: 0 8px 20px rgba(0,0,0,0.1); 
+        }
+        .form-group { margin-bottom: 20px; }
+        label { display: block; margin-bottom: 8px; font-weight: 600; color: #333; }
+        input, select { 
+            width: 100%; 
+            padding: 12px; 
+            border: 2px solid #e1e1e1; 
+            border-radius: 8px; 
+            font-size: 16px; 
+        }
+        .btn { 
+            background: linear-gradient(45deg, #667eea, #764ba2); 
+            color: white; 
+            padding: 15px 30px; 
+            border: none; 
+            border-radius: 8px; 
+            cursor: pointer; 
+            font-size: 16px; 
+            font-weight: 600; 
+            margin: 10px; 
+            transition: transform 0.2s;
+        }
+        .btn:hover { transform: translateY(-2px); }
+        .btn:disabled { background: #ccc; cursor: not-allowed; transform: none; }
+        .btn-test { background: linear-gradient(45deg, #17a2b8, #138496); }
+        .stats { 
+            display: grid; 
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); 
+            gap: 20px; 
+            margin: 20px 0; 
+        }
+        .stat-card { 
+            background: #f8f9fa; 
+            padding: 20px; 
+            border-radius: 10px; 
+            text-align: center; 
+        }
+        .stat-value { font-size: 2em; font-weight: bold; color: #667eea; }
+        .stat-label { color: #666; font-size: 0.9em; }
+        .downloads { 
+            display: grid; 
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); 
+            gap: 15px; 
+            margin: 20px 0; 
+        }
+        .download-btn { 
+            background: #28a745; 
+            color: white; 
+            padding: 15px; 
+            border-radius: 8px; 
+            text-decoration: none; 
+            text-align: center; 
+            font-weight: 600; 
+            transition: background 0.2s;
+        }
+        .download-btn:hover { background: #218838; }
+        .charts { 
+            display: grid; 
+            grid-template-columns: repeat(auto-fit, minmax(500px, 1fr)); 
+            gap: 20px; 
+            margin: 20px 0; 
+        }
+        .chart-container { 
+            background: white; 
+            padding: 20px; 
+            border-radius: 10px; 
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+            height: 400px;
+            position: relative;
+        }
+        .chart-title { 
+            font-size: 1.2em; 
+            font-weight: 600; 
+            margin-bottom: 15px; 
+            text-align: center; 
+        }
+        .chart-canvas { 
+            width: 100% !important; 
+            height: 320px !important;
+            max-height: 320px !important;
+        }
+        .hidden { display: none; }
+        .alert { 
+            padding: 15px; 
+            margin: 15px 0; 
+            border-radius: 8px; 
+            border-left: 4px solid; 
+        }
+        .alert-success { background: #d4edda; color: #155724; border-color: #28a745; }
+        .alert-error { background: #f8d7da; color: #721c24; border-color: #dc3545; }
+        .alert-info { background: #d1ecf1; color: #0c5460; border-color: #17a2b8; }
+        .loading { text-align: center; padding: 20px; }
+        .spinner { 
+            border: 4px solid #f3f3f3; 
+            border-top: 4px solid #667eea; 
+            border-radius: 50%; 
+            width: 40px; 
+            height: 40px; 
+            animation: spin 1s linear infinite; 
+            margin: 0 auto 20px; 
+        }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        .debug { 
+            background: #f8f9fa; 
+            padding: 10px; 
+            border-radius: 5px; 
+            font-family: monospace; 
+            font-size: 12px; 
+            margin: 10px 0; 
+            max-height: 200px; 
+            overflow-y: auto; 
+            white-space: pre-wrap;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>🧬 Generador Dataset Chlorella vulgaris</h1>
+        <p>Genera datasets científicos de alta calidad con variabilidad configurable</p>
+    </div>
     
-    // Configurar multiplicadores de variabilidad
-    const variabilityConfig = {
-        low: { tempRange: 3, pHRange: 0.6, stressProb: 0.1, noiseLevel: 0.01 },
-        medium: { tempRange: 10, pHRange: 1.2, stressProb: 0.2, noiseLevel: 0.03 },
-        high: { tempRange: 15, pHRange: 1.8, stressProb: 0.4, noiseLevel: 0.05 },
-        extreme: { tempRange: 20, pHRange: 2.5, stressProb: 0.6, noiseLevel: 0.08 }
-    };
-    
-    const config = variabilityConfig[variabilityLevel] || variabilityConfig.medium;
-    
-    for (let s = 1; s <= scenarios; s++) {
-        console.log(`Generando escenario ${s}/${scenarios} con variabilidad ${variabilityLevel}`);
+    <div class="container">
+        <!-- Configuración -->
+        <div class="card">
+            <h2>⚙️ Configuración</h2>
+            <div class="form-group">
+                <label for="scenarios">Número de escenarios:</label>
+                <input type="number" id="scenarios" value="10" min="1" max="100">
+                <small>Recomendado: 10-50 para datasets robustos</small>
+            </div>
+            <div class="form-group">
+                <label for="hours">Horas por escenario:</label>
+                <input type="number" id="hours" value="72" min="24" max="480">
+                <small>Recomendado: 72-168 horas para ciclos completos</small>
+            </div>
+            <div class="form-group">
+                <label for="variability">Nivel de variabilidad:</label>
+                <select id="variability">
+                    <option value="low">Baja - Condiciones controladas</option>
+                    <option value="medium" selected>Media - Variaciones realistas</option>
+                    <option value="high">Alta - Condiciones extremas</option>
+                    <option value="extreme">Extrema - Máxima diversidad</option>
+                </select>
+                <small>Selecciona qué tanta variabilidad quieres en las condiciones</small>
+            </div>
+            <div style="text-align: center;">
+                <button class="btn" onclick="generateDatabase()" id="generateBtn">🚀 Generar Dataset</button>
+                <button class="btn btn-test" onclick="testServer()">🔧 Test Servidor</button>
+            </div>
+        </div>
         
-        // Parámetros únicos por escenario BASADOS EN INVESTIGACIÓN CIENTÍFICA
-        const scenarioParams = {
-            baseTemp: 22 + Math.random() * 13,        // 22-35°C (óptimo científico)
-            basePh: 7.0 + Math.random() * 2.5,        // 7.0-9.5 (óptimo pH 8-9)
-            maxPAR: 50 + Math.random() * 350,         // 50-400 μmol/m²/s (óptimo científico)
-            initialBiomass: 0.01 + Math.random() * 0.3,
-            nutrientLevel: 0.2 + Math.random() * 0.8,
-            lightRegime: Math.random() > 0.4 ? 'continuous' : 'cyclic',
-            stressCondition: Math.random() > (1 - config.stressProb) ? 
-                            (Math.random() > 0.5 ? 'high_temp' : 'low_pH') : 'normal',
-            muMax: 0.08 + Math.random() * 0.15,       // 0.08-0.23 h⁻¹ (más realista para correlaciones)
-            Ks_light: 60 + Math.random() * 80,        // 60-140 μmol/m²/s (más sensible)
-            Ks_nutrient: 0.005 + Math.random() * 0.04, // Más limitante
-            Ki_biomass: 0.8 + Math.random() * 2.2,    // 0.8-3.0 g/L (menor capacidad de carga)
-            tempOptimal: 28 + Math.random() * 7,      // 28-35°C
-            pHOptimal: 8.0 + Math.random() * 1.5,     // 8.0-9.5
-            noiseLevel: config.noiseLevel
-        };
+        <!-- Debug info -->
+        <div id="debug" class="card hidden">
+            <h3>🔍 Debug Info</h3>
+            <div id="debugContent" class="debug"></div>
+        </div>
         
-        // Variables del estado del cultivo
-        let biomass = scenarioParams.initialBiomass;
-        let cellConcentration = biomass * (1.5e6 + Math.random() * 1e6);
-        let currentpH = scenarioParams.basePh;
-        let currentTemp = scenarioParams.baseTemp;
-        let nutrients = scenarioParams.nutrientLevel;
-        let oxygenLevel = 6.0 + Math.random() * 4.0;
-        let co2Level = 0.02 + Math.random() * 0.06;
+        <!-- Resultados -->
+        <div id="results" class="card hidden">
+            <h2>✅ Resultados</h2>
+            <div id="stats" class="stats"></div>
+            <div id="downloads" class="downloads"></div>
+        </div>
         
-        // Variables derivadas
-        let totalProductivity = 0;
-        let cumulativeBiomass = biomass;
-        
-        for (let h = 0; h < hours; h++) {
-            // === CONDICIONES AMBIENTALES ===
+        <!-- Gráficas -->
+        <div id="charts-section" class="card hidden">
+            <h2>📊 Análisis Avanzado de Datos</h2>
             
-            // Ciclo de luz avanzado con variaciones realistas
-            let lightIntensity;
-            if (scenarioParams.lightRegime === 'continuous') {
-                lightIntensity = scenarioParams.maxPAR * (0.95 + 0.1 * Math.random());
-            } else {
-                const hourOfDay = h % 24;
-                if (hourOfDay >= 6 && hourOfDay <= 18) {
-                    const lightFactor = Math.sin((hourOfDay - 6) * Math.PI / 12);
-                    lightIntensity = scenarioParams.maxPAR * lightFactor * (0.85 + 0.3 * Math.random());
+            <div id="charts" class="charts">
+                <div class="chart-container">
+                    <div class="chart-title">📈 Evolución de Biomasa por Escenario</div>
+                    <canvas id="biomassChart" class="chart-canvas"></canvas>
+                </div>
+                <div class="chart-container">
+                    <div class="chart-title">🔬 Concentración Celular</div>
+                    <canvas id="cellChart" class="chart-canvas"></canvas>
+                </div>
+                <div class="chart-container">
+                    <div class="chart-title">🌡️ Condiciones Ambientales</div>
+                    <canvas id="environmentChart" class="chart-canvas"></canvas>
+                </div>
+                <div class="chart-container">
+                    <div class="chart-title">💡 Intensidad de Luz (PAR)</div>
+                    <canvas id="lightChart" class="chart-canvas"></canvas>
+                </div>
+                <div class="chart-container">
+                    <div class="chart-title">📊 Distribución de pH</div>
+                    <canvas id="pHChart" class="chart-canvas"></canvas>
+                </div>
+                <div class="chart-container">
+                    <div class="chart-title">⚡ Productividad vs Tiempo</div>
+                    <canvas id="productivityChart" class="chart-canvas"></canvas>
+                </div>
+            </div>
+            
+            <!-- Análisis de Calidad -->
+            <div class="card">
+                <h2>🔍 Análisis de Calidad del Dataset</h2>
+                <div id="quality-analysis" class="stats"></div>
+                
+                <h3>🔗 Correlaciones Principales</h3>
+                <div id="correlations" class="stats"></div>
+                
+                <h3>💡 Recomendaciones</h3>
+                <div id="recommendations" class="alert alert-info"></div>
+            </div>
+        </div>
+        
+        <!-- Loading -->
+        <div id="loading" class="card hidden">
+            <div class="loading">
+                <div class="spinner"></div>
+                <p id="loadingText">Generando dataset...</p>
+            </div>
+        </div>
+        
+        <!-- Mensajes -->
+        <div id="messages"></div>
+    </div>
+
+    <script>
+        // Variables globales
+        let currentDataset = null;
+        let charts = {};
+        let serverData = null;
+        let debugMode = true;
+        
+        // Función para debug
+        function debugLog(message, data = null) {
+            if (debugMode) {
+                console.log(message, data);
+                const debugContent = document.getElementById('debugContent');
+                if (debugContent) {
+                    const timestamp = new Date().toLocaleTimeString();
+                    debugContent.innerHTML += `[${timestamp}] ${message}\n`;
+                    if (data) {
+                        debugContent.innerHTML += `   Data: ${JSON.stringify(data, null, 2)}\n`;
+                    }
+                    debugContent.scrollTop = debugContent.scrollHeight;
+                    document.getElementById('debug').classList.remove('hidden');
+                }
+            }
+        }
+        
+        // Función para mostrar mensajes
+        function showMessage(message, type = 'success') {
+            const messagesDiv = document.getElementById('messages');
+            const alertDiv = document.createElement('div');
+            alertDiv.className = `alert alert-${type}`;
+            alertDiv.innerHTML = message;
+            messagesDiv.appendChild(alertDiv);
+            
+            setTimeout(() => {
+                if (alertDiv.parentNode) {
+                    alertDiv.remove();
+                }
+            }, 5000);
+        }
+        
+        // Test del servidor
+        async function testServer() {
+            debugLog('🔧 Testing servidor...');
+            
+            try {
+                showMessage('🔧 Probando conexión...', 'info');
+                
+                const response = await fetch('/test');
+                debugLog('Respuesta:', { status: response.status, ok: response.ok });
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    showMessage(`✅ Servidor OK: ${data.message}`, 'success');
+                    debugLog('✅ Test exitoso:', data);
                 } else {
-                    lightIntensity = 0;
+                    throw new Error(`HTTP ${response.status}`);
                 }
+            } catch (error) {
+                showMessage(`❌ Error: ${error.message}`, 'error');
+                debugLog('❌ Error:', error);
             }
-            
-            // Variaciones de temperatura graduales
-            let tempVariation = 0;
-            if (scenarioParams.stressCondition === 'high_temp') {
-                const stressFactor = Math.sin(h * 0.02);
-                tempVariation = 5 + stressFactor * 8 + Math.random() * 2;
-            } else {
-                tempVariation = Math.sin(h * 0.01) * 2 + (Math.random() - 0.5) * 1;
-            }
-            
-            const circadianTemp = 1.0 * Math.sin((h % 24) * Math.PI / 12);
-            currentTemp = Math.max(15, Math.min(40, 
-                scenarioParams.baseTemp + tempVariation + circadianTemp));
-            
-            // Variaciones de pH graduales
-            let pHDrift = 0;
-            if (scenarioParams.stressCondition === 'low_pH') {
-                pHDrift = -0.5 + Math.sin(h * 0.015) * 0.3 + Math.random() * 0.1;
-            } else {
-                pHDrift = Math.sin(h * 0.008) * 0.15 + (Math.random() - 0.5) * 0.05;
-            }
-            
-            const biomassPHEffect = (biomass - scenarioParams.initialBiomass) * 0.05;
-            currentpH = Math.max(6.0, Math.min(9.0, 
-                scenarioParams.basePh + pHDrift + biomassPHEffect));
-            
-            // Depleción gradual de nutrientes
-            const nutrientUptake = (nutrients / (nutrients + 0.05)) * biomass * 0.008;
-            nutrients = Math.max(0.05, nutrients - nutrientUptake);
-            
-            // Oxígeno con cambios graduales
-            const oxygenProduction = lightIntensity > 0 ? biomass * 0.3 : 0;
-            const oxygenConsumption = biomass * 0.08;
-            const oxygenChange = (oxygenProduction - oxygenConsumption) * 0.002;
-            oxygenLevel = Math.max(2, Math.min(12, oxygenLevel + oxygenChange));
-            
-            // CO2 con variación gradual
-            const co2Consumption = lightIntensity > 0 ? biomass * 0.0008 : 0;
-            co2Level = Math.max(0.01, Math.min(0.1, 
-                co2Level - co2Consumption + 0.0005 + (Math.random() - 0.5) * 0.0002));
-            
-            // === MODELO CINÉTICO ULTRA-MEJORADO ===
-            
-            // 1. Efecto de LUZ - CRÍTICO con relación directa a concentración celular
-            let lightEffect;
-            if (lightIntensity === 0) {
-                lightEffect = 0.005; // Respiración mínima en oscuridad
-            } else if (lightIntensity < 30) {
-                lightEffect = (lightIntensity / 30) * 0.2; // Muy limitado
-            } else if (lightIntensity > 500) {
-                // Fotoinhibición graduales
-                lightEffect = 0.9 - Math.min(0.4, (lightIntensity - 500) / 1000);
-            } else {
-                // Curva de saturación optimizada
-                lightEffect = (lightIntensity / (lightIntensity + scenarioParams.Ks_light)) * 
-                             (1 + 0.3 * Math.sin(lightIntensity / 100)); // Efecto no-lineal
-            }
-            
-            // 2. Efecto de TEMPERATURA - MÁS PRONUNCIADO
-            let tempEffect;
-            const tempDiff = Math.abs(currentTemp - scenarioParams.tempOptimal);
-            
-            if (currentTemp < 10 || currentTemp > 42) {
-                tempEffect = 0.01; // Letal
-            } else if (currentTemp < 18 || currentTemp > 38) {
-                tempEffect = 0.15; // Muy limitado
-            } else {
-                // Curva de campana MÁS ESTRECHA para mayor sensibilidad
-                tempEffect = Math.exp(-Math.pow(tempDiff / 3.5, 2)); // Más sensible
-                
-                // Bonus por estar en rango óptimo
-                if (tempDiff < 2) {
-                    tempEffect *= 1.2; // 20% bonus en rango óptimo
-                }
-            }
-            
-            // 3. Efecto de pH - MÁS SENSIBLE
-            let pHEffect;
-            const pHDiff = Math.abs(currentpH - scenarioParams.pHOptimal);
-            
-            if (currentpH < 6.0 || currentpH > 10.5) {
-                pHEffect = 0.01; // Letal
-            } else if (currentpH < 6.5 || currentpH > 10.0) {
-                pHEffect = 0.2; // Muy limitado
-            } else {
-                // Curva optimizada para pH alcalino con mayor sensibilidad
-                pHEffect = Math.exp(-Math.pow(pHDiff / 0.8, 2)); // Más sensible
-                
-                // Bonus por pH alcalino óptimo (8.5-9.5)
-                if (currentpH >= 8.5 && currentpH <= 9.5) {
-                    pHEffect *= 1.3; // 30% bonus en pH óptimo
-                }
-            }
-            
-            // 4. Efecto de NUTRIENTES
-            const nutrientEffect = Math.pow(nutrients / (nutrients + scenarioParams.Ks_nutrient), 1.5);
-            
-            // 5. Inhibición por DENSIDAD
-            const densityInhibition = Math.exp(-biomass / scenarioParams.Ki_biomass);
-            
-            // 6. Efecto del OXÍGENO
-            const oxygenEffect = oxygenLevel > 2 ? 
-                Math.min(1.0, (oxygenLevel - 1) / 7) : 0.01;
-            
-            // 7. Efecto del CO2
-            const co2Effect = lightIntensity > 0 ? 
-                Math.min(1.0, co2Level / 0.025) : 1.0;
-            
-            // Combinar efectos de forma REALISTA
-            // La luz es ESENCIAL - sin luz no hay fotosíntesis
-            let combinedEffect = lightEffect * tempEffect * pHEffect * nutrientEffect;
-            
-            // Solo agregar otros efectos si hay fotosíntesis activa
-            if (lightIntensity > 0) {
-                combinedEffect *= densityInhibition * oxygenEffect * co2Effect;
-            } else {
-                // En oscuridad, solo respiración (consumo)
-                combinedEffect = 0.005 * tempEffect; // Respiración mínima
-            }
-            
-            // Asegurar efecto mínimo pero biológicamente relevante
-            combinedEffect = Math.max(0.001, Math.min(1.0, combinedEffect));
-            
-            // Tasa específica de crecimiento MÁS SENSIBLE A LUZ
-            const mu = scenarioParams.muMax * combinedEffect;
-            
-            // Aplicar ruido biológico REDUCIDO para correlaciones más claras
-            const biologicalNoise = (Math.random() - 0.5) * (scenarioParams.noiseLevel * 0.3);
-            const actualGrowthRate = Math.max(0.001, mu + biologicalNoise);
-            
-            // === CONCENTRACIÓN CELULAR DIRECTAMENTE CORRELACIONADA CON PAR ===
-            
-            // Relación directa PAR -> células (basada en fotosíntesis)
-            let baseCellDensity = 1.5e6; // Densidad base
-            
-            // Factor de luz DIRECTO para concentración celular
-            let lightCellFactor = 1.0;
-            if (lightIntensity > 50) {
-                // Relación directa: más luz = más células (hasta saturación)
-                lightCellFactor = 1.0 + Math.min(1.5, lightIntensity / 200);
-            } else {
-                // Sin luz suficiente, densidad reducida
-                lightCellFactor = 0.3 + (lightIntensity / 50) * 0.7;
-            }
-            
-            // Factor de calidad celular basado en condiciones óptimas
-            const qualityFactor = Math.sqrt(tempEffect * pHEffect * nutrientEffect);
-            
-            // === CRECIMIENTO CON CORRELACIONES OPTIMIZADAS ===
-            
-            const growthIncrement = actualGrowthRate * biomass * 2.0; // Más acelerado
-            const mortalityRate = 0.0005 * biomass; // Mortalidad mínima
-            
-            const netGrowth = growthIncrement - mortalityRate;
-            biomass = Math.max(0.001, Math.min(biomass + netGrowth, scenarioParams.Ki_biomass));
-            
-            // Productividad
-            const instantProductivity = netGrowth * 24;
-            totalProductivity += Math.max(0, instantProductivity);
-            cumulativeBiomass += biomass;
-            
-            // === VARIABLES DERIVADAS ===
-            
-            const opticalDensity = biomass * (2.0 + 0.3 * Math.random());
-            
-            const photosyntheticEfficiency = lightIntensity > 0 && actualGrowthRate > 0 ? 
-                (actualGrowthRate * biomass) / (lightIntensity / 1000) : 0;
-            
-            const lightStressLevel = lightIntensity < scenarioParams.maxPAR * 0.3 ? 0.7 : 1.0;
-            const chlorophyllContent = biomass * (12 + 8 * lightStressLevel + 3 * Math.random());
-            
-            const proteinContent = Math.max(20, Math.min(60, 
-                30 + 25 * nutrientEffect + 10 * tempEffect + 5 * Math.random()));
-            
-            const stressFactor = 1 - Math.min(tempEffect, pHEffect, nutrientEffect);
-            const lipidContent = Math.max(5, Math.min(40, 
-                15 + 20 * stressFactor + 5 * Math.random()));
-            
-            const specificLightUptake = lightIntensity > 0 && biomass > 0 ? 
-                lightIntensity / biomass : 0;
-            
-            const cultureAge = h;
-            
-            // Fase de crecimiento
-            let growthPhase = 'lag';
-            if (actualGrowthRate > scenarioParams.muMax * 0.7) {
-                growthPhase = 'exponential';
-            } else if (actualGrowthRate > scenarioParams.muMax * 0.3) {
-                growthPhase = 'linear';
-            } else if (actualGrowthRate > scenarioParams.muMax * 0.1) {
-                growthPhase = 'stationary';
-            } else {
-                growthPhase = 'decline';
-            }
-            
-            // Indicadores de estrés
-            const thermalStress = tempEffect < 0.7 ? 1 : 0;
-            const pHStress = pHEffect < 0.7 ? 1 : 0;
-            const nutrientStress = nutrients < 0.3 ? 1 : 0;
-            const lightStressIndicator = lightIntensity < scenarioParams.maxPAR * 0.2 ? 1 : 0;
-            
-            // === CREAR PUNTO DE DATOS ===
-            const dataPoint = {
-                // Identificadores
-                Scenario: s,
-                Time_h: h,
-                DateTime: new Date(Date.now() + h * 3600000).toISOString(),
-                Culture_Age_h: cultureAge,
-                Growth_Phase: growthPhase,
-                
-                // Variables ambientales
-                pH: parseFloat(currentpH.toFixed(3)),
-                Temperature_C: parseFloat(currentTemp.toFixed(2)),
-                PAR_umol_m2_s: parseFloat(lightIntensity.toFixed(1)),
-                Dissolved_O2_mg_L: parseFloat(oxygenLevel.toFixed(2)),
-                CO2_percent: parseFloat(co2Level.toFixed(4)),
-                
-                // Cinética de crecimiento
-                Growth_Rate_mu_h: parseFloat(actualGrowthRate.toFixed(5)),
-                Specific_Growth_Rate: parseFloat((actualGrowthRate * 24).toFixed(4)),
-                
-                // Biomasa y células
-                Biomass_g_L: parseFloat(biomass.toFixed(4)),
-                Cell_Concentration_cells_mL: parseFloat(cellConcentration.toFixed(0)),
-                Optical_Density_680nm: parseFloat(opticalDensity.toFixed(3)),
-                
-                // Nutrientes y metabolismo
-                Nutrients_g_L: parseFloat(nutrients.toFixed(4)),
-                Nutrient_Uptake_Rate: parseFloat(nutrientUptake.toFixed(5)),
-                
-                // Productividad
-                Instantaneous_Productivity_g_L_d: parseFloat(instantProductivity.toFixed(4)),
-                Cumulative_Productivity: parseFloat(totalProductivity.toFixed(3)),
-                Average_Productivity: parseFloat((totalProductivity / (h + 1)).toFixed(4)),
-                
-                // Eficiencias
-                Photosynthetic_Efficiency: parseFloat(photosyntheticEfficiency.toFixed(6)),
-                Light_Use_Efficiency: parseFloat((actualGrowthRate / Math.max(0.001, lightIntensity / 1000)).toFixed(5)),
-                Specific_Light_Uptake: parseFloat(specificLightUptake.toFixed(2)),
-                
-                // Composición bioquímica
-                Chlorophyll_ug_mL: parseFloat(chlorophyllContent.toFixed(2)),
-                Protein_Content_percent: parseFloat(proteinContent.toFixed(1)),
-                Lipid_Content_percent: parseFloat(lipidContent.toFixed(1)),
-                Carbohydrate_Content_percent: parseFloat((100 - proteinContent - lipidContent).toFixed(1)),
-                
-                // Indicadores de estrés
-                Thermal_Stress: thermalStress,
-                pH_Stress: pHStress,
-                Nutrient_Stress: nutrientStress,
-                Light_Stress: lightStressIndicator,
-                Overall_Stress_Score: thermalStress + pHStress + nutrientStress + lightStressIndicator,
-                
-                // Condiciones experimentales
-                Light_Regime: scenarioParams.lightRegime,
-                Stress_Condition: scenarioParams.stressCondition,
-                
-                // Parámetros del modelo
-                Temp_Optimal_C: parseFloat(scenarioParams.tempOptimal.toFixed(1)),
-                pH_Optimal: parseFloat(scenarioParams.pHOptimal.toFixed(2)),
-                mu_Max_h: parseFloat(scenarioParams.muMax.toFixed(4)),
-                
-                // Efectos individuales
-                Light_Effect: parseFloat(lightEffect.toFixed(4)),
-                Temperature_Effect: parseFloat(tempEffect.toFixed(4)),
-                pH_Effect: parseFloat(pHEffect.toFixed(4)),
-                Nutrient_Effect: parseFloat(nutrientEffect.toFixed(4)),
-                Density_Effect: parseFloat(densityInhibition.toFixed(4)),
-                
-                // Calidad de datos
-                Data_Quality_Score: parseFloat((1 - Math.abs(biologicalNoise)).toFixed(3)),
-                Biological_Noise_Level: parseFloat(Math.abs(biologicalNoise).toFixed(4))
-            };
-            
-            data.push(dataPoint);
-        }
-    }
-    
-    return data;
-}
-
-// Convertir a CSV
-function toCSV(data) {
-    if (!data.length) return '';
-    
-    const headers = Object.keys(data[0]);
-    const rows = [headers.join(',')];
-    
-    data.forEach(row => {
-        rows.push(headers.map(h => row[h]).join(','));
-    });
-    
-    return rows.join('\n');
-}
-
-// Health check endpoint
-app.get('/health', (req, res) => {
-    res.status(200).json({ 
-        status: 'OK', 
-        message: 'Chlorella Generator Running',
-        timestamp: new Date().toISOString(),
-        port: PORT
-    });
-});
-
-// Test endpoint
-app.get('/test', (req, res) => {
-    res.json({ 
-        message: 'Servidor Chlorella OK', 
-        time: new Date().toISOString(),
-        environment: process.env.NODE_ENV || 'development'
-    });
-});
-
-// Endpoint principal para generar dataset
-app.post('/generate-dataset', (req, res) => {
-    try {
-        const { scenarios = 25, hoursPerScenario = 120, variabilityLevel = 'medium' } = req.body;
-        
-        // Validar parámetros
-        if (scenarios < 1 || scenarios > 100) {
-            return res.status(400).json({ 
-                success: false, 
-                error: 'Escenarios debe estar entre 1 y 100' 
-            });
         }
         
-        if (hoursPerScenario < 24 || hoursPerScenario > 480) {
-            return res.status(400).json({ 
-                success: false, 
-                error: 'Horas debe estar entre 24 y 480' 
-            });
-        }
-        
-        const validVariability = ['low', 'medium', 'high', 'extreme'];
-        if (!validVariability.includes(variabilityLevel)) {
-            return res.status(400).json({ 
-                success: false, 
-                error: 'Nivel de variabilidad debe ser: low, medium, high, o extreme' 
-            });
-        }
-        
-        console.log(`🚀 Generando ${scenarios} escenarios con ${hoursPerScenario} horas, variabilidad: ${variabilityLevel}`);
-        
-        const data = generateAdvancedData(scenarios, hoursPerScenario, variabilityLevel);
-        
-        // Dividir datos
-        const shuffled = data.sort(() => Math.random() - 0.5);
-        const trainSize = Math.floor(shuffled.length * 0.7);
-        const validSize = Math.floor(shuffled.length * 0.15);
-        
-        const train = shuffled.slice(0, trainSize);
-        const valid = shuffled.slice(trainSize, trainSize + validSize);
-        const test = shuffled.slice(trainSize + validSize);
-        
-        // Crear directorio con timestamp
-        const timestamp = Date.now();
-        const folder = path.join(datasetsDir, timestamp.toString());
-        fs.mkdirSync(folder, { recursive: true });
-        
-        // Guardar archivos CSV
-        try {
-            fs.writeFileSync(path.join(folder, 'complete_dataset.csv'), toCSV(data));
-            fs.writeFileSync(path.join(folder, 'training_data.csv'), toCSV(train));
-            fs.writeFileSync(path.join(folder, 'validation_data.csv'), toCSV(valid));
-            fs.writeFileSync(path.join(folder, 'test_data.csv'), toCSV(test));
-        } catch (writeError) {
-            console.error('Error escribiendo archivos:', writeError);
-            return res.status(500).json({ 
-                success: false, 
-                error: 'Error guardando archivos CSV' 
-            });
-        }
-        
-        // Estadísticas del dataset
-        const stats = {
-            totalPoints: data.length,
-            trainingPoints: train.length,
-            validationPoints: valid.length,
-            testPoints: test.length,
-            scenarios: scenarios,
-            duration: hoursPerScenario,
-            biomassRange: {
-                min: Math.min(...data.map(d => d.Biomass_g_L)),
-                max: Math.max(...data.map(d => d.Biomass_g_L)),
-                mean: data.reduce((s, d) => s + d.Biomass_g_L, 0) / data.length
-            },
-            stressDistribution: {
-                thermal: data.filter(d => d.Thermal_Stress === 1).length,
-                ph: data.filter(d => d.pH_Stress === 1).length,
-                nutrient: data.filter(d => d.Nutrient_Stress === 1).length,
-                normal: data.filter(d => d.Overall_Stress_Score === 0).length
-            },
-            qualityMetrics: {
-                completeness: 100,
-                dataQuality: 'industrial-grade',
-                temporalResolution: 'hourly',
-                biologicalAccuracy: 'high'
-            },
-            outputDir: folder
-        };
-        
-        console.log('✅ Dataset generado exitosamente');
-        res.json({ 
-            success: true, 
-            stats, 
-            outputDir: folder,
-            message: 'Dataset generado correctamente'
-        });
-        
-    } catch (error) {
-        console.error('❌ Error generando dataset:', error);
-        res.status(500).json({ 
-            success: false, 
-            error: error.message || 'Error interno del servidor'
-        });
-    }
-});
-
-// Endpoint para obtener muestra de datos
-app.get('/sample-data/:folder', (req, res) => {
-    try {
-        const filePath = path.join(datasetsDir, req.params.folder, 'complete_dataset.csv');
-        
-        if (!fs.existsSync(filePath)) {
-            return res.status(404).json({ 
-                error: 'Dataset no encontrado',
-                folder: req.params.folder
-            });
-        }
-        
-        const csv = fs.readFileSync(filePath, 'utf8');
-        const lines = csv.split('\n').filter(line => line.trim());
-        const headers = lines[0].split(',');
-        
-        // Tomar muestra de los primeros 1000 registros
-        const sampleSize = Math.min(1000, lines.length - 1);
-        const data = [];
-        
-        for (let i = 1; i <= sampleSize; i++) {
-            if (lines[i] && lines[i].trim()) {
-                const values = lines[i].split(',');
-                const row = {};
-                headers.forEach((header, idx) => {
-                    const value = values[idx];
-                    row[header] = isNaN(value) ? value : parseFloat(value);
+        // Función principal
+        async function generateDatabase() {
+            const scenarios = parseInt(document.getElementById('scenarios').value);
+            const hours = parseInt(document.getElementById('hours').value);
+            const variability = document.getElementById('variability').value;
+            
+            // Validaciones
+            if (scenarios < 1 || scenarios > 100) {
+                showMessage('❌ Escenarios entre 1 y 100', 'error');
+                return;
+            }
+            
+            if (hours < 24 || hours > 480) {
+                showMessage('❌ Horas entre 24 y 480', 'error');
+                return;
+            }
+            
+            debugLog(`🚀 Generando ${scenarios} escenarios, ${hours}h, variabilidad: ${variability}`);
+            
+            // UI
+            const generateBtn = document.getElementById('generateBtn');
+            generateBtn.disabled = true;
+            document.getElementById('loading').classList.remove('hidden');
+            document.getElementById('results').classList.add('hidden');
+            document.getElementById('charts-section').classList.add('hidden');
+            
+            try {
+                debugLog('📡 Llamando servidor...');
+                document.getElementById('loadingText').textContent = 'Enviando solicitud...';
+                
+                const response = await fetch('/generate-dataset', {
+                    method: 'POST',
+                    headers: { 
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        scenarios: scenarios,
+                        hoursPerScenario: hours,
+                        variabilityLevel: variability
+                    })
                 });
-                data.push(row);
+                
+                debugLog('📡 Respuesta:', { status: response.status, ok: response.ok });
+                
+                if (!response.ok) {
+                    const errorText = await response.text();
+                    throw new Error(`Servidor ${response.status}: ${errorText}`);
+                }
+                
+                document.getElementById('loadingText').textContent = 'Procesando...';
+                const data = await response.json();
+                debugLog('📊 Datos recibidos:', data);
+                
+                if (!data.success) {
+                    throw new Error(data.error || 'Error desconocido');
+                }
+                
+                serverData = data;
+                
+                document.getElementById('loadingText').textContent = 'Obteniendo muestra...';
+                await getSampleData();
+                
+                displayResults();
+                
+                if (currentDataset && Array.isArray(currentDataset) && currentDataset.length > 0) {
+                    createAllCharts();
+                    document.getElementById('charts-section').classList.remove('hidden');
+                } else {
+                    showMessage('⚠️ Dataset generado sin gráficas', 'info');
+                }
+                
+                document.getElementById('results').classList.remove('hidden');
+                showMessage('✅ Dataset generado exitosamente', 'success');
+                
+            } catch (error) {
+                debugLog('❌ Error:', error);
+                showMessage(`❌ Error: ${error.message}`, 'error');
+            } finally {
+                document.getElementById('loading').classList.add('hidden');
+                generateBtn.disabled = false;
             }
         }
         
-        res.json({
-            data: data,
-            sampleSize: data.length,
-            totalRows: lines.length - 1,
-            headers: headers
-        });
+        // Obtener muestra
+        async function getSampleData() {
+            if (!serverData || !serverData.outputDir) {
+                debugLog('⚠️ No hay outputDir');
+                return;
+            }
+            
+            try {
+                const folderName = serverData.outputDir.split('/').pop() || serverData.outputDir.split('\\').pop();
+                debugLog('📈 Obteniendo muestra:', folderName);
+                
+                const sampleResponse = await fetch(`/sample-data/${folderName}`);
+                debugLog('Respuesta muestra:', { status: sampleResponse.status, ok: sampleResponse.ok });
+                
+                if (sampleResponse.ok) {
+                    const sampleData = await sampleResponse.json();
+                    debugLog('📈 Estructura:', { keys: Object.keys(sampleData) });
+                    
+                    if (sampleData.data && Array.isArray(sampleData.data)) {
+                        currentDataset = sampleData.data;
+                        debugLog('✅ Dataset cargado:', currentDataset.length, 'registros');
+                    } else if (Array.isArray(sampleData)) {
+                        currentDataset = sampleData;
+                        debugLog('✅ Dataset directo:', currentDataset.length, 'registros');
+                    } else {
+                        debugLog('⚠️ Formato inesperado');
+                        currentDataset = null;
+                    }
+                }
+            } catch (error) {
+                debugLog('⚠️ Error en muestra:', error);
+            }
+        }
         
-    } catch (error) {
-        console.error('Error obteniendo muestra:', error);
-        res.status(500).json({ 
-            error: 'Error leyendo datos',
-            details: error.message
-        });
-    }
-});
-
-// Endpoint para descargar archivos
-app.get('/download/:folder/:filename', (req, res) => {
-    try {
-        const filePath = path.join(datasetsDir, req.params.folder, req.params.filename);
+        // Mostrar resultados
+        function displayResults() {
+            if (!serverData || !serverData.stats) return;
+            
+            const stats = serverData.stats;
+            
+            document.getElementById('stats').innerHTML = `
+                <div class="stat-card">
+                    <div class="stat-value">${stats.totalPoints.toLocaleString()}</div>
+                    <div class="stat-label">Total Registros</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value">${stats.scenarios}</div>
+                    <div class="stat-label">Escenarios</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value">${stats.trainingPoints.toLocaleString()}</div>
+                    <div class="stat-label">Entrenamiento</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value">${stats.biomassRange.max.toFixed(2)}</div>
+                    <div class="stat-label">Biomasa Máx (g/L)</div>
+                </div>
+            `;
+            
+            const folderName = serverData.outputDir.split('/').pop() || serverData.outputDir.split('\\').pop();
+            document.getElementById('downloads').innerHTML = `
+                <a href="/download/${folderName}/complete_dataset.csv" class="download-btn">
+                    📊 Dataset Completo (${stats.totalPoints.toLocaleString()})
+                </a>
+                <a href="/download/${folderName}/training_data.csv" class="download-btn">
+                    🎯 Entrenamiento (${stats.trainingPoints.toLocaleString()})
+                </a>
+                <a href="/download/${folderName}/validation_data.csv" class="download-btn">
+                    🔍 Validación (${stats.validationPoints.toLocaleString()})
+                </a>
+                <a href="/download/${folderName}/test_data.csv" class="download-btn">
+                    🧪 Prueba (${stats.testPoints.toLocaleString()})
+                </a>
+            `;
+        }
         
-        if (!fs.existsSync(filePath)) {
-            return res.status(404).json({ 
-                error: 'Archivo no encontrado',
-                path: req.params.filename
+        // Crear todas las gráficas
+        function createAllCharts() {
+            if (!currentDataset || !Array.isArray(currentDataset) || currentDataset.length === 0) {
+                debugLog('⚠️ Sin datos para gráficas');
+                return;
+            }
+            
+            debugLog('📊 Creando gráficas:', currentDataset.length, 'registros');
+            
+            setTimeout(() => {
+                try {
+                    createBiomassChart();
+                    createCellChart();
+                    createEnvironmentChart();
+                    createLightChart();
+                    createPHChart();
+                    createProductivityChart();
+                    analyzeQuality();
+                    debugLog('✅ Gráficas creadas');
+                } catch (error) {
+                    debugLog('❌ Error gráficas:', error);
+                    showMessage(`❌ Error gráficas: ${error.message}`, 'error');
+                }
+            }, 300);
+        }
+        
+        // Biomasa
+        function createBiomassChart() {
+            const ctx = document.getElementById('biomassChart').getContext('2d');
+            if (charts.biomass) charts.biomass.destroy();
+            
+            const scenarios = [...new Set(currentDataset.map(d => d.Scenario))].slice(0, 8);
+            const colors = ['#667eea', '#f093fb', '#4facfe', '#43e97b', '#fa709a', '#ffecd2', '#a8edea', '#d299c2'];
+            
+            charts.biomass = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    datasets: scenarios.map((scenario, index) => {
+                        const data = currentDataset
+                            .filter(d => d.Scenario === scenario)
+                            .sort((a, b) => (a.Time_h || 0) - (b.Time_h || 0))
+                            .map(d => ({ x: d.Time_h || 0, y: d.Biomass_g_L || 0 }));
+                        
+                        return {
+                            label: `Escenario ${scenario}`,
+                            data: data,
+                            borderColor: colors[index % colors.length],
+                            backgroundColor: colors[index % colors.length] + '20',
+                            tension: 0.3,
+                            pointRadius: 1
+                        };
+                    })
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { display: true, position: 'top' } },
+                    scales: {
+                        x: { title: { display: true, text: 'Tiempo (h)' }, type: 'linear' },
+                        y: { title: { display: true, text: 'Biomasa (g/L)' }, beginAtZero: true }
+                    }
+                }
             });
         }
         
-        // Configurar headers para descarga
-        res.setHeader('Content-Disposition', `attachment; filename="${req.params.filename}"`);
-        res.setHeader('Content-Type', 'text/csv');
+        // Células
+        function createCellChart() {
+            const ctx = document.getElementById('cellChart').getContext('2d');
+            if (charts.cells) charts.cells.destroy();
+            
+            const data = currentDataset.slice(0, 200).map(d => ({
+                x: d.Time_h || 0,
+                y: (d.Cell_Concentration_cells_mL || 0) / 1000000
+            }));
+            
+            charts.cells = new Chart(ctx, {
+                type: 'scatter',
+                data: {
+                    datasets: [{
+                        label: 'Concentración Celular',
+                        data: data,
+                        backgroundColor: 'rgba(102, 126, 234, 0.6)',
+                        borderColor: '#667eea',
+                        pointRadius: 2
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { display: true } },
+                    scales: {
+                        x: { title: { display: true, text: 'Tiempo (h)' } },
+                        y: { title: { display: true, text: 'Células (millones/mL)' }, beginAtZero: true }
+                    }
+                }
+            });
+        }
         
-        res.download(filePath, req.params.filename, (err) => {
-            if (err) {
-                console.error('Error en descarga:', err);
-                if (!res.headersSent) {
-                    res.status(500).json({ error: 'Error descargando archivo' });
+        // Ambiente - VERSIÓN MEJORADA con tiempo lineal
+        function createEnvironmentChart() {
+            const ctx = document.getElementById('environmentChart').getContext('2d');
+            if (charts.environment) charts.environment.destroy();
+            
+            // Tomar datos de UN SOLO escenario para ver la progresión temporal clara
+            const firstScenario = currentDataset.filter(d => d.Scenario === 1).slice(0, 150);
+            // Ordenar por tiempo para asegurar continuidad
+            firstScenario.sort((a, b) => (a.Time_h || 0) - (b.Time_h || 0));
+            
+            charts.environment = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: firstScenario.map(d => d.Time_h || 0),
+                    datasets: [{
+                        label: 'pH',
+                        data: firstScenario.map(d => d.pH || 7),
+                        borderColor: '#3b82f6',
+                        backgroundColor: 'rgba(59, 130, 246, 0.1)',
+                        yAxisID: 'y',
+                        tension: 0.3,
+                        pointRadius: 1
+                    }, {
+                        label: 'Temperatura (°C)',
+                        data: firstScenario.map(d => d.Temperature_C || 25),
+                        borderColor: '#ef4444',
+                        backgroundColor: 'rgba(239, 68, 68, 0.1)',
+                        yAxisID: 'y1',
+                        tension: 0.3,
+                        pointRadius: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { 
+                        legend: { display: true },
+                        title: {
+                            display: true,
+                            text: 'Escenario 1 - Evolución temporal continua'
+                        }
+                    },
+                    scales: {
+                        x: { title: { display: true, text: 'Tiempo (h)' } },
+                        y: { 
+                            title: { display: true, text: 'pH' },
+                            min: 6, max: 9,
+                            position: 'left'
+                        },
+                        y1: {
+                            type: 'linear',
+                            display: true,
+                            position: 'right',
+                            title: { display: true, text: 'Temp (°C)' },
+                            grid: { drawOnChartArea: false },
+                            min: 15, max: 40
+                        }
+                    }
+                }
+            });
+        }
+        
+        // Luz - MEJORADA para mostrar ciclos claros
+        function createLightChart() {
+            const ctx = document.getElementById('lightChart').getContext('2d');
+            if (charts.light) charts.light.destroy();
+            
+            // Tomar datos de un escenario con ciclo día/noche para ver patrones
+            let cyclicScenario = currentDataset
+                .filter(d => d.Light_Regime === 'cyclic')
+                .slice(0, 100);
+            
+            if (cyclicScenario.length === 0) {
+                // Si no hay datos cíclicos, tomar cualquier escenario
+                cyclicScenario = currentDataset.slice(0, 100);
+            }
+            
+            cyclicScenario.sort((a, b) => (a.Time_h || 0) - (b.Time_h || 0));
+            
+            charts.light = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: cyclicScenario.map(d => d.Time_h || 0),
+                    datasets: [{
+                        label: 'PAR (μmol/m²/s)',
+                        data: cyclicScenario.map(d => d.PAR_umol_m2_s || 0),
+                        borderColor: '#f59e0b',
+                        backgroundColor: 'rgba(245, 158, 11, 0.3)',
+                        fill: true,
+                        tension: 0.2,
+                        pointRadius: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { 
+                        legend: { display: true },
+                        title: {
+                            display: true,
+                            text: 'Ciclos de luz - Patrón día/noche'
+                        }
+                    },
+                    scales: {
+                        x: { title: { display: true, text: 'Tiempo (h)' } },
+                        y: { 
+                            title: { display: true, text: 'PAR (μmol/m²/s)' }, 
+                            beginAtZero: true,
+                            max: Math.max(...cyclicScenario.map(d => d.PAR_umol_m2_s || 0)) * 1.1
+                        }
+                    }
+                }
+            });
+        }
+        
+        // pH
+        function createPHChart() {
+            const ctx = document.getElementById('pHChart').getContext('2d');
+            if (charts.pH) charts.pH.destroy();
+            
+            const pHValues = currentDataset.map(d => d.pH || 7);
+            const bins = [6.0, 6.5, 7.0, 7.5, 8.0, 8.5, 9.0];
+            const counts = bins.slice(0, -1).map((bin, i) => 
+                pHValues.filter(v => v >= bin && v < bins[i + 1]).length
+            );
+            
+            charts.pH = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: bins.slice(0, -1).map((bin, i) => `${bin}-${bins[i + 1]}`),
+                    datasets: [{
+                        label: 'Frecuencia',
+                        data: counts,
+                        backgroundColor: 'rgba(102, 126, 234, 0.8)',
+                        borderColor: '#667eea',
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { display: true } },
+                    scales: {
+                        x: { title: { display: true, text: 'Rango de pH' } },
+                        y: { title: { display: true, text: 'Frecuencia' }, beginAtZero: true }
+                    }
+                }
+            });
+        }
+        
+        // Productividad
+        function createProductivityChart() {
+            const ctx = document.getElementById('productivityChart').getContext('2d');
+            if (charts.productivity) charts.productivity.destroy();
+            
+            const data = currentDataset.slice(0, 150).map(d => ({
+                x: d.Time_h || 0,
+                y: d.Instantaneous_Productivity_g_L_d || 0
+            }));
+            
+            charts.productivity = new Chart(ctx, {
+                type: 'scatter',
+                data: {
+                    datasets: [{
+                        label: 'Productividad',
+                        data: data,
+                        backgroundColor: 'rgba(102, 126, 234, 0.6)',
+                        borderColor: '#667eea'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { display: true } },
+                    scales: {
+                        x: { title: { display: true, text: 'Tiempo (h)' } },
+                        y: { title: { display: true, text: 'Productividad (g/L/día)' }, beginAtZero: true }
+                    }
+                }
+            });
+        }
+        
+        // Análisis de calidad
+        function analyzeQuality() {
+            try {
+                const scenarios = [...new Set(currentDataset.map(d => d.Scenario))];
+                const biomassValues = currentDataset.map(d => d.Biomass_g_L || 0);
+                const timeRange = {
+                    min: Math.min(...currentDataset.map(d => d.Time_h || 0)),
+                    max: Math.max(...currentDataset.map(d => d.Time_h || 0))
+                };
+                
+                const biomassStats = {
+                    mean: biomassValues.reduce((a, b) => a + b, 0) / biomassValues.length,
+                    std: calculateStandardDeviation(biomassValues),
+                    min: Math.min(...biomassValues),
+                    max: Math.max(...biomassValues)
+                };
+                
+                const cv = (biomassStats.std / biomassStats.mean) * 100;
+                
+                // Mostrar métricas
+                document.getElementById('quality-analysis').innerHTML = `
+                    <div class="stat-card">
+                        <div class="stat-value">${scenarios.length}</div>
+                        <div class="stat-label">Escenarios</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value">${timeRange.max}</div>
+                        <div class="stat-label">Horas Máx</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value">${cv.toFixed(1)}%</div>
+                        <div class="stat-label">Variabilidad CV</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value">${currentDataset.length}</div>
+                        <div class="stat-label">Total Registros</div>
+                    </div>
+                `;
+                
+                // Correlaciones
+                const correlations = [
+                    {
+                        name: 'pH - Biomasa',
+                        value: calculateCorrelation(
+                            currentDataset.map(d => d.pH || 7),
+                            currentDataset.map(d => d.Biomass_g_L || 0)
+                        )
+                    },
+                    {
+                        name: 'Temperatura - Crecimiento',
+                        value: calculateCorrelation(
+                            currentDataset.map(d => d.Temperature_C || 25),
+                            currentDataset.map(d => d.Growth_Rate_mu_h || 0)
+                        )
+                    },
+                    {
+                        name: 'PAR - Biomasa',
+                        value: calculateCorrelation(
+                            currentDataset.map(d => d.PAR_umol_m2_s || 0),
+                            currentDataset.map(d => d.Biomass_g_L || 0)
+                        )
+                    },
+                    {
+                        name: 'Tiempo - Biomasa',
+                        value: calculateCorrelation(
+                            currentDataset.map(d => d.Time_h || 0),
+                            currentDataset.map(d => d.Biomass_g_L || 0)
+                        )
+                    }
+                ];
+                
+                document.getElementById('correlations').innerHTML = correlations.map(corr => {
+                    const strength = Math.abs(corr.value);
+                    let color = '#dc3545';
+                    let label = 'Muy débil';
+                    
+                    if (strength > 0.7) {
+                        color = '#28a745';
+                        label = 'Fuerte';
+                    } else if (strength > 0.4) {
+                        color = '#ffc107';
+                        label = 'Moderada';
+                    } else if (strength > 0.2) {
+                        color = '#fd7e14';
+                        label = 'Débil';
+                    }
+                    
+                    return `
+                        <div class="stat-card" style="border-left: 4px solid ${color}">
+                            <div class="stat-value" style="color: ${color}">${corr.value.toFixed(3)}</div>
+                            <div class="stat-label">${corr.name}</div>
+                            <div style="font-size: 0.8em; color: #666;">${label}</div>
+                        </div>
+                    `;
+                }).join('');
+                
+                // Recomendaciones
+                const recommendations = [];
+                
+                if (scenarios.length < 20) {
+                    recommendations.push("🔢 <strong>Más escenarios:</strong> Recomendado 20-50 para mejor diversidad");
+                }
+                
+                if (cv < 30) {
+                    recommendations.push("📊 <strong>Más variabilidad:</strong> CV bajo, considera condiciones más extremas");
+                }
+                
+                if (timeRange.max < 120) {
+                    recommendations.push("⏰ <strong>Más tiempo:</strong> Ciclos más largos capturan más fases de crecimiento");
+                }
+                
+                recommendations.push("🤖 <strong>Para ML:</strong> Normalizar variables antes del entrenamiento");
+                recommendations.push("📈 <strong>Variables clave:</strong> PAR y temperatura son predictores importantes");
+                
+                if (recommendations.length === 2) {
+                    recommendations.unshift("✅ <strong>Dataset excelente:</strong> Buena calidad para machine learning");
+                }
+                
+                const score = Math.max(1, Math.min(10, 
+                    10 - (scenarios.length < 10 ? 3 : 0) - (cv < 20 ? 2 : 0) - (timeRange.max < 72 ? 1 : 0)
+                ));
+                
+                document.getElementById('recommendations').innerHTML = `
+                    <h4>💡 Evaluación del Dataset:</h4>
+                    <ul style="margin: 10px 0; padding-left: 20px;">
+                        ${recommendations.map(rec => `<li style="margin: 5px 0;">${rec}</li>`).join('')}
+                    </ul>
+                    <p><strong>📊 Puntuación de calidad: ${score}/10</strong></p>
+                    <p><strong>🎯 Recomendación:</strong> ${score >= 8 ? 'Excelente para ML' : score >= 6 ? 'Bueno para ML' : score >= 4 ? 'Aceptable, mejorar variabilidad' : 'Necesita mejoras significativas'}</p>
+                `;
+                
+            } catch (error) {
+                debugLog('❌ Error análisis:', error);
+                document.getElementById('recommendations').innerHTML = '<p>Error en análisis de calidad</p>';
+            }
+        }
+        
+        // Utilidades matemáticas
+        function calculateStandardDeviation(values) {
+            if (values.length === 0) return 0;
+            const mean = values.reduce((a, b) => a + b, 0) / values.length;
+            const squaredDiffs = values.map(value => Math.pow(value - mean, 2));
+            const avgSquaredDiff = squaredDiffs.reduce((a, b) => a + b, 0) / values.length;
+            return Math.sqrt(avgSquaredDiff);
+        }
+        
+        function calculateCorrelation(x, y) {
+            const n = Math.min(x.length, y.length);
+            if (n < 2) return 0;
+            
+            const validPairs = [];
+            for (let i = 0; i < n; i++) {
+                if (!isNaN(x[i]) && !isNaN(y[i]) && isFinite(x[i]) && isFinite(y[i])) {
+                    validPairs.push([x[i], y[i]]);
                 }
             }
+            
+            if (validPairs.length < 2) return 0;
+            
+            const validX = validPairs.map(p => p[0]);
+            const validY = validPairs.map(p => p[1]);
+            const len = validPairs.length;
+            
+            const sumX = validX.reduce((a, b) => a + b, 0);
+            const sumY = validY.reduce((a, b) => a + b, 0);
+            const sumXY = validPairs.reduce((sum, pair) => sum + pair[0] * pair[1], 0);
+            const sumX2 = validX.reduce((sum, xi) => sum + xi * xi, 0);
+            const sumY2 = validY.reduce((sum, yi) => sum + yi * yi, 0);
+            
+            const numerator = len * sumXY - sumX * sumY;
+            const denominator = Math.sqrt((len * sumX2 - sumX * sumX) * (len * sumY2 - sumY * sumY));
+            
+            return denominator === 0 ? 0 : numerator / denominator;
+        }
+        
+        // Inicialización
+        document.addEventListener('DOMContentLoaded', function() {
+            debugLog('🎯 Aplicación cargada');
+            setTimeout(testServer, 1000);
         });
         
-    } catch (error) {
-        console.error('Error preparando descarga:', error);
-        res.status(500).json({ error: 'Error interno' });
-    }
-});
-
-// Ruta principal
-app.get('/', (req, res) => {
-    const indexPath = path.join(__dirname, 'public', 'index.html');
-    
-    if (fs.existsSync(indexPath)) {
-        res.sendFile(indexPath);
-    } else {
-        res.send(`
-            <html>
-                <head><title>Chlorella Generator</title></head>
-                <body style="font-family: Arial; text-align: center; padding: 50px;">
-                    <h1>🧬 Generador Chlorella vulgaris</h1>
-                    <p>Servidor funcionando correctamente</p>
-                    <p>Puerto: ${PORT}</p>
-                    <p>Tiempo: ${new Date().toISOString()}</p>
-                    <p><strong>Nota:</strong> Coloca el archivo index.html en la carpeta public/</p>
-                    <a href="/test" style="background: #007bff; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px;">Test Servidor</a>
-                </body>
-            </html>
-        `);
-    }
-});
-
-// Manejo de errores global
-app.use((err, req, res, next) => {
-    console.error('Error del servidor:', err);
-    res.status(500).json({ 
-        error: 'Error interno del servidor',
-        message: err.message
-    });
-});
-
-// Manejo de rutas no encontradas
-app.use('*', (req, res) => {
-    res.status(404).json({ 
-        error: 'Ruta no encontrada',
-        path: req.originalUrl
-    });
-});
-
-// Iniciar servidor
-app.listen(PORT, '0.0.0.0', () => {
-    console.log(`🚀 Servidor Chlorella iniciado en puerto ${PORT}`);
-    console.log(`🌐 Ambiente: ${process.env.NODE_ENV || 'development'}`);
-    console.log(`📁 Directorio datasets: ${datasetsDir}`);
-    console.log(`⏰ Iniciado: ${new Date().toISOString()}`);
-});
-
-// Manejo de cierre graceful
-process.on('SIGTERM', () => {
-    console.log('🛑 Recibida señal SIGTERM, cerrando servidor...');
-    process.exit(0);
-});
-
-process.on('SIGINT', () => {
-    console.log('🛑 Recibida señal SIGINT, cerrando servidor...');
-    process.exit(0);
-});
-
-module.exports = app;
+        // Manejo de errores
+        window.addEventListener('error', function(e) {
+            debugLog('🚨 Error JS:', e.message);
+            showMessage(`🚨 Error: ${e.message}`, 'error');
+        });
+        
+        window.addEventListener('unhandledrejection', function(e) {
+            debugLog('🚨 Promise error:', e.reason);
+            showMessage(`🚨 Error: ${e.reason}`, 'error');
+        });
+        
+        console.log('✅ Generador Chlorella cargado correctamente');
+    </script>
+</body>
+</html>
