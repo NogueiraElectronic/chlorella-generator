@@ -1,4 +1,26 @@
-<!DOCTYPE html>
+function displayDownloadOptions(serverData) {
+            const folderName = serverData.outputDir.split('/').pop();
+            const timestamp = new Date().toISOString().split('T')[0];
+            
+            const downloadsHTML = `
+                <div class="download-card" onclick="downloadServerFile('${folderName}', 'complete_dataset.csv')">
+                    <div class="download-icon">📄</div>
+                    <div class="download-title">Dataset Completo CSV</div>
+                    <div class="download-desc">Todos los datos en formato CSV</div>
+                </div>
+                <div class="download-card" onclick="downloadServerFile('${folderName}', 'training_data.csv')">
+                    <div class="download-icon">🎯</div>
+                    <div class="download-title">Datos de Entrenamiento</div>
+                    <div class="download-desc">70% de los datos para entrenamiento</div>
+                </div>
+                <div class="download-card" onclick="downloadServerFile('${folderName}', 'validation_data.csv')">
+                    <div class="download-icon">🔍</div>
+                    <div class="download-title">Datos de Validación</div>
+                    <div class="download-desc">15% de los datos para validación</div>
+                </div>
+                <div class="download-card" onclick="downloadServerFile('${folderName}', 'test_data.csv')">
+                    <div class="download-icon">🧪</div>
+                    <div class="download-title">Datos<!DOCTYPE html>
 <html lang="es">
 <head>
     <meta charset="UTF-8">
@@ -304,7 +326,43 @@
                 // Generar datos
                 progressText.textContent = 'Procesando datos...';
                 progressBar.style.width = '95%';
-                await generateDataset(scenarios, hours);
+                // Generar dataset usando el servidor
+                const response = await fetch('/generate-dataset', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        scenarios: scenarios,
+                        hoursPerScenario: hours,
+                        dataQuality: document.getElementById('data-quality').value,
+                        stressConditions: document.getElementById('stress-conditions').value,
+                        temporalResolution: document.getElementById('temporal-resolution').value,
+                        advanced: true
+                    })
+                });
+                
+                if (!response.ok) {
+                    throw new Error('Error en la generación del dataset');
+                }
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    // Usar datos del servidor
+                    dataStats = data.stats;
+                    
+                    // Obtener muestra de datos para visualizaciones
+                    const sampleResponse = await fetch(`/sample-data/${data.outputDir.split('/').pop()}?limit=2000`);
+                    if (sampleResponse.ok) {
+                        currentDataset = await sampleResponse.json();
+                    }
+                    
+                    // Mostrar resultados
+                    displayResults(data);
+                    createCharts();
+                    performCorrelationAnalysis();
+                } else {
+                    throw new Error(data.error || 'Error desconocido');
+                }
                 
                 // Finalizar
                 progressBar.style.width = '100%';
