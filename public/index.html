@@ -1,336 +1,250 @@
+// server.js - Servidor Node.js para generar dataset de Chlorella
 const express = require('express');
 const fs = require('fs');
 const path = require('path');
 const app = express();
+const PORT = process.env.PORT || 3000;
 
-// Configuración básica
-app.use(express.json({ limit: '10mb' }));
+app.use(express.json());
 app.use(express.static('public'));
 
-// Logging básico
-app.use((req, res, next) => {
-    console.log(`${req.method} ${req.path} - ${new Date().toISOString()}`);
-    next();
-});
+// Configuración para generación de datos
+const dataConfig = {
+  scenarios: 50,
+  hoursPerScenario: 240,
+  totalDataPoints: 12000,
+  trainRatio: 0.7,
+  validRatio: 0.15,
+  testRatio: 0.15
+};
 
-// Crear directorio de datasets
-const datasetsDir = path.join(__dirname, 'generated_datasets');
-if (!fs.existsSync(datasetsDir)) {
-    fs.mkdirSync(datasetsDir, { recursive: true });
-}
-
-// Función simple para generar datos
-function generateSimpleDataset(scenarios = 50, hours = 240) {
-    console.log(`Generando ${scenarios} escenarios con ${hours} horas cada uno`);
-    
-    const allData = [];
-    
-    for (let scenario = 1; scenario <= scenarios; scenario++) {
-        // Parámetros del escenario
-        const baseTemp = 20 + Math.random() * 10;
-        const basePh = 6.8 + Math.random() * 1.2;
-        const maxPAR = 400 + Math.random() * 600;
-        const initialBiomass = 0.05 + Math.random() * 0.3;
-        
-        let currentBiomass = initialBiomass;
-        let currentTemp = baseTemp;
-        let currentpH = basePh;
-        let nutrients = 0.5 + Math.random() * 0.5;
-        
-        for (let hour = 0; hour < hours; hour++) {
-            // Ciclo de luz simple
-            const hourOfDay = hour % 24;
-            const lightIntensity = (hourOfDay >= 6 && hourOfDay <= 18) ? 
-                maxPAR * Math.sin((hourOfDay - 6) * Math.PI / 12) : 0;
-            
-            // Variaciones simples
-            currentTemp = baseTemp + Math.random() * 4 - 2;
-            currentpH = basePh + Math.random() * 0.4 - 0.2;
-            nutrients = Math.max(0.1, nutrients - 0.001);
-            
-            // Crecimiento simple
-            const growthRate = 0.02 * Math.random() * (lightIntensity / 500) * (nutrients / 0.5);
-            currentBiomass = Math.min(currentBiomass * (1 + growthRate), 4.0);
-            
-            // Crear punto de datos
-            const dataPoint = {
-                Scenario: scenario,
-                Time_h: hour,
-                DateTime: new Date(Date.now() + hour * 3600000).toISOString(),
-                pH: parseFloat(currentpH.toFixed(2)),
-                Temperature_C: parseFloat(currentTemp.toFixed(1)),
-                PAR_umol_m2_s: parseFloat(lightIntensity.toFixed(1)),
-                Growth_Rate_h: parseFloat(growthRate.toFixed(4)),
-                Biomass_g_L: parseFloat(currentBiomass.toFixed(3)),
-                Cell_Concentration_cells_mL: parseFloat((currentBiomass * 2e6).toFixed(0)),
-                Nutrients_g_L: parseFloat(nutrients.toFixed(3)),
-                Optical_Density_OD680: parseFloat((currentBiomass * 2.5).toFixed(3)),
-                Productivity_g_L_d: parseFloat((currentBiomass * growthRate * 24).toFixed(3)),
-                Light_Efficiency: parseFloat((growthRate / Math.max(0.001, lightIntensity / 1000)).toFixed(4)),
-                Thermal_Stress: currentTemp > 30 || currentTemp < 20 ? 1 : 0,
-                pH_Stress: currentpH < 6.5 || currentpH > 8.0 ? 1 : 0,
-                Light_Regime: 'cyclic',
-                Stress_Condition: 'normal',
-                Data_Quality: 'industrial',
-                Sampling_Resolution: 'hour'
-            };
-            
-            allData.push(dataPoint);
-        }
-        
-        // Log progreso
-        if (scenario % 10 === 0) {
-            console.log(`Completado ${scenario}/${scenarios} escenarios`);
-        }
+// Función para generar datos de un escenario
+function generateScenarioData(scenarioId, params) {
+  const data = [];
+  let currentBiomass = params.initialBiomass;
+  let currentCellConc = currentBiomass * 2e6;
+  let currentpH = params.basePH;
+  let currentTemp = params.baseTemp;
+  let nutrients = params.nutrientLevel;
+  
+  for (let hour = 0; hour < dataConfig.hoursPerScenario; hour++) {
+    // Ciclo de luz
+    let lightIntensity;
+    if (params.lightRegime === 'continuous') {
+      lightIntensity = params.maxPAR * (0.8 + 0.2 * Math.random());
+    } else {
+      const hourOfDay = hour % 24;
+      lightIntensity = hourOfDay >= 6 && hourOfDay <= 18 ? 
+        params.maxPAR * Math.sin((hourOfDay - 6) * Math.PI / 12) : 0;
     }
     
-    return allData;
+    // Variaciones de temperatura
+    const tempVariation = params.stressCondition === 'high_temp' ? 
+      5 + Math.random() * 3 : Math.random() * 2 - 1;
+    currentTemp = Math.max(15, Math.min(40, 
+      params.baseTemp + tempVariation + 2 * Math.sin(hour * Math.PI / 12)));
+    
+    // Variaciones de pH
+    const pHDrift = params.stressCondition === 'low_pH' ? 
+      -0.5 + Math.random() * 0.2 : (Math.random() - 0.5) * 0.1;
+    currentpH = Math.max(6.0, Math.min(9.0, 
+      params.basePH + pHDrift + 0.3 * Math.sin(hour * 0.05)));
+    
+    // Depleción de nutrientes
+    nutrients = Math.max(0.1, nutrients - 0.001 * currentBiomass);
+    
+    // Cálculo de μ (tasa de crecimiento específica)
+    const lightEffect = Math.min(1, lightIntensity / 300);
+    const tempEffect = currentTemp >= 15 && currentTemp <= 35 ? 
+      Math.exp(-Math.pow((currentTemp - 25) / 10, 2)) : 0.1;
+    const pHEffect = currentpH >= 6.5 && currentpH <= 8.5 ? 
+      Math.exp(-Math.pow((currentpH - 7.2) / 1.5, 2)) : 0.1;
+    const nutrientEffect = nutrients / (nutrients + 0.1);
+    const densityEffect = Math.max(0.1, 1 - currentBiomass / 4);
+    
+    const mu = 0.08 * lightEffect * tempEffect * pHEffect * nutrientEffect * densityEffect;
+    
+    // Actualizar biomasa y concentración celular
+    const growthRate = Math.max(0, mu + (Math.random() - 0.5) * 0.005);
+    currentBiomass = currentBiomass * (1 + growthRate);
+    currentCellConc = currentCellConc * (1 + growthRate);
+    
+    // Limitar valores máximos
+    currentBiomass = Math.min(currentBiomass, 5.0);
+    currentCellConc = Math.min(currentCellConc, 2e7);
+    
+    // Agregar ruido realista
+    const biomassNoise = currentBiomass * (1 + (Math.random() - 0.5) * 0.02);
+    const cellConcNoise = currentCellConc * (1 + (Math.random() - 0.5) * 0.03);
+    
+    data.push({
+      Scenario: scenarioId,
+      Hora: hour,
+      pH: parseFloat(currentpH.toFixed(2)),
+      Temperatura: parseFloat(currentTemp.toFixed(1)),
+      PAR: parseFloat(lightIntensity.toFixed(1)),
+      mu: parseFloat(growthRate.toFixed(4)),
+      Biomasa: parseFloat(biomassNoise.toFixed(3)),
+      Concentracion_Celular: parseFloat(cellConcNoise.toFixed(0)),
+      Nutrientes: parseFloat(nutrients.toFixed(3)),
+      Densidad_Optica: parseFloat((currentBiomass * 2.5).toFixed(3)),
+      Productividad: parseFloat((currentBiomass * growthRate * 24).toFixed(3)),
+      Eficiencia_Luz: parseFloat((mu / Math.max(0.001, lightIntensity / 1000)).toFixed(4)),
+      Estres_Termico: currentTemp > 32 || currentTemp < 18 ? 1 : 0,
+      Estres_pH: currentpH < 6.5 || currentpH > 8.5 ? 1 : 0
+    });
+  }
+  
+  return data;
+}
+
+// Función para mezclar array
+function shuffleArray(array) {
+  const shuffled = [...array];
+  for (let i = shuffled.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+  }
+  return shuffled;
 }
 
 // Función para convertir a CSV
 function arrayToCSV(data) {
-    if (!data || data.length === 0) return '';
-    
-    const headers = Object.keys(data[0]);
-    const csvRows = [headers.join(',')];
-    
-    for (const row of data) {
-        const values = headers.map(header => {
-            const value = row[header];
-            return typeof value === 'string' && value.includes(',') ? `"${value}"` : value;
-        });
-        csvRows.push(values.join(','));
-    }
-    
-    return csvRows.join('\n');
+  if (data.length === 0) return '';
+  
+  const headers = Object.keys(data[0]);
+  const csvContent = [
+    headers.join(','),
+    ...data.map(row => headers.map(header => row[header]).join(','))
+  ].join('\n');
+  
+  return csvContent;
 }
 
-// Función para dividir datos
-function splitData(data) {
-    const shuffled = [...data].sort(() => Math.random() - 0.5);
-    const trainSize = Math.floor(shuffled.length * 0.7);
-    const validSize = Math.floor(shuffled.length * 0.15);
-    
-    return {
-        training: shuffled.slice(0, trainSize),
-        validation: shuffled.slice(trainSize, trainSize + validSize),
-        test: shuffled.slice(trainSize + validSize)
-    };
-}
-
-// Test endpoint
-app.get('/test', (req, res) => {
-    console.log('Test endpoint llamado');
-    res.json({ 
-        message: 'Servidor funcionando correctamente',
-        timestamp: new Date().toISOString(),
-        status: 'OK'
-    });
-});
-
-// Endpoint principal
+// Endpoint para generar dataset
 app.post('/generate-dataset', (req, res) => {
-    console.log('=== INICIANDO GENERACIÓN DE DATASET ===');
-    console.log('Body recibido:', req.body);
+  const { scenarios = 50, hoursPerScenario = 240 } = req.body;
+  
+  try {
+    console.log('Iniciando generación de dataset...');
+    const allData = [];
     
-    try {
-        const { scenarios = 50, hoursPerScenario = 240 } = req.body;
-        
-        console.log(`Generando dataset con ${scenarios} escenarios y ${hoursPerScenario} horas`);
-        
-        // Generar datos
-        const allData = generateSimpleDataset(scenarios, hoursPerScenario);
-        console.log(`Datos generados: ${allData.length} registros`);
-        
-        // Dividir datos
-        const splitDatasets = splitData(allData);
-        console.log(`Datos divididos: ${splitDatasets.training.length} train, ${splitDatasets.validation.length} validation, ${splitDatasets.test.length} test`);
-        
-        // Crear directorio único
-        const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
-        const outputDir = path.join(datasetsDir, timestamp);
-        fs.mkdirSync(outputDir, { recursive: true });
-        
-        // Guardar archivos
-        fs.writeFileSync(path.join(outputDir, 'complete_dataset.csv'), arrayToCSV(allData));
-        fs.writeFileSync(path.join(outputDir, 'training_data.csv'), arrayToCSV(splitDatasets.training));
-        fs.writeFileSync(path.join(outputDir, 'validation_data.csv'), arrayToCSV(splitDatasets.validation));
-        fs.writeFileSync(path.join(outputDir, 'test_data.csv'), arrayToCSV(splitDatasets.test));
-        
-        // Estadísticas
-        const stats = {
-            totalPoints: allData.length,
-            trainingPoints: splitDatasets.training.length,
-            validationPoints: splitDatasets.validation.length,
-            testPoints: splitDatasets.test.length,
-            scenarios: scenarios,
-            duration: hoursPerScenario,
-            biomassRange: {
-                min: Math.min(...allData.map(d => d.Biomass_g_L)),
-                max: Math.max(...allData.map(d => d.Biomass_g_L)),
-                mean: allData.reduce((sum, d) => sum + d.Biomass_g_L, 0) / allData.length
-            },
-            stressDistribution: {
-                thermal: allData.filter(d => d.Thermal_Stress === 1).length,
-                ph: allData.filter(d => d.pH_Stress === 1).length,
-                normal: allData.filter(d => d.Thermal_Stress === 0 && d.pH_Stress === 0).length
-            },
-            qualityMetrics: {
-                completeness: 100,
-                dataQuality: 'industrial',
-                resolution: 'hour'
-            },
-            outputDir: outputDir
-        };
-        
-        // Guardar metadatos
-        const metadata = {
-            timestamp: new Date().toISOString(),
-            configuration: req.body,
-            statistics: stats
-        };
-        fs.writeFileSync(path.join(outputDir, 'metadata.json'), JSON.stringify(metadata, null, 2));
-        
-        console.log('=== DATASET GENERADO EXITOSAMENTE ===');
-        console.log(`Archivos guardados en: ${outputDir}`);
-        
-        res.json({
-            success: true,
-            message: 'Dataset generado exitosamente',
-            stats: stats,
-            outputDir: outputDir,
-            metadata: metadata
-        });
-        
-    } catch (error) {
-        console.error('=== ERROR GENERANDO DATASET ===');
-        console.error('Error:', error);
-        console.error('Stack:', error.stack);
-        
-        res.status(500).json({
-            success: false,
-            error: error.message,
-            stack: error.stack
-        });
-    }
-});
-
-// Endpoint para obtener muestra de datos
-app.get('/sample-data/:folder', (req, res) => {
-    const { folder } = req.params;
-    const { limit = 1000 } = req.query;
-    
-    console.log(`Solicitando muestra de datos: ${folder}, límite: ${limit}`);
-    
-    const filePath = path.join(datasetsDir, folder, 'complete_dataset.csv');
-    
-    if (!fs.existsSync(filePath)) {
-        console.log(`Archivo no encontrado: ${filePath}`);
-        return res.status(404).json({ error: 'Dataset no encontrado' });
+    // Generar múltiples escenarios
+    for (let scenario = 0; scenario < scenarios; scenario++) {
+      const scenarioParams = {
+        baseTemp: 20 + Math.random() * 10,
+        basePH: 6.8 + Math.random() * 1.2,
+        maxPAR: 400 + Math.random() * 600,
+        initialBiomass: 0.05 + Math.random() * 0.3,
+        nutrientLevel: 0.5 + Math.random() * 0.5,
+        lightRegime: Math.random() > 0.5 ? 'continuous' : 'cyclic',
+        stressCondition: Math.random() > 0.8 ? 'high_temp' : 
+                        Math.random() > 0.6 ? 'low_pH' : 'normal'
+      };
+      
+      const scenarioData = generateScenarioData(scenario, scenarioParams);
+      allData.push(...scenarioData);
+      
+      // Progreso cada 10 escenarios
+      if (scenario % 10 === 0) {
+        console.log(`Progreso: ${scenario}/${scenarios} escenarios completados`);
+      }
     }
     
-    try {
-        const csvData = fs.readFileSync(filePath, 'utf8');
-        const lines = csvData.split('\n').filter(line => line.trim());
-        
-        if (lines.length < 2) {
-            return res.status(400).json({ error: 'Dataset vacío' });
-        }
-        
-        const headers = lines[0].split(',');
-        const sampleData = [];
-        const step = Math.max(1, Math.floor((lines.length - 1) / parseInt(limit)));
-        
-        for (let i = 1; i < lines.length && sampleData.length < parseInt(limit); i += step) {
-            const line = lines[i];
-            if (line.trim()) {
-                const values = line.split(',');
-                const dataPoint = {};
-                
-                headers.forEach((header, index) => {
-                    let value = values[index];
-                    if (value && !isNaN(value) && value !== '') {
-                        value = parseFloat(value);
-                    }
-                    dataPoint[header.trim()] = value;
-                });
-                
-                sampleData.push(dataPoint);
-            }
-        }
-        
-        console.log(`Muestra generada: ${sampleData.length} registros`);
-        res.json(sampleData);
-        
-    } catch (error) {
-        console.error('Error leyendo muestra:', error);
-        res.status(500).json({ error: 'Error procesando datos' });
+    // Dividir datos
+    const shuffledData = shuffleArray(allData);
+    const trainSize = Math.floor(shuffledData.length * dataConfig.trainRatio);
+    const validSize = Math.floor(shuffledData.length * dataConfig.validRatio);
+    
+    const trainingData = shuffledData.slice(0, trainSize);
+    const validationData = shuffledData.slice(trainSize, trainSize + validSize);
+    const testData = shuffledData.slice(trainSize + validSize);
+    
+    // Guardar archivos CSV
+    const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
+    const outputDir = path.join(__dirname, 'generated_datasets', timestamp);
+    
+    if (!fs.existsSync(outputDir)) {
+      fs.mkdirSync(outputDir, { recursive: true });
     }
+    
+    fs.writeFileSync(path.join(outputDir, 'training_data.csv'), arrayToCSV(trainingData));
+    fs.writeFileSync(path.join(outputDir, 'validation_data.csv'), arrayToCSV(validationData));
+    fs.writeFileSync(path.join(outputDir, 'test_data.csv'), arrayToCSV(testData));
+    fs.writeFileSync(path.join(outputDir, 'complete_dataset.csv'), arrayToCSV(allData));
+    
+    // Estadísticas
+    const stats = {
+      totalPoints: allData.length,
+      trainingPoints: trainingData.length,
+      validationPoints: validationData.length,
+      testPoints: testData.length,
+      scenarios: scenarios,
+      biomassRange: {
+        min: Math.min(...allData.map(d => d.Biomasa)),
+        max: Math.max(...allData.map(d => d.Biomasa)),
+        mean: allData.reduce((sum, d) => sum + d.Biomasa, 0) / allData.length
+      },
+      outputDir: outputDir
+    };
+    
+    console.log('Dataset generado exitosamente!');
+    res.json({ success: true, stats, outputDir });
+    
+  } catch (error) {
+    console.error('Error generando dataset:', error);
+    res.status(500).json({ error: error.message });
+  }
 });
 
 // Endpoint para descargar archivos
 app.get('/download/:folder/:filename', (req, res) => {
-    const { folder, filename } = req.params;
-    const filePath = path.join(datasetsDir, folder, filename);
+  const { folder, filename } = req.params;
+  const filePath = path.join(__dirname, 'generated_datasets', folder, filename);
+  
+  if (fs.existsSync(filePath)) {
+    res.download(filePath);
+  } else {
+    res.status(404).send('Archivo no encontrado');
+  }
+});
+
+// Endpoint para listar datasets generados
+app.get('/datasets', (req, res) => {
+  const datasetsDir = path.join(__dirname, 'generated_datasets');
+  
+  if (!fs.existsSync(datasetsDir)) {
+    return res.json([]);
+  }
+  
+  const folders = fs.readdirSync(datasetsDir).filter(item => {
+    return fs.statSync(path.join(datasetsDir, item)).isDirectory();
+  });
+  
+  const datasets = folders.map(folder => {
+    const folderPath = path.join(datasetsDir, folder);
+    const files = fs.readdirSync(folderPath);
+    const stats = fs.statSync(folderPath);
     
-    console.log(`Descarga solicitada: ${filePath}`);
-    
-    if (fs.existsSync(filePath)) {
-        res.download(filePath, filename);
-    } else {
-        console.log(`Archivo no encontrado: ${filePath}`);
-        res.status(404).send('Archivo no encontrado');
-    }
+    return {
+      id: folder,
+      created: stats.birthtime,
+      files: files.map(file => ({
+        name: file,
+        size: fs.statSync(path.join(folderPath, file)).size
+      }))
+    };
+  });
+  
+  res.json(datasets);
 });
 
 // Página principal
 app.get('/', (req, res) => {
-    const indexPath = path.join(__dirname, 'public', 'index.html');
-    if (fs.existsSync(indexPath)) {
-        res.sendFile(indexPath);
-    } else {
-        res.send(`
-            <h1>Generador de Dataset Chlorella</h1>
-            <p>Servidor funcionando correctamente</p>
-            <p>Timestamp: ${new Date().toISOString()}</p>
-            <p>El archivo index.html debe estar en la carpeta public/</p>
-        `);
-    }
+  res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
 
-// Manejo de errores
-app.use((err, req, res, next) => {
-    console.error('Error del servidor:', err);
-    res.status(500).json({ error: 'Error interno del servidor' });
+app.listen(PORT, () => {
+  console.log(`Servidor ejecutándose en puerto ${PORT}`);
+  console.log(`Accede a http://localhost:${PORT} para usar el generador`);
 });
-
-// Iniciar servidor
-const PORT = process.env.PORT || 3000;
-
-const server = app.listen(PORT, '0.0.0.0', () => {
-    console.log('=================================');
-    console.log(`✅ SERVIDOR INICIADO`);
-    console.log(`🌐 Puerto: ${PORT}`);
-    console.log(`📁 Directorio: ${__dirname}`);
-    console.log(`📊 Datasets: ${datasetsDir}`);
-    console.log(`🚀 URL: http://localhost:${PORT}`);
-    console.log('=================================');
-});
-
-server.on('error', (error) => {
-    console.error('❌ Error del servidor:', error);
-    if (error.code === 'EADDRINUSE') {
-        console.error(`Puerto ${PORT} ya está en uso`);
-    }
-});
-
-// Graceful shutdown
-process.on('SIGTERM', () => {
-    console.log('Cerrando servidor...');
-    server.close(() => {
-        console.log('Servidor cerrado');
-        process.exit(0);
-    });
-});
-
-console.log('Servidor configurado, esperando conexiones...');
