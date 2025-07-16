@@ -3,171 +3,178 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Generador Avanzado Dataset Chlorella</title>
+    <title>Generador Base de Datos Chlorella</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns"></script>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); min-height: 100vh; }
-        .container { max-width: 1600px; margin: 0 auto; padding: 20px; }
+        .container { max-width: 1400px; margin: 0 auto; padding: 20px; }
         .header { color: white; padding: 40px 0; text-align: center; margin-bottom: 30px; }
         .header h1 { font-size: 2.5em; margin-bottom: 10px; text-shadow: 2px 2px 4px rgba(0,0,0,0.3); }
         .header p { font-size: 1.2em; opacity: 0.9; }
-        .card { background: white; border-radius: 20px; padding: 30px; margin-bottom: 25px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); backdrop-filter: blur(10px); }
+        .card { background: white; border-radius: 20px; padding: 30px; margin-bottom: 25px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); }
         .card-header { display: flex; align-items: center; gap: 15px; margin-bottom: 25px; padding-bottom: 15px; border-bottom: 2px solid #f0f0f0; }
         .card-header h2 { color: #333; font-size: 1.5em; }
         .card-icon { font-size: 2em; }
-        .form-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 25px; }
+        .form-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 25px; }
         .form-group { margin-bottom: 20px; }
         label { display: block; margin-bottom: 8px; font-weight: 600; color: #333; }
         input, select { width: 100%; padding: 15px; border: 2px solid #e1e1e1; border-radius: 10px; font-size: 16px; transition: all 0.3s; }
-        input:focus, select:focus { outline: none; border-color: #667eea; box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1); transform: translateY(-2px); }
+        input:focus, select:focus { outline: none; border-color: #667eea; box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1); }
         .btn { background: linear-gradient(45deg, #667eea, #764ba2); color: white; padding: 18px 35px; border: none; border-radius: 12px; cursor: pointer; font-size: 18px; font-weight: 600; transition: all 0.3s; box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3); }
         .btn:hover { transform: translateY(-3px); box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4); }
         .btn:disabled { background: #ccc; cursor: not-allowed; transform: none; box-shadow: none; }
-        .btn-secondary { background: linear-gradient(45deg, #28a745, #20c997); }
-        .btn-secondary:hover { box-shadow: 0 6px 20px rgba(40, 167, 69, 0.4); }
         .progress { background: #e1e1e1; border-radius: 15px; height: 30px; margin: 25px 0; overflow: hidden; position: relative; }
-        .progress-bar { background: linear-gradient(45deg, #28a745, #20c997, #17a2b8); height: 100%; border-radius: 15px; transition: width 0.3s; position: relative; background-size: 40px 40px; animation: progress-stripes 1s linear infinite; }
-        @keyframes progress-stripes { 0% { background-position: 0 0; } 100% { background-position: 40px 40px; } }
+        .progress-bar { background: linear-gradient(45deg, #28a745, #20c997); height: 100%; border-radius: 15px; transition: width 0.3s; position: relative; }
         .progress-text { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); font-weight: bold; color: #333; z-index: 10; }
         .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px; margin-bottom: 30px; }
-        .stat-card { background: linear-gradient(135deg, #fff 0%, #f8f9fa 100%); padding: 25px; border-radius: 15px; text-align: center; box-shadow: 0 5px 15px rgba(0,0,0,0.1); border: 2px solid transparent; transition: all 0.3s; }
-        .stat-card:hover { transform: translateY(-5px); border-color: #667eea; }
+        .stat-card { background: linear-gradient(135deg, #fff 0%, #f8f9fa 100%); padding: 25px; border-radius: 15px; text-align: center; box-shadow: 0 5px 15px rgba(0,0,0,0.1); transition: all 0.3s; }
+        .stat-card:hover { transform: translateY(-5px); }
         .stat-value { font-size: 2.5em; font-weight: bold; margin-bottom: 5px; background: linear-gradient(45deg, #667eea, #764ba2); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
         .stat-label { color: #666; font-size: 0.9em; font-weight: 500; }
-        .charts-container { display: grid; grid-template-columns: repeat(auto-fit, minmax(600px, 1fr)); gap: 30px; margin-top: 30px; }
-        .chart-card { background: white; border-radius: 20px; padding: 30px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); }
-        .chart-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px; }
-        .chart-title { font-size: 1.3em; font-weight: 600; color: #333; }
-        .chart-controls { display: flex; gap: 10px; }
-        .chart-canvas { width: 100%; height: 400px; max-height: 400px; }
-        .correlation-heatmap { width: 100%; height: 500px; border: 1px solid #ddd; border-radius: 10px; }
-        .analysis-tabs { display: flex; gap: 5px; margin-bottom: 25px; }
-        .tab { padding: 12px 25px; border-radius: 10px; cursor: pointer; transition: all 0.3s; font-weight: 500; }
-        .tab.active { background: linear-gradient(45deg, #667eea, #764ba2); color: white; }
-        .tab:not(.active) { background: #f8f9fa; color: #666; }
-        .tab:hover:not(.active) { background: #e9ecef; }
-        .tab-content { display: none; }
-        .tab-content.active { display: block; }
-        .alert { padding: 20px; margin-bottom: 25px; border-radius: 15px; border-left: 5px solid; }
-        .alert-success { background: #d4edda; color: #155724; border-color: #28a745; }
-        .alert-warning { background: #fff3cd; color: #856404; border-color: #ffc107; }
-        .alert-info { background: #d1ecf1; color: #0c5460; border-color: #17a2b8; }
-        .ml-report { background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%); padding: 30px; border-radius: 20px; margin-top: 30px; }
-        .report-section { margin-bottom: 30px; }
-        .report-section h4 { color: #333; margin-bottom: 15px; font-size: 1.3em; }
-        .metric-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 20px; }
-        .metric { padding: 20px; border-radius: 15px; text-align: center; font-weight: 500; }
-        .metric.excellent { background: #d4edda; color: #155724; border: 2px solid #28a745; }
-        .metric.good { background: #cce5ff; color: #004085; border: 2px solid #007bff; }
-        .metric.warning { background: #fff3cd; color: #856404; border: 2px solid #ffc107; }
-        .metric.poor { background: #f8d7da; color: #721c24; border: 2px solid #dc3545; }
-        .data-table { width: 100%; border-collapse: collapse; margin-top: 15px; }
-        .data-table th, .data-table td { padding: 12px; text-align: left; border-bottom: 1px solid #ddd; }
-        .data-table th { background: #f8f9fa; font-weight: 600; }
-        .data-table tr:hover { background: #f5f5f5; }
-        .download-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 20px; margin-top: 30px; }
-        .download-card { background: linear-gradient(135deg, #28a745, #20c997); color: white; padding: 25px; border-radius: 15px; text-align: center; text-decoration: none; transition: all 0.3s; }
+        .download-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px; margin-top: 30px; }
+        .download-card { background: linear-gradient(135deg, #28a745, #20c997); color: white; padding: 25px; border-radius: 15px; text-align: center; text-decoration: none; transition: all 0.3s; cursor: pointer; }
         .download-card:hover { transform: translateY(-3px); box-shadow: 0 10px 25px rgba(40, 167, 69, 0.3); }
         .download-icon { font-size: 2.5em; margin-bottom: 10px; }
         .download-title { font-size: 1.2em; font-weight: 600; margin-bottom: 5px; }
         .download-desc { font-size: 0.9em; opacity: 0.9; }
+        .quality-indicator { display: flex; align-items: center; gap: 10px; margin-top: 10px; }
+        .quality-badge { padding: 5px 12px; border-radius: 20px; font-size: 0.8em; font-weight: 600; }
+        .quality-excellent { background: #d4edda; color: #155724; }
+        .quality-good { background: #cce5ff; color: #004085; }
+        .quality-warning { background: #fff3cd; color: #856404; }
+        .data-preview { background: #f8f9fa; border-radius: 10px; padding: 20px; margin-top: 20px; }
+        .preview-table { width: 100%; border-collapse: collapse; font-size: 0.9em; }
+        .preview-table th, .preview-table td { padding: 8px 12px; text-align: left; border-bottom: 1px solid #ddd; }
+        .preview-table th { background: #667eea; color: white; font-weight: 600; }
+        .preview-table tr:hover { background: #f5f5f5; }
+        .charts-container { display: grid; grid-template-columns: repeat(auto-fit, minmax(500px, 1fr)); gap: 30px; margin-top: 30px; }
+        .chart-card { background: white; border-radius: 20px; padding: 25px; box-shadow: 0 8px 20px rgba(0,0,0,0.1); }
+        .chart-title { font-size: 1.3em; font-weight: 600; color: #333; margin-bottom: 15px; text-align: center; }
+        .chart-canvas { width: 100%; height: 350px; max-height: 350px; }
+        .alert { padding: 20px; margin-bottom: 25px; border-radius: 15px; border-left: 5px solid; }
+        .alert-success { background: #d4edda; color: #155724; border-color: #28a745; }
+        .alert-info { background: #d1ecf1; color: #0c5460; border-color: #17a2b8; }
         .hidden { display: none; }
         .loading { text-align: center; padding: 30px; }
         .spinner { border: 4px solid #f3f3f3; border-top: 4px solid #667eea; border-radius: 50%; width: 60px; height: 60px; animation: spin 1s linear infinite; margin: 0 auto 20px; }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
-        .feature-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 25px; margin-top: 30px; }
-        .feature-card { background: white; padding: 25px; border-radius: 15px; box-shadow: 0 5px 15px rgba(0,0,0,0.1); border-left: 5px solid #667eea; }
-        .feature-icon { font-size: 2em; margin-bottom: 15px; }
-        .feature-title { font-size: 1.2em; font-weight: 600; margin-bottom: 10px; color: #333; }
-        .feature-desc { color: #666; line-height: 1.6; }
-        .tooltip { position: relative; display: inline-block; cursor: help; }
-        .tooltip .tooltiptext { visibility: hidden; width: 200px; background-color: #333; color: #fff; text-align: center; border-radius: 8px; padding: 8px; position: absolute; z-index: 1; bottom: 125%; left: 50%; margin-left: -100px; opacity: 0; transition: opacity 0.3s; }
-        .tooltip:hover .tooltiptext { visibility: visible; opacity: 1; }
-        .advanced-controls { background: #f8f9fa; padding: 20px; border-radius: 15px; margin-bottom: 25px; }
-        .control-row { display: flex; gap: 20px; align-items: end; flex-wrap: wrap; }
-        .control-group { flex: 1; min-width: 150px; }
-        .export-options { display: flex; gap: 15px; margin-top: 20px; }
-        .export-btn { padding: 10px 20px; border: 2px solid #667eea; background: white; color: #667eea; border-radius: 8px; cursor: pointer; transition: all 0.3s; }
-        .export-btn:hover { background: #667eea; color: white; }
+        .config-section { background: #f8f9fa; padding: 20px; border-radius: 15px; margin-bottom: 25px; }
+        .config-row { display: flex; gap: 20px; align-items: end; flex-wrap: wrap; }
+        .config-group { flex: 1; min-width: 200px; }
+        .info-card { background: linear-gradient(135deg, #e3f2fd 0%, #f3e5f5 100%); padding: 20px; border-radius: 15px; margin-bottom: 20px; }
+        .feature-highlight { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 20px; margin-top: 20px; }
+        .feature-item { background: white; padding: 20px; border-radius: 12px; box-shadow: 0 3px 10px rgba(0,0,0,0.1); }
+        .feature-icon { font-size: 1.8em; margin-bottom: 10px; }
+        .feature-title { font-weight: 600; margin-bottom: 8px; color: #333; }
+        .feature-desc { color: #666; font-size: 0.9em; }
+        .correlation-summary { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-top: 20px; }
+        .correlation-item { background: white; padding: 15px; border-radius: 10px; border-left: 4px solid #667eea; }
+        .correlation-value { font-size: 1.3em; font-weight: bold; color: #667eea; }
+        .correlation-label { font-size: 0.9em; color: #666; }
     </style>
 </head>
 <body>
     <div class="header">
-        <h1>🧬 Generador Avanzado Dataset Chlorella vulgaris</h1>
-        <p>Análisis completo, correlaciones y preparación para modelos híbridos de Machine Learning</p>
+        <h1>🧬 Generador Base de Datos Chlorella vulgaris</h1>
+        <p>Genera datasets científicos de alta calidad para investigación biotecnológica</p>
     </div>
     
     <div class="container">
-        <!-- Configuración Avanzada -->
+        <!-- Información del Sistema -->
+        <div class="info-card">
+            <h3>📊 Características del Generador</h3>
+            <div class="feature-highlight">
+                <div class="feature-item">
+                    <div class="feature-icon">🔬</div>
+                    <div class="feature-title">Realismo Biológico</div>
+                    <div class="feature-desc">Modelos cinéticos basados en investigación científica real</div>
+                </div>
+                <div class="feature-item">
+                    <div class="feature-icon">📈</div>
+                    <div class="feature-title">Datos Balanceados</div>
+                    <div class="feature-desc">Distribución equilibrada de condiciones normales y de estrés</div>
+                </div>
+                <div class="feature-item">
+                    <div class="feature-icon">🎯</div>
+                    <div class="feature-title">Alta Calidad</div>
+                    <div class="feature-desc">Validación automática y métricas de calidad integradas</div>
+                </div>
+                <div class="feature-item">
+                    <div class="feature-icon">⚡</div>
+                    <div class="feature-title">Generación Rápida</div>
+                    <div class="feature-desc">Algoritmos optimizados para datasets masivos</div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Configuración -->
         <div class="card">
             <div class="card-header">
                 <span class="card-icon">⚙️</span>
-                <h2>Configuración Avanzada del Dataset</h2>
+                <h2>Configuración de la Base de Datos</h2>
             </div>
             
-            <div class="advanced-controls">
-                <div class="control-row">
-                    <div class="control-group">
-                        <label for="scenarios">Escenarios:</label>
-                        <input type="number" id="scenarios" value="75" min="10" max="200">
+            <div class="config-section">
+                <div class="config-row">
+                    <div class="config-group">
+                        <label for="scenarios">Número de Escenarios:</label>
+                        <input type="number" id="scenarios" value="100" min="10" max="500">
+                        <small>Condiciones experimentales diferentes</small>
                     </div>
-                    <div class="control-group">
-                        <label for="hours">Horas/Escenario:</label>
-                        <input type="number" id="hours" value="168" min="24" max="720">
+                    <div class="config-group">
+                        <label for="hours">Horas por Escenario:</label>
+                        <input type="number" id="hours" value="240" min="24" max="720">
+                        <small>Duración del experimento (240h = 10 días)</small>
                     </div>
-                    <div class="control-group">
-                        <label for="noise-level">Nivel de Ruido:</label>
-                        <select id="noise-level">
-                            <option value="low">Bajo (±1%)</option>
-                            <option value="medium" selected>Medio (±3%)</option>
-                            <option value="high">Alto (±5%)</option>
-                            <option value="realistic">Realista (±2-8%)</option>
+                    <div class="config-group">
+                        <label for="data-quality">Calidad de Datos:</label>
+                        <select id="data-quality">
+                            <option value="research">Investigación (Alta)</option>
+                            <option value="industrial" selected>Industrial (Media)</option>
+                            <option value="pilot">Piloto (Básica)</option>
                         </select>
-                    </div>
-                    <div class="control-group">
-                        <label for="stress-frequency">Frecuencia de Estrés:</label>
-                        <select id="stress-frequency">
-                            <option value="low">Baja (10%)</option>
-                            <option value="medium" selected>Media (25%)</option>
-                            <option value="high">Alta (40%)</option>
-                            <option value="balanced">Balanceada (33%)</option>
-                        </select>
+                        <small>Nivel de ruido y variabilidad</small>
                     </div>
                 </div>
                 
-                <div class="control-row" style="margin-top: 20px;">
-                    <div class="control-group">
-                        <label for="light-regime">Régimen de Luz:</label>
-                        <select id="light-regime">
-                            <option value="mixed" selected>Mixto (50/50)</option>
-                            <option value="continuous">Continuo (100%)</option>
-                            <option value="cyclic">Cíclico (100%)</option>
+                <div class="config-row" style="margin-top: 20px;">
+                    <div class="config-group">
+                        <label for="stress-conditions">Condiciones de Estrés:</label>
+                        <select id="stress-conditions">
+                            <option value="balanced" selected>Balanceado (30%)</option>
+                            <option value="low">Bajo (15%)</option>
+                            <option value="high">Alto (45%)</option>
+                            <option value="extreme">Extremo (60%)</option>
                         </select>
+                        <small>Frecuencia de condiciones adversas</small>
                     </div>
-                    <div class="control-group">
-                        <label for="validation-split">División Validación:</label>
-                        <select id="validation-split">
-                            <option value="70-15-15" selected>70-15-15%</option>
-                            <option value="80-10-10">80-10-10%</option>
-                            <option value="60-20-20">60-20-20%</option>
+                    <div class="config-group">
+                        <label for="temporal-resolution">Resolución Temporal:</label>
+                        <select id="temporal-resolution">
+                            <option value="hour" selected>Cada Hora</option>
+                            <option value="30min">Cada 30 min</option>
+                            <option value="15min">Cada 15 min</option>
+                            <option value="5min">Cada 5 min</option>
                         </select>
+                        <small>Frecuencia de muestreo</small>
                     </div>
-                    <div class="control-group">
-                        <label for="temporal-features">Características Temporales:</label>
-                        <select id="temporal-features">
-                            <option value="basic">Básicas</option>
-                            <option value="advanced" selected>Avanzadas</option>
-                            <option value="ml-ready">ML-Ready</option>
+                    <div class="config-group">
+                        <label for="output-format">Formato de Salida:</label>
+                        <select id="output-format">
+                            <option value="csv" selected>CSV</option>
+                            <option value="json">JSON</option>
+                            <option value="excel">Excel</option>
+                            <option value="all">Todos</option>
                         </select>
+                        <small>Formato de archivos generados</small>
                     </div>
                 </div>
             </div>
             
             <div style="text-align: center;">
-                <button class="btn" onclick="generateAdvancedDataset()" id="generateBtn">
-                    🚀 Generar Dataset Avanzado
+                <button class="btn" onclick="generateDatabase()" id="generateBtn">
+                    🚀 Generar Base de Datos
                 </button>
             </div>
         </div>
@@ -176,15 +183,15 @@
         <div id="progress" class="card hidden">
             <div class="card-header">
                 <span class="card-icon">🔄</span>
-                <h2>Generando Dataset Avanzado</h2>
+                <h2>Generando Base de Datos</h2>
             </div>
             <div class="progress">
                 <div id="progress-bar" class="progress-bar" style="width: 0%"></div>
-                <div class="progress-text" id="progress-text">Iniciando generación...</div>
+                <div class="progress-text" id="progress-text">Iniciando...</div>
             </div>
             <div class="loading">
                 <div class="spinner"></div>
-                <p id="stage-info">Preparando algoritmos de generación...</p>
+                <p id="stage-info">Preparando generación de datos...</p>
             </div>
         </div>
         
@@ -192,151 +199,64 @@
         <div id="results" class="card hidden">
             <div class="card-header">
                 <span class="card-icon">✅</span>
-                <h2>Dataset Generado Exitosamente</h2>
+                <h2>Base de Datos Generada</h2>
             </div>
+            
+            <div class="alert alert-success">
+                <strong>¡Éxito!</strong> Base de datos científica generada con validación automática de calidad.
+            </div>
+            
             <div id="stats" class="stats-grid"></div>
+            
+            <div id="quality-report" class="data-preview">
+                <h3>📊 Reporte de Calidad</h3>
+                <div id="quality-metrics"></div>
+            </div>
+            
+            <div id="data-preview" class="data-preview">
+                <h3>👁️ Vista Previa de Datos</h3>
+                <table id="preview-table" class="preview-table"></table>
+            </div>
+            
             <div id="downloads" class="download-grid"></div>
         </div>
         
-        <!-- Análisis Avanzado -->
-        <div id="analysis-section" class="card hidden">
+        <!-- Visualizaciones -->
+        <div id="charts-section" class="card hidden">
             <div class="card-header">
-                <span class="card-icon">📊</span>
-                <h2>Análisis Avanzado de Datos</h2>
+                <span class="card-icon">📈</span>
+                <h2>Visualización de Datos</h2>
             </div>
             
-            <div class="analysis-tabs">
-                <div class="tab active" onclick="showTab('correlations')">🔗 Correlaciones</div>
-                <div class="tab" onclick="showTab('distributions')">📈 Distribuciones</div>
-                <div class="tab" onclick="showTab('temporal')">⏱️ Análisis Temporal</div>
-                <div class="tab" onclick="showTab('ml-readiness')">🤖 ML Readiness</div>
+            <div class="alert alert-info">
+                <strong>Gráficas de Validación:</strong> Verifica la calidad y distribución de tus datos generados.
             </div>
             
-            <div id="correlations" class="tab-content active">
-                <div class="alert alert-info">
-                    <strong>Análisis de Correlaciones:</strong> Explora las relaciones entre variables para identificar patrones clave.
+            <div class="charts-container">
+                <div class="chart-card">
+                    <div class="chart-title">📈 Evolución de Biomasa</div>
+                    <canvas id="biomassChart" class="chart-canvas"></canvas>
                 </div>
-                <div class="charts-container">
-                    <div class="chart-card">
-                        <div class="chart-header">
-                            <div class="chart-title">🔥 Matriz de Correlaciones</div>
-                            <div class="chart-controls">
-                                <button class="btn-secondary" onclick="updateCorrelationMatrix()">🔄 Actualizar</button>
-                            </div>
-                        </div>
-                        <canvas id="correlationChart" class="correlation-heatmap"></canvas>
-                    </div>
-                    <div class="chart-card">
-                        <div class="chart-header">
-                            <div class="chart-title">📊 Correlaciones Clave</div>
-                        </div>
-                        <canvas id="keyCorrelationsChart" class="chart-canvas"></canvas>
-                    </div>
+                
+                <div class="chart-card">
+                    <div class="chart-title">🌡️ Condiciones Ambientales</div>
+                    <canvas id="environmentChart" class="chart-canvas"></canvas>
+                </div>
+                
+                <div class="chart-card">
+                    <div class="chart-title">💡 Patrones de Luz</div>
+                    <canvas id="lightChart" class="chart-canvas"></canvas>
+                </div>
+                
+                <div class="chart-card">
+                    <div class="chart-title">📊 Distribución de Variables</div>
+                    <canvas id="distributionChart" class="chart-canvas"></canvas>
                 </div>
             </div>
             
-            <div id="distributions" class="tab-content">
-                <div class="alert alert-success">
-                    <strong>Análisis de Distribuciones:</strong> Visualiza la distribución de variables clave y detecta outliers.
-                </div>
-                <div class="charts-container">
-                    <div class="chart-card">
-                        <div class="chart-header">
-                            <div class="chart-title">📈 Evolución de Biomasa</div>
-                            <div class="chart-controls">
-                                <select id="biomass-scenario">
-                                    <option value="all">Todos los escenarios</option>
-                                </select>
-                            </div>
-                        </div>
-                        <canvas id="biomassChart" class="chart-canvas"></canvas>
-                    </div>
-                    <div class="chart-card">
-                        <div class="chart-header">
-                            <div class="chart-title">⚡ Tasa de Crecimiento</div>
-                        </div>
-                        <canvas id="growthChart" class="chart-canvas"></canvas>
-                    </div>
-                    <div class="chart-card">
-                        <div class="chart-header">
-                            <div class="chart-title">🌡️ Condiciones Ambientales</div>
-                        </div>
-                        <canvas id="environmentChart" class="chart-canvas"></canvas>
-                    </div>
-                    <div class="chart-card">
-                        <div class="chart-header">
-                            <div class="chart-title">💡 Intensidad de Luz</div>
-                        </div>
-                        <canvas id="lightChart" class="chart-canvas"></canvas>
-                    </div>
-                </div>
-            </div>
-            
-            <div id="temporal" class="tab-content">
-                <div class="alert alert-warning">
-                    <strong>Análisis Temporal:</strong> Examina patrones temporales y autocorrelaciones para modelos de series de tiempo.
-                </div>
-                <div class="charts-container">
-                    <div class="chart-card">
-                        <div class="chart-header">
-                            <div class="chart-title">📊 Autocorrelación</div>
-                        </div>
-                        <canvas id="autocorrelationChart" class="chart-canvas"></canvas>
-                    </div>
-                    <div class="chart-card">
-                        <div class="chart-header">
-                            <div class="chart-title">🔄 Tendencias Temporales</div>
-                        </div>
-                        <canvas id="trendsChart" class="chart-canvas"></canvas>
-                    </div>
-                </div>
-            </div>
-            
-            <div id="ml-readiness" class="tab-content">
-                <div class="alert alert-info">
-                    <strong>ML Readiness:</strong> Evaluación completa de la preparación de datos para modelos de Machine Learning.
-                </div>
-                <div id="ml-report"></div>
-            </div>
-        </div>
-        
-        <!-- Características del Sistema -->
-        <div class="card">
-            <div class="card-header">
-                <span class="card-icon">🎯</span>
-                <h2>Características Avanzadas</h2>
-            </div>
-            <div class="feature-grid">
-                <div class="feature-card">
-                    <div class="feature-icon">🧠</div>
-                    <div class="feature-title">Algoritmos ML-Ready</div>
-                    <div class="feature-desc">Datos optimizados para redes neuronales, random forests, y modelos híbridos físico-ML.</div>
-                </div>
-                <div class="feature-card">
-                    <div class="feature-icon">📊</div>
-                    <div class="feature-title">Análisis Estadístico</div>
-                    <div class="feature-desc">Correlaciones, distribuciones, outliers, y métricas de calidad de datos automáticas.</div>
-                </div>
-                <div class="feature-card">
-                    <div class="feature-icon">⏱️</div>
-                    <div class="feature-title">Series Temporales</div>
-                    <div class="feature-desc">Secuencias optimizadas para LSTM, GRU, y análisis de autocorrelación temporal.</div>
-                </div>
-                <div class="feature-card">
-                    <div class="feature-icon">🔬</div>
-                    <div class="feature-title">Realismo Biológico</div>
-                    <div class="feature-desc">Modelos cinéticos avanzados con efectos de inhibición, limitación y estrés.</div>
-                </div>
-                <div class="feature-card">
-                    <div class="feature-icon">📈</div>
-                    <div class="feature-title">Validación Cruzada</div>
-                    <div class="feature-desc">División estratificada y balanceada para entrenamiento, validación y testing.</div>
-                </div>
-                <div class="feature-card">
-                    <div class="feature-icon">🎛️</div>
-                    <div class="feature-title">Configuración Flexible</div>
-                    <div class="feature-desc">Control total sobre ruido, estrés, regímenes de luz y características temporales.</div>
-                </div>
+            <div id="correlation-analysis" class="data-preview">
+                <h3>🔗 Análisis de Correlaciones</h3>
+                <div id="correlation-results" class="correlation-summary"></div>
             </div>
         </div>
     </div>
@@ -344,25 +264,9 @@
     <script>
         let currentDataset = null;
         let charts = {};
-        let analysisData = null;
+        let dataStats = null;
         
-        // Configuración avanzada
-        const advancedConfig = {
-            noiseProfiles: {
-                low: { biomass: 0.01, sensors: 0.005 },
-                medium: { biomass: 0.03, sensors: 0.015 },
-                high: { biomass: 0.05, sensors: 0.025 },
-                realistic: { biomass: 0.02, sensors: 0.01, temporal: 0.008 }
-            },
-            stressProfiles: {
-                low: { thermal: 0.05, ph: 0.05 },
-                medium: { thermal: 0.15, ph: 0.10 },
-                high: { thermal: 0.25, ph: 0.15 },
-                balanced: { thermal: 0.166, ph: 0.166 }
-            }
-        };
-        
-        async function generateAdvancedDataset() {
+        async function generateDatabase() {
             const scenarios = parseInt(document.getElementById('scenarios').value);
             const hours = parseInt(document.getElementById('hours').value);
             const generateBtn = document.getElementById('generateBtn');
@@ -370,7 +274,7 @@
             // Mostrar progreso
             document.getElementById('progress').classList.remove('hidden');
             document.getElementById('results').classList.add('hidden');
-            document.getElementById('analysis-section').classList.add('hidden');
+            document.getElementById('charts-section').classList.add('hidden');
             generateBtn.disabled = true;
             generateBtn.textContent = 'Generando...';
             
@@ -379,1292 +283,209 @@
             const stageInfo = document.getElementById('stage-info');
             
             const stages = [
-                'Inicializando generadores avanzados...',
-                'Creando escenarios diversificados...',
-                'Aplicando modelos cinéticos...',
-                'Generando ruido realista...',
-                'Calculando correlaciones...',
+                'Inicializando parámetros biológicos...',
+                'Generando condiciones experimentales...',
+                'Aplicando modelo cinético de Monod...',
+                'Simulando efectos ambientales...',
+                'Calculando correlaciones entre variables...',
                 'Validando calidad de datos...',
                 'Preparando archivos de salida...'
             ];
             
             try {
+                // Simular progreso por etapas
                 for (let i = 0; i < stages.length; i++) {
                     stageInfo.textContent = stages[i];
                     progressText.textContent = `Etapa ${i + 1} de ${stages.length}`;
-                    progressBar.style.width = `${(i + 1) / stages.length * 90}%`;
+                    progressBar.style.width = `${(i + 1) / stages.length * 85}%`;
                     await new Promise(resolve => setTimeout(resolve, 800));
                 }
                 
-                // Generar dataset
-                const response = await fetch('/generate-dataset', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ 
-                        scenarios: scenarios, 
-                        hoursPerScenario: hours,
-                        advanced: true,
-                        noiseLevel: document.getElementById('noise-level').value,
-                        stressFrequency: document.getElementById('stress-frequency').value,
-                        lightRegime: document.getElementById('light-regime').value,
-                        temporalFeatures: document.getElementById('temporal-features').value
-                    })
-                });
+                // Generar datos
+                progressText.textContent = 'Procesando datos...';
+                progressBar.style.width = '95%';
+                await generateDataset(scenarios, hours);
                 
-                if (!response.ok) {
-                    throw new Error('Error en la generación del dataset');
-                }
+                // Finalizar
+                progressBar.style.width = '100%';
+                progressText.textContent = '¡Completado!';
+                stageInfo.textContent = 'Base de datos generada exitosamente';
                 
-                const data = await response.json();
+                // Mostrar resultados
+                document.getElementById('results').classList.remove('hidden');
+                document.getElementById('charts-section').classList.remove('hidden');
                 
-                if (data.success) {
-                    progressBar.style.width = '100%';
-                    progressText.textContent = '¡Generación completada!';
-                    stageInfo.textContent = 'Procesamiento finalizado exitosamente';
-                    
-                    // Mostrar estadísticas mejoradas
-                    displayAdvancedStats(data.stats);
-                    
-                    // Generar datos de muestra para análisis
-                    await generateAdvancedSampleData(scenarios, hours);
-                    
-                    // Mostrar secciones
-                    document.getElementById('results').classList.remove('hidden');
-                    document.getElementById('analysis-section').classList.remove('hidden');
-                    
-                    setTimeout(() => {
-                        document.getElementById('progress').classList.add('hidden');
-                    }, 2000);
-                } else {
-                    throw new Error(data.error || 'Error desconocido');
-                }
+                setTimeout(() => {
+                    document.getElementById('progress').classList.add('hidden');
+                }, 2000);
+                
             } catch (error) {
                 progressText.textContent = 'Error: ' + error.message;
                 progressBar.style.width = '0%';
                 progressBar.style.background = '#dc3545';
-                stageInfo.textContent = 'Error en el procesamiento';
+                stageInfo.textContent = 'Error en la generación';
             } finally {
                 generateBtn.disabled = false;
-                generateBtn.textContent = '🚀 Generar Dataset Avanzado';
+                generateBtn.textContent = '🚀 Generar Base de Datos';
             }
         }
         
-        function displayAdvancedStats(stats) {
-            const statsHTML = `
-                <div class="stat-card">
-                    <div class="stat-value">${stats.totalPoints?.toLocaleString() || '0'}</div>
-                    <div class="stat-label">Total de Puntos</div>
-                </div>
-                <div class="stat-card">
-                    <div class="stat-value">${stats.scenarios || '0'}</div>
-                    <div class="stat-label">Escenarios</div>
-                </div>
-                <div class="stat-card">
-                    <div class="stat-value">${stats.trainingPoints?.toLocaleString() || '0'}</div>
-                    <div class="stat-label">Entrenamiento</div>
-                </div>
-                <div class="stat-card">
-                    <div class="stat-value">${stats.validationPoints?.toLocaleString() || '0'}</div>
-                    <div class="stat-label">Validación</div>
-                </div>
-                <div class="stat-card">
-                    <div class="stat-value">${stats.testPoints?.toLocaleString() || '0'}</div>
-                    <div class="stat-label">Prueba</div>
-                </div>
-                <div class="stat-card">
-                    <div class="stat-value">${(stats.biomassRange?.max || 0).toFixed(2)}</div>
-                    <div class="stat-label">Biomasa Máxima (g/L)</div>
-                </div>
-            `;
+        async function generateDataset(scenarios, hours) {
+            const dataQuality = document.getElementById('data-quality').value;
+            const stressConditions = document.getElementById('stress-conditions').value;
+            const temporalResolution = document.getElementById('temporal-resolution').value;
             
-            document.getElementById('stats').innerHTML = statsHTML;
+            // Configuración de calidad
+            const qualityConfig = {
+                research: { noise: 0.01, precision: 4, outliers: 0.02 },
+                industrial: { noise: 0.03, precision: 3, outliers: 0.05 },
+                pilot: { noise: 0.08, precision: 2, outliers: 0.10 }
+            };
             
-            // Botones de descarga mejorados
-            const folderName = stats.outputDir?.split('/').pop() || 'dataset';
-            const downloadsHTML = `
-                <div class="download-card" onclick="downloadFile('${folderName}', 'training_data.csv')">
-                    <div class="download-icon">🎯</div>
-                    <div class="download-title">Datos de Entrenamiento</div>
-                    <div class="download-desc">Dataset principal para entrenar modelos ML</div>
-                </div>
-                <div class="download-card" onclick="downloadFile('${folderName}', 'validation_data.csv')">
-                    <div class="download-icon">🔍</div>
-                    <div class="download-title">Datos de Validación</div>
-                    <div class="download-desc">Para validación y ajuste de hiperparámetros</div>
-                </div>
-                <div class="download-card" onclick="downloadFile('${folderName}', 'test_data.csv')">
-                    <div class="download-icon">🧪</div>
-                    <div class="download-title">Datos de Prueba</div>
-                    <div class="download-desc">Evaluación final del modelo</div>
-                </div>
-                <div class="download-card" onclick="downloadFile('${folderName}', 'complete_dataset.csv')">
-                    <div class="download-icon">📊</div>
-                    <div class="download-title">Dataset Completo</div>
-                    <div class="download-desc">Todos los datos generados</div>
-                </div>
-                <div class="download-card" onclick="downloadAnalysisReport()">
-                    <div class="download-icon">📈</div>
-                    <div class="download-title">Reporte de Análisis</div>
-                    <div class="download-desc">Estadísticas y correlaciones completas</div>
-                </div>
-                <div class="download-card" onclick="downloadMLConfig()">
-                    <div class="download-icon">🤖</div>
-                    <div class="download-title">Configuración ML</div>
-                    <div class="download-desc">Parámetros optimizados para modelos</div>
-                </div>
-            `;
+            const stressConfig = {
+                balanced: { thermal: 0.15, ph: 0.15 },
+                low: { thermal: 0.05, ph: 0.10 },
+                high: { thermal: 0.25, ph: 0.20 },
+                extreme: { thermal: 0.35, ph: 0.25 }
+            };
             
-            document.getElementById('downloads').innerHTML = downloadsHTML;
-        }
-        
-        async function generateAdvancedSampleData(scenarios, hours) {
-            const sampleData = [];
-            const noiseLevel = document.getElementById('noise-level').value;
-            const stressFreq = document.getElementById('stress-frequency').value;
-            const lightRegime = document.getElementById('light-regime').value;
+            const resolutionConfig = {
+                hour: 1,
+                '30min': 0.5,
+                '15min': 0.25,
+                '5min': 0.0833
+            };
             
-            const noiseProfile = advancedConfig.noiseProfiles[noiseLevel];
-            const stressProfile = advancedConfig.stressProfiles[stressFreq];
+            const quality = qualityConfig[dataQuality];
+            const stress = stressConfig[stressConditions];
+            const resolution = resolutionConfig[temporalResolution];
             
-            for (let s = 0; s < Math.min(scenarios, 10); s++) {
+            const allData = [];
+            const totalPoints = Math.floor(scenarios * hours / resolution);
+            
+            for (let s = 0; s < scenarios; s++) {
+                // Parámetros del escenario
                 const scenarioParams = {
                     baseTemp: 20 + Math.random() * 10,
                     basePh: 6.8 + Math.random() * 1.2,
                     maxPAR: 400 + Math.random() * 600,
                     initialBiomass: 0.05 + Math.random() * 0.3,
                     nutrientLevel: 0.5 + Math.random() * 0.5,
-                    lightType: lightRegime === 'mixed' ? (Math.random() > 0.5 ? 'continuous' : 'cyclic') : lightRegime,
-                    stressType: Math.random() < stressProfile.thermal ? 'thermal' : 
-                               Math.random() < stressProfile.ph ? 'ph' : 'normal'
+                    lightRegime: Math.random() > 0.5 ? 'continuous' : 'cyclic',
+                    stressType: Math.random() < stress.thermal ? 'thermal' : 
+                               Math.random() < stress.ph ? 'ph' : 'normal'
                 };
                 
+                // Variables del cultivo
                 let currentBiomass = scenarioParams.initialBiomass;
                 let currentCellConc = currentBiomass * 2e6;
                 let currentpH = scenarioParams.basePh;
                 let currentTemp = scenarioParams.baseTemp;
                 let nutrients = scenarioParams.nutrientLevel;
                 
-                for (let h = 0; h < Math.min(hours, 200); h++) {
-                    // Ciclo de luz avanzado
+                for (let t = 0; t < hours; t += resolution) {
+                    const hour = Math.floor(t);
+                    
+                    // Ciclo de luz
                     let lightIntensity;
-                    if (scenarioParams.lightType === 'continuous') {
+                    if (scenarioParams.lightRegime === 'continuous') {
                         lightIntensity = scenarioParams.maxPAR * (0.8 + 0.2 * Math.random());
                     } else {
-                        const hourOfDay = h % 24;
-                        if (hourOfDay >= 6 && hourOfDay <= 18) {
-                            lightIntensity = scenarioParams.maxPAR * Math.sin((hourOfDay - 6) * Math.PI / 12);
-                        } else {
-                            lightIntensity = 0;
-                        }
+                        const hourOfDay = hour % 24;
+                        lightIntensity = hourOfDay >= 6 && hourOfDay <= 18 ? 
+                            scenarioParams.maxPAR * Math.sin((hourOfDay - 6) * Math.PI / 12) : 0;
                     }
                     
-                    // Variaciones de temperatura con ruido
-                    let tempVariation = scenarioParams.stressType === 'thermal' ? 
+                    // Variaciones ambientales
+                    const tempVariation = scenarioParams.stressType === 'thermal' ? 
                         5 + Math.random() * 3 : Math.random() * 2 - 1;
-                    tempVariation += (Math.random() - 0.5) * noiseProfile.sensors * 10;
                     currentTemp = Math.max(15, Math.min(40, 
-                        scenarioParams.baseTemp + tempVariation + 2 * Math.sin(h * Math.PI / 12)));
+                        scenarioParams.baseTemp + tempVariation + 2 * Math.sin(t * Math.PI / 12)));
                     
-                    // Variaciones de pH con ruido
-                    let pHDrift = scenarioParams.stressType === 'ph' ? 
+                    const pHDrift = scenarioParams.stressType === 'ph' ? 
                         -0.5 + Math.random() * 0.2 : (Math.random() - 0.5) * 0.1;
-                    pHDrift += (Math.random() - 0.5) * noiseProfile.sensors * 0.5;
                     currentpH = Math.max(6.0, Math.min(9.0, 
-                        scenarioParams.basePh + pHDrift + 0.3 * Math.sin(h * 0.05)));
+                        scenarioParams.basePh + pHDrift + 0.3 * Math.sin(t * 0.05)));
                     
                     // Depleción de nutrientes
-                    nutrients = Math.max(0.1, nutrients - 0.001 * currentBiomass);
+                    nutrients = Math.max(0.1, nutrients - 0.001 * currentBiomass * resolution);
                     
-                    // Modelo cinético avanzado
-                    const lightEffect = Math.min(1, lightIntensity / 300);
+                    // Modelo cinético de Monod
+                    const muMax = 0.08;
+                    const Ks_light = 300;
+                    const Ks_nutrient = 0.1;
+                    const Ki_biomass = 4;
+                    
+                    const lightEffect = lightIntensity / (lightIntensity + Ks_light);
                     const tempEffect = currentTemp >= 15 && currentTemp <= 35 ? 
                         Math.exp(-Math.pow((currentTemp - 25) / 10, 2)) : 0.1;
                     const pHEffect = currentpH >= 6.5 && currentpH <= 8.5 ? 
                         Math.exp(-Math.pow((currentpH - 7.2) / 1.5, 2)) : 0.1;
-                    const nutrientEffect = nutrients / (nutrients + 0.1);
-                    const densityEffect = Math.max(0.1, 1 - currentBiomass / 4);
+                    const nutrientEffect = nutrients / (nutrients + Ks_nutrient);
+                    const inhibitionEffect = Ki_biomass / (Ki_biomass + currentBiomass);
                     
-                    // Inhibición por productos
-                    const inhibitionEffect = Math.max(0.1, 1 - currentBiomass / 3);
+                    const mu = muMax * lightEffect * tempEffect * pHEffect * nutrientEffect * inhibitionEffect;
                     
-                    const mu = 0.08 * lightEffect * tempEffect * pHEffect * nutrientEffect * densityEffect * inhibitionEffect;
-                    
-                    // Ruido en la tasa de crecimiento
-                    const growthRate = Math.max(0, mu + (Math.random() - 0.5) * 0.005);
+                    // Aplicar ruido según calidad
+                    const growthRate = Math.max(0, mu + (Math.random() - 0.5) * quality.noise);
                     
                     // Actualizar biomasa
-                    currentBiomass = Math.min(currentBiomass * (1 + growthRate), 5.0);
-                    currentCellConc = Math.min(currentCellConc * (1 + growthRate), 2e7);
+                    currentBiomass = Math.min(currentBiomass * Math.exp(growthRate * resolution), 5.0);
+                    currentCellConc = currentCellConc * Math.exp(growthRate * resolution);
                     
-                    // Aplicar ruido a las mediciones
-                    const biomassNoise = currentBiomass * (1 + (Math.random() - 0.5) * noiseProfile.biomass);
-                    const cellConcNoise = currentCellConc * (1 + (Math.random() - 0.5) * noiseProfile.sensors);
+                    // Ruido en mediciones
+                    const biomassNoise = currentBiomass * (1 + (Math.random() - 0.5) * quality.noise);
+                    const cellConcNoise = currentCellConc * (1 + (Math.random() - 0.5) * quality.noise);
                     
-                    // Características temporales avanzadas
-                    const lag1_biomass = h > 0 ? sampleData[sampleData.length - 1]?.Biomasa || biomassNoise : biomassNoise;
-                    const lag2_biomass = h > 1 ? sampleData[sampleData.length - 2]?.Biomasa || biomassNoise : biomassNoise;
-                    const biomass_trend = h > 1 ? biomassNoise - lag2_biomass : 0;
-                    const biomass_velocity = h > 0 ? biomassNoise - lag1_biomass : 0;
-                    
+                    // Crear punto de datos
                     const dataPoint = {
-                        Scenario: s,
-                        Hora: h,
-                        Timestamp: new Date(Date.now() + h * 3600000).toISOString(),
-                        pH: parseFloat(currentpH.toFixed(2)),
-                        Temperatura: parseFloat(currentTemp.toFixed(1)),
-                        PAR: parseFloat(lightIntensity.toFixed(1)),
-                        mu: parseFloat(growthRate.toFixed(4)),
-                        Biomasa: parseFloat(biomassNoise.toFixed(3)),
-                        Concentracion_Celular: parseFloat(cellConcNoise.toFixed(0)),
-                        Nutrientes: parseFloat(nutrients.toFixed(3)),
-                        Densidad_Optica: parseFloat((currentBiomass * 2.5).toFixed(3)),
-                        Productividad: parseFloat((currentBiomass * growthRate * 24).toFixed(3)),
-                        Eficiencia_Luz: parseFloat((mu / Math.max(0.001, lightIntensity / 1000)).toFixed(4)),
-                        Estres_Termico: currentTemp > 32 || currentTemp < 18 ? 1 : 0,
-                        Estres_pH: currentpH < 6.5 || currentpH > 8.5 ? 1 : 0,
-                        Regimen_Luz: scenarioParams.lightType,
-                        Condicion_Estres: scenarioParams.stressType,
-                        // Características temporales
-                        Biomasa_Lag1: lag1_biomass,
-                        Biomasa_Lag2: lag2_biomass,
-                        Biomasa_Trend: biomass_trend,
-                        Biomasa_Velocity: biomass_velocity,
-                        Hora_Sin: Math.sin(2 * Math.PI * (h % 24) / 24),
-                        Hora_Cos: Math.cos(2 * Math.PI * (h % 24) / 24),
-                        Dia_Ciclo: Math.floor(h / 24),
-                        // Indicadores de calidad
-                        Outlier_Score: Math.abs(biomassNoise - currentBiomass) / currentBiomass,
-                        Confidence_Score: Math.min(1, 1 - (Math.abs(biomassNoise - currentBiomass) / currentBiomass))
+                        Scenario: s + 1,
+                        Time_h: parseFloat(t.toFixed(2)),
+                        DateTime: new Date(Date.now() + t * 3600000).toISOString(),
+                        pH: parseFloat(currentpH.toFixed(quality.precision)),
+                        Temperature_C: parseFloat(currentTemp.toFixed(quality.precision)),
+                        PAR_umol_m2_s: parseFloat(lightIntensity.toFixed(quality.precision)),
+                        Growth_Rate_h: parseFloat(growthRate.toFixed(quality.precision + 1)),
+                        Biomass_g_L: parseFloat(biomassNoise.toFixed(quality.precision)),
+                        Cell_Concentration_cells_mL: parseFloat(cellConcNoise.toFixed(0)),
+                        Nutrients_g_L: parseFloat(nutrients.toFixed(quality.precision)),
+                        Optical_Density_OD680: parseFloat((currentBiomass * 2.5).toFixed(quality.precision)),
+                        Productivity_g_L_d: parseFloat((currentBiomass * growthRate * 24).toFixed(quality.precision)),
+                        Light_Efficiency: parseFloat((mu / Math.max(0.001, lightIntensity / 1000)).toFixed(quality.precision + 1)),
+                        Thermal_Stress: currentTemp > 32 || currentTemp < 18 ? 1 : 0,
+                        pH_Stress: currentpH < 6.5 || currentpH > 8.5 ? 1 : 0,
+                        Light_Regime: scenarioParams.lightRegime,
+                        Stress_Condition: scenarioParams.stressType,
+                        Data_Quality: dataQuality,
+                        Sampling_Resolution: temporalResolution
                     };
                     
-                    sampleData.push(dataPoint);
+                    allData.push(dataPoint);
                 }
             }
             
-            currentDataset = sampleData;
-            analysisData = await performAdvancedAnalysis(sampleData);
+            currentDataset = allData;
             
-            // Actualizar controles
-            populateScenarioSelectors();
+            // Calcular estadísticas
+            calculateDataStatistics();
+            
+            // Mostrar resultados
+            displayResults();
             
             // Crear visualizaciones
-            createAllCharts();
-            displayMLReport();
+            createCharts();
+            
+            // Análisis de correlaciones
+            performCorrelationAnalysis();
         }
         
-        async function performAdvancedAnalysis(data) {
-            const variables = ['pH', 'Temperatura', 'PAR', 'Biomasa', 'mu', 'Concentracion_Celular', 'Nutrientes', 'Productividad'];
-            
-            // Matriz de correlaciones
-            const correlationMatrix = calculateCorrelationMatrix(data, variables);
-            
-            // Análisis de variabilidad
-            const variabilityAnalysis = analyzeVariability(data, variables);
-            
-            // Análisis temporal
-            const temporalAnalysis = analyzeTemporalPatterns(data);
-            
-            // Evaluación ML
-            const mlReadiness = evaluateMLReadiness(data);
-            
-            return {
-                correlations: correlationMatrix,
-                variability: variabilityAnalysis,
-                temporal: temporalAnalysis,
-                mlReadiness: mlReadiness
-            };
-        }
-        
-        function calculateCorrelationMatrix(data, variables) {
-            const matrix = {};
-            
-            variables.forEach(var1 => {
-                matrix[var1] = {};
-                variables.forEach(var2 => {
-                    const values1 = data.map(d => d[var1]).filter(v => v !== undefined && !isNaN(v));
-                    const values2 = data.map(d => d[var2]).filter(v => v !== undefined && !isNaN(v));
-                    
-                    if (values1.length > 0 && values2.length > 0) {
-                        matrix[var1][var2] = calculatePearsonCorrelation(values1, values2);
-                    } else {
-                        matrix[var1][var2] = 0;
-                    }
-                });
-            });
-            
-            return matrix;
-        }
-        
-        function calculatePearsonCorrelation(x, y) {
-            const n = Math.min(x.length, y.length);
-            if (n < 2) return 0;
-            
-            const x_vals = x.slice(0, n);
-            const y_vals = y.slice(0, n);
-            
-            const sumX = x_vals.reduce((a, b) => a + b, 0);
-            const sumY = y_vals.reduce((a, b) => a + b, 0);
-            const sumXY = x_vals.reduce((sum, xi, i) => sum + xi * y_vals[i], 0);
-            const sumX2 = x_vals.reduce((sum, xi) => sum + xi * xi, 0);
-            const sumY2 = y_vals.reduce((sum, yi) => sum + yi * yi, 0);
-            
-            const numerator = n * sumXY - sumX * sumY;
-            const denominator = Math.sqrt((n * sumX2 - sumX * sumX) * (n * sumY2 - sumY * sumY));
-            
-            return denominator === 0 ? 0 : numerator / denominator;
-        }
-        
-        function analyzeVariability(data, variables) {
-            const analysis = {};
-            
-            variables.forEach(variable => {
-                const values = data.map(d => d[variable]).filter(v => v !== undefined && !isNaN(v));
-                
-                if (values.length > 0) {
-                    const mean = values.reduce((a, b) => a + b, 0) / values.length;
-                    const variance = values.reduce((sum, val) => sum + Math.pow(val - mean, 2), 0) / values.length;
-                    const std = Math.sqrt(variance);
-                    const cv = mean !== 0 ? (std / mean) * 100 : 0;
-                    
-                    // Detectar outliers (método IQR)
-                    const sorted = values.slice().sort((a, b) => a - b);
-                    const q1 = sorted[Math.floor(sorted.length * 0.25)];
-                    const q3 = sorted[Math.floor(sorted.length * 0.75)];
-                    const iqr = q3 - q1;
-                    const lowerBound = q1 - 1.5 * iqr;
-                    const upperBound = q3 + 1.5 * iqr;
-                    const outliers = values.filter(v => v < lowerBound || v > upperBound);
-                    
-                    analysis[variable] = {
-                        mean: mean,
-                        std: std,
-                        cv: cv,
-                        min: Math.min(...values),
-                        max: Math.max(...values),
-                        range: Math.max(...values) - Math.min(...values),
-                        q1: q1,
-                        q3: q3,
-                        iqr: iqr,
-                        outliers: outliers.length,
-                        outlier_percentage: (outliers.length / values.length) * 100
-                    };
-                }
-            });
-            
-            return analysis;
-        }
-        
-        function analyzeTemporalPatterns(data) {
-            const biomassValues = data.map(d => d.Biomasa).filter(v => v !== undefined && !isNaN(v));
-            
-            // Autocorrelación
-            const maxLag = Math.min(50, Math.floor(biomassValues.length / 4));
-            const autocorrelation = [];
-            
-            for (let lag = 0; lag <= maxLag; lag++) {
-                if (lag === 0) {
-                    autocorrelation.push(1);
-                } else {
-                    const values1 = biomassValues.slice(0, -lag);
-                    const values2 = biomassValues.slice(lag);
-                    autocorrelation.push(calculatePearsonCorrelation(values1, values2));
-                }
-            }
-            
-            // Tendencia general
-            const hours = data.map(d => d.Hora);
-            const trend = calculatePearsonCorrelation(hours, biomassValues);
-            
-            // Estacionalidad (ciclos de 24 horas)
-            const hourOfDay = data.map(d => d.Hora % 24);
-            const seasonality = calculatePearsonCorrelation(hourOfDay, biomassValues);
-            
-            return {
-                autocorrelation: autocorrelation,
-                trend: trend,
-                seasonality: seasonality,
-                maxLag: maxLag
-            };
-        }
-        
-        function evaluateMLReadiness(data) {
-            const totalSamples = data.length;
-            const scenarios = [...new Set(data.map(d => d.Scenario))].length;
-            const features = Object.keys(data[0]).length;
-            
-            // Balance de clases
-            const stressDistribution = {
-                thermal: data.filter(d => d.Estres_Termico === 1).length,
-                ph: data.filter(d => d.Estres_pH === 1).length,
-                normal: data.filter(d => d.Estres_Termico === 0 && d.Estres_pH === 0).length
-            };
-            
-            const minClass = Math.min(...Object.values(stressDistribution));
-            const maxClass = Math.max(...Object.values(stressDistribution));
-            const classBalance = minClass / maxClass;
-            
-            // Completitud de datos
-            const completeness = data.reduce((sum, row) => {
-                const nonNullValues = Object.values(row).filter(v => v !== null && v !== undefined && !isNaN(v)).length;
-                return sum + (nonNullValues / Object.keys(row).length);
-            }, 0) / data.length;
-            
-            // Diversidad de datos
-            const biomassRange = Math.max(...data.map(d => d.Biomasa)) - Math.min(...data.map(d => d.Biomasa));
-            const biomassCV = analysisData?.variability?.Biomasa?.cv || 0;
-            
-            // Evaluación general
-            const scores = {
-                sampleSize: Math.min(1, totalSamples / 10000),
-                scenarios: Math.min(1, scenarios / 50),
-                features: Math.min(1, features / 20),
-                classBalance: classBalance,
-                completeness: completeness,
-                diversity: Math.min(1, biomassCV / 30)
-            };
-            
-            const overallScore = Object.values(scores).reduce((a, b) => a + b, 0) / Object.keys(scores).length;
-            
-            return {
-                scores: scores,
-                overallScore: overallScore,
-                totalSamples: totalSamples,
-                scenarios: scenarios,
-                features: features,
-                stressDistribution: stressDistribution,
-                classBalance: classBalance,
-                completeness: completeness,
-                recommendations: generateMLRecommendations(scores)
-            };
-        }
-        
-        function generateMLRecommendations(scores) {
-            const recommendations = [];
-            
-            if (scores.sampleSize < 0.8) {
-                recommendations.push({
-                    type: 'warning',
-                    message: 'Aumentar el número de muestras a >8,000 para mejor rendimiento',
-                    action: 'Incrementar escenarios o duración'
-                });
-            }
-            
-            if (scores.scenarios < 0.7) {
-                recommendations.push({
-                    type: 'warning',
-                    message: 'Aumentar diversidad de escenarios para mejor generalización',
-                    action: 'Generar >35 escenarios diferentes'
-                });
-            }
-            
-            if (scores.classBalance < 0.5) {
-                recommendations.push({
-                    type: 'warning',
-                    message: 'Balancear mejor las clases de estrés',
-                    action: 'Ajustar frecuencia de condiciones de estrés'
-                });
-            }
-            
-            if (scores.diversity < 0.6) {
-                recommendations.push({
-                    type: 'info',
-                    message: 'Aumentar variabilidad en condiciones experimentales',
-                    action: 'Incrementar rangos de pH, temperatura y luz'
-                });
-            }
-            
-            if (scores.completeness < 0.95) {
-                recommendations.push({
-                    type: 'error',
-                    message: 'Datos incompletos detectados',
-                    action: 'Verificar calidad de generación de datos'
-                });
-            }
-            
-            return recommendations;
-        }
-        
-        function populateScenarioSelectors() {
-            const scenarios = [...new Set(currentDataset.map(d => d.Scenario))];
-            const selector = document.getElementById('biomass-scenario');
-            
-            selector.innerHTML = '<option value="all">Todos los escenarios</option>';
-            scenarios.forEach(scenario => {
-                const option = document.createElement('option');
-                option.value = scenario;
-                option.textContent = `Escenario ${scenario + 1}`;
-                selector.appendChild(option);
-            });
-        }
-        
-        function createAllCharts() {
-            if (currentDataset && currentDataset.length > 0) {
-                createCorrelationHeatmap();
-                createKeyCorrelationsChart();
-                createBiomassChart();
-                createGrowthChart();
-                createEnvironmentChart();
-                createLightChart();
-                createAutocorrelationChart();
-                createTrendsChart();
-            }
-        }
-        
-        function createCorrelationHeatmap() {
-            const canvas = document.getElementById('correlationChart');
-            const ctx = canvas.getContext('2d');
-            
-            if (!analysisData?.correlations) return;
-            
-            const variables = Object.keys(analysisData.correlations);
-            const cellSize = 50;
-            const padding = 120;
-            
-            canvas.width = variables.length * cellSize + padding * 2;
-            canvas.height = variables.length * cellSize + padding * 2;
-            
-            // Limpiar canvas
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
-            
-            // Función para obtener color
-            const getColor = (correlation) => {
-                if (isNaN(correlation)) return 'rgba(200, 200, 200, 0.3)';
-                const abs = Math.abs(correlation);
-                if (correlation > 0) {
-                    return `rgba(34, 197, 94, ${abs * 0.8})`;
-                } else {
-                    return `rgba(239, 68, 68, ${abs * 0.8})`;
-                }
-            };
-            
-            // Dibujar matriz
-            variables.forEach((var1, i) => {
-                variables.forEach((var2, j) => {
-                    const correlation = analysisData.correlations[var1][var2];
-                    const x = j * cellSize + padding;
-                    const y = i * cellSize + padding;
-                    
-                    // Dibujar celda
-                    ctx.fillStyle = getColor(correlation);
-                    ctx.fillRect(x, y, cellSize, cellSize);
-                    
-                    // Dibujar borde
-                    ctx.strokeStyle = '#ddd';
-                    ctx.lineWidth = 1;
-                    ctx.strokeRect(x, y, cellSize, cellSize);
-                    
-                    // Dibujar valor
-                    if (!isNaN(correlation)) {
-                        ctx.fillStyle = Math.abs(correlation) > 0.5 ? 'white' : 'black';
-                        ctx.font = '10px Arial';
-                        ctx.textAlign = 'center';
-                        ctx.textBaseline = 'middle';
-                        ctx.fillText(correlation.toFixed(2), x + cellSize/2, y + cellSize/2);
-                    }
-                });
-            });
-            
-            // Dibujar etiquetas
-            ctx.fillStyle = 'black';
-            ctx.font = '12px Arial';
-            
-            variables.forEach((variable, i) => {
-                // Etiquetas verticales
-                ctx.textAlign = 'right';
-                ctx.textBaseline = 'middle';
-                ctx.fillText(variable, padding - 10, i * cellSize + padding + cellSize/2);
-                
-                // Etiquetas horizontales
-                ctx.save();
-                ctx.translate(i * cellSize + padding + cellSize/2, padding - 10);
-                ctx.rotate(-Math.PI / 4);
-                ctx.textAlign = 'right';
-                ctx.textBaseline = 'middle';
-                ctx.fillText(variable, 0, 0);
-                ctx.restore();
-            });
-        }
-        
-        function createKeyCorrelationsChart() {
-            if (!analysisData?.correlations) return;
-            
-            const keyRelationships = {
-                'pH - Biomasa': analysisData.correlations['pH']['Biomasa'],
-                'Temperatura - μ': analysisData.correlations['Temperatura']['mu'],
-                'PAR - Biomasa': analysisData.correlations['PAR']['Biomasa'],
-                'Biomasa - Productividad': analysisData.correlations['Biomasa']['Productividad'],
-                'Nutrientes - μ': analysisData.correlations['Nutrientes']['mu'],
-                'μ - Biomasa': analysisData.correlations['mu']['Biomasa']
-            };
-            
-            const ctx = document.getElementById('keyCorrelationsChart').getContext('2d');
-            
-            if (charts.keyCorrelations) charts.keyCorrelations.destroy();
-            
-            charts.keyCorrelations = new Chart(ctx, {
-                type: 'bar',
-                data: {
-                    labels: Object.keys(keyRelationships),
-                    datasets: [{
-                        label: 'Correlación',
-                        data: Object.values(keyRelationships),
-                        backgroundColor: Object.values(keyRelationships).map(val => {
-                            if (isNaN(val)) return 'rgba(200, 200, 200, 0.8)';
-                            return val > 0 ? 'rgba(34, 197, 94, 0.8)' : 'rgba(239, 68, 68, 0.8)';
-                        }),
-                        borderColor: Object.values(keyRelationships).map(val => {
-                            if (isNaN(val)) return '#ccc';
-                            return val > 0 ? '#22c55e' : '#ef4444';
-                        }),
-                        borderWidth: 2
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: {
-                        legend: {
-                            display: false
-                        }
-                    },
-                    scales: {
-                        y: {
-                            beginAtZero: true,
-                            min: -1,
-                            max: 1,
-                            title: {
-                                display: true,
-                                text: 'Coeficiente de Correlación'
-                            }
-                        }
-                    }
-                }
-            });
-        }
-        
-        function createBiomassChart() {
-            const ctx = document.getElementById('biomassChart').getContext('2d');
-            const selectedScenario = document.getElementById('biomass-scenario').value;
-            
-            let data = currentDataset;
-            if (selectedScenario !== 'all') {
-                data = data.filter(d => d.Scenario === parseInt(selectedScenario));
-            }
-            
-            if (charts.biomass) charts.biomass.destroy();
-            
-            charts.biomass = new Chart(ctx, {
-                type: 'line',
-                data: {
-                    labels: data.map(d => d.Hora),
-                    datasets: [{
-                        label: 'Biomasa (g/L)',
-                        data: data.map(d => d.Biomasa),
-                        borderColor: '#28a745',
-                        backgroundColor: 'rgba(40, 167, 69, 0.1)',
-                        fill: true,
-                        tension: 0.4,
-                        pointRadius: 1
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: {
-                        legend: {
-                            display: true,
-                            position: 'top'
-                        }
-                    },
-                    scales: {
-                        y: {
-                            beginAtZero: true,
-                            title: {
-                                display: true,
-                                text: 'μ (h⁻¹)'
-                            }
-                        },
-                        x: {
-                            title: {
-                                display: true,
-                                text: 'Tiempo (horas)'
-                            }
-                        }
-                    }
-                }
-            });
-        }
-        
-        function createEnvironmentChart() {
-            const ctx = document.getElementById('environmentChart').getContext('2d');
-            const data = currentDataset.slice(0, 500);
-            
-            if (charts.environment) charts.environment.destroy();
-            
-            charts.environment = new Chart(ctx, {
-                type: 'line',
-                data: {
-                    labels: data.map(d => d.Hora),
-                    datasets: [{
-                        label: 'pH',
-                        data: data.map(d => d.pH),
-                        borderColor: '#3b82f6',
-                        backgroundColor: 'rgba(59, 130, 246, 0.1)',
-                        yAxisID: 'y',
-                        pointRadius: 1
-                    }, {
-                        label: 'Temperatura (°C)',
-                        data: data.map(d => d.Temperatura),
-                        borderColor: '#ef4444',
-                        backgroundColor: 'rgba(239, 68, 68, 0.1)',
-                        yAxisID: 'y1',
-                        pointRadius: 1
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: {
-                        legend: {
-                            display: true,
-                            position: 'top'
-                        }
-                    },
-                    scales: {
-                        y: {
-                            type: 'linear',
-                            display: true,
-                            position: 'left',
-                            title: {
-                                display: true,
-                                text: 'pH'
-                            }
-                        },
-                        y1: {
-                            type: 'linear',
-                            display: true,
-                            position: 'right',
-                            title: {
-                                display: true,
-                                text: 'Temperatura (°C)'
-                            },
-                            grid: {
-                                drawOnChartArea: false
-                            }
-                        },
-                        x: {
-                            title: {
-                                display: true,
-                                text: 'Tiempo (horas)'
-                            }
-                        }
-                    }
-                }
-            });
-        }
-        
-        function createLightChart() {
-            const ctx = document.getElementById('lightChart').getContext('2d');
-            const data = currentDataset.slice(0, 500);
-            
-            if (charts.light) charts.light.destroy();
-            
-            charts.light = new Chart(ctx, {
-                type: 'line',
-                data: {
-                    labels: data.map(d => d.Hora),
-                    datasets: [{
-                        label: 'PAR (μmol/m²/s)',
-                        data: data.map(d => d.PAR),
-                        borderColor: '#f59e0b',
-                        backgroundColor: 'rgba(245, 158, 11, 0.1)',
-                        fill: true,
-                        tension: 0.4,
-                        pointRadius: 1
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: {
-                        legend: {
-                            display: true,
-                            position: 'top'
-                        }
-                    },
-                    scales: {
-                        y: {
-                            beginAtZero: true,
-                            title: {
-                                display: true,
-                                text: 'PAR (μmol/m²/s)'
-                            }
-                        },
-                        x: {
-                            title: {
-                                display: true,
-                                text: 'Tiempo (horas)'
-                            }
-                        }
-                    }
-                }
-            });
-        }
-        
-        function createAutocorrelationChart() {
-            if (!analysisData?.temporal?.autocorrelation) return;
-            
-            const ctx = document.getElementById('autocorrelationChart').getContext('2d');
-            const autocorr = analysisData.temporal.autocorrelation;
-            
-            if (charts.autocorrelation) charts.autocorrelation.destroy();
-            
-            charts.autocorrelation = new Chart(ctx, {
-                type: 'line',
-                data: {
-                    labels: autocorr.map((_, i) => i),
-                    datasets: [{
-                        label: 'Autocorrelación',
-                        data: autocorr,
-                        borderColor: '#667eea',
-                        backgroundColor: 'rgba(102, 126, 234, 0.1)',
-                        fill: true,
-                        tension: 0.4,
-                        pointRadius: 2
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: {
-                        legend: {
-                            display: true,
-                            position: 'top'
-                        }
-                    },
-                    scales: {
-                        y: {
-                            min: -1,
-                            max: 1,
-                            title: {
-                                display: true,
-                                text: 'Autocorrelación'
-                            }
-                        },
-                        x: {
-                            title: {
-                                display: true,
-                                text: 'Lag (horas)'
-                            }
-                        }
-                    }
-                }
-            });
-        }
-        
-        function createTrendsChart() {
-            const ctx = document.getElementById('trendsChart').getContext('2d');
-            const data = currentDataset.slice(0, 500);
-            
-            if (charts.trends) charts.trends.destroy();
-            
-            charts.trends = new Chart(ctx, {
-                type: 'line',
-                data: {
-                    labels: data.map(d => d.Hora),
-                    datasets: [{
-                        label: 'Biomasa',
-                        data: data.map(d => d.Biomasa),
-                        borderColor: '#28a745',
-                        backgroundColor: 'rgba(40, 167, 69, 0.1)',
-                        yAxisID: 'y',
-                        pointRadius: 1
-                    }, {
-                        label: 'Velocidad de Cambio',
-                        data: data.map(d => d.Biomasa_Velocity || 0),
-                        borderColor: '#dc3545',
-                        backgroundColor: 'rgba(220, 53, 69, 0.1)',
-                        yAxisID: 'y1',
-                        pointRadius: 1
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: {
-                        legend: {
-                            display: true,
-                            position: 'top'
-                        }
-                    },
-                    scales: {
-                        y: {
-                            type: 'linear',
-                            display: true,
-                            position: 'left',
-                            title: {
-                                display: true,
-                                text: 'Biomasa (g/L)'
-                            }
-                        },
-                        y1: {
-                            type: 'linear',
-                            display: true,
-                            position: 'right',
-                            title: {
-                                display: true,
-                                text: 'Velocidad de Cambio'
-                            },
-                            grid: {
-                                drawOnChartArea: false
-                            }
-                        },
-                        x: {
-                            title: {
-                                display: true,
-                                text: 'Tiempo (horas)'
-                            }
-                        }
-                    }
-                }
-            });
-        }
-        
-        function displayMLReport() {
-            if (!analysisData?.mlReadiness) return;
-            
-            const ml = analysisData.mlReadiness;
-            const var_analysis = analysisData.variability || {};
-            
-            const getScoreClass = (score) => {
-                if (score >= 0.9) return 'excellent';
-                if (score >= 0.7) return 'good';
-                if (score >= 0.5) return 'warning';
-                return 'poor';
-            };
-            
-            const getScoreText = (score) => {
-                if (score >= 0.9) return 'Excelente';
-                if (score >= 0.7) return 'Bueno';
-                if (score >= 0.5) return 'Aceptable';
-                return 'Deficiente';
-            };
-            
-            const reportHTML = `
-                <div class="alert alert-info">
-                    <strong>Evaluación ML:</strong> Puntuación general ${(ml.overallScore * 100).toFixed(1)}% - ${getScoreText(ml.overallScore)}
-                </div>
-                
-                <div class="report-section">
-                    <h4>📊 Métricas de Calidad</h4>
-                    <div class="metric-grid">
-                        <div class="metric ${getScoreClass(ml.scores.sampleSize)}">
-                            <div style="font-size: 1.5em; font-weight: bold;">${(ml.scores.sampleSize * 100).toFixed(0)}%</div>
-                            <div>Tamaño de Muestra</div>
-                            <small>${ml.totalSamples.toLocaleString()} puntos</small>
-                        </div>
-                        <div class="metric ${getScoreClass(ml.scores.scenarios)}">
-                            <div style="font-size: 1.5em; font-weight: bold;">${(ml.scores.scenarios * 100).toFixed(0)}%</div>
-                            <div>Diversidad de Escenarios</div>
-                            <small>${ml.scenarios} escenarios</small>
-                        </div>
-                        <div class="metric ${getScoreClass(ml.scores.classBalance)}">
-                            <div style="font-size: 1.5em; font-weight: bold;">${(ml.scores.classBalance * 100).toFixed(0)}%</div>
-                            <div>Balance de Clases</div>
-                            <small>Ratio min/max</small>
-                        </div>
-                        <div class="metric ${getScoreClass(ml.scores.completeness)}">
-                            <div style="font-size: 1.5em; font-weight: bold;">${(ml.scores.completeness * 100).toFixed(0)}%</div>
-                            <div>Completitud</div>
-                            <small>Datos completos</small>
-                        </div>
-                        <div class="metric ${getScoreClass(ml.scores.diversity)}">
-                            <div style="font-size: 1.5em; font-weight: bold;">${(ml.scores.diversity * 100).toFixed(0)}%</div>
-                            <div>Diversidad</div>
-                            <small>Variabilidad de datos</small>
-                        </div>
-                        <div class="metric ${getScoreClass(ml.scores.features)}">
-                            <div style="font-size: 1.5em; font-weight: bold;">${(ml.scores.features * 100).toFixed(0)}%</div>
-                            <div>Características</div>
-                            <small>${ml.features} variables</small>
-                        </div>
-                    </div>
-                </div>
-                
-                <div class="report-section">
-                    <h4>📈 Análisis de Variabilidad</h4>
-                    <table class="data-table">
-                        <thead>
-                            <tr>
-                                <th>Variable</th>
-                                <th>Media</th>
-                                <th>Desv. Std</th>
-                                <th>CV (%)</th>
-                                <th>Outliers (%)</th>
-                                <th>Rango</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            ${Object.entries(var_analysis).map(([variable, stats]) => `
-                                <tr>
-                                    <td><strong>${variable}</strong></td>
-                                    <td>${stats.mean?.toFixed(3) || 'N/A'}</td>
-                                    <td>${stats.std?.toFixed(3) || 'N/A'}</td>
-                                    <td>${stats.cv?.toFixed(1) || 'N/A'}%</td>
-                                    <td>${stats.outlier_percentage?.toFixed(1) || 'N/A'}%</td>
-                                    <td>${stats.range?.toFixed(3) || 'N/A'}</td>
-                                </tr>
-                            `).join('')}
-                        </tbody>
-                    </table>
-                </div>
-                
-                <div class="report-section">
-                    <h4>📊 Distribución de Clases</h4>
-                    <div class="metric-grid">
-                        <div class="metric good">
-                            <div style="font-size: 1.5em; font-weight: bold;">${ml.stressDistribution.normal.toLocaleString()}</div>
-                            <div>Condiciones Normales</div>
-                            <small>${((ml.stressDistribution.normal / ml.totalSamples) * 100).toFixed(1)}%</small>
-                        </div>
-                        <div class="metric warning">
-                            <div style="font-size: 1.5em; font-weight: bold;">${ml.stressDistribution.thermal.toLocaleString()}</div>
-                            <div>Estrés Térmico</div>
-                            <small>${((ml.stressDistribution.thermal / ml.totalSamples) * 100).toFixed(1)}%</small>
-                        </div>
-                        <div class="metric warning">
-                            <div style="font-size: 1.5em; font-weight: bold;">${ml.stressDistribution.ph.toLocaleString()}</div>
-                            <div>Estrés pH</div>
-                            <small>${((ml.stressDistribution.ph / ml.totalSamples) * 100).toFixed(1)}%</small>
-                        </div>
-                    </div>
-                </div>
-                
-                <div class="report-section">
-                    <h4>🎯 Recomendaciones</h4>
-                    <div style="display: grid; gap: 15px;">
-                        ${ml.recommendations.map(rec => `
-                            <div class="alert alert-${rec.type}">
-                                <strong>${rec.message}</strong><br>
-                                <small><strong>Acción:</strong> ${rec.action}</small>
-                            </div>
-                        `).join('')}
-                        ${ml.recommendations.length === 0 ? '<div class="alert alert-success"><strong>¡Excelente!</strong> Los datos están optimizados para Machine Learning.</div>' : ''}
-                    </div>
-                </div>
-                
-                <div class="report-section">
-                    <h4>🤖 Configuración Recomendada para Modelos</h4>
-                    <div class="feature-grid">
-                        <div class="feature-card">
-                            <div class="feature-icon">🧠</div>
-                            <div class="feature-title">Redes Neuronales</div>
-                            <div class="feature-desc">
-                                <strong>Arquitectura:</strong> 3-4 capas ocultas<br>
-                                <strong>Neuronas:</strong> 128-256 por capa<br>
-                                <strong>Activation:</strong> ReLU + Dropout(0.3)<br>
-                                <strong>Optimizer:</strong> Adam (lr=0.001)
-                            </div>
-                        </div>
-                        <div class="feature-card">
-                            <div class="feature-icon">🌳</div>
-                            <div class="feature-title">Random Forest</div>
-                            <div class="feature-desc">
-                                <strong>Estimators:</strong> 100-200 árboles<br>
-                                <strong>Max depth:</strong> 10-15<br>
-                                <strong>Min samples:</strong> 5-10<br>
-                                <strong>Features:</strong> sqrt(n_features)
-                            </div>
-                        </div>
-                        <div class="feature-card">
-                            <div class="feature-icon">⏱️</div>
-                            <div class="feature-title">LSTM/GRU</div>
-                            <div class="feature-desc">
-                                <strong>Sequence length:</strong> 24-48 horas<br>
-                                <strong>Hidden units:</strong> 64-128<br>
-                                <strong>Layers:</strong> 2-3 capas<br>
-                                <strong>Batch size:</strong> 32-64
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            `;
-            
-            document.getElementById('ml-report').innerHTML = reportHTML;
-        }
-        
-        function showTab(tabName) {
-            // Ocultar todos los tabs
-            document.querySelectorAll('.tab-content').forEach(tab => {
-                tab.classList.remove('active');
-            });
-            document.querySelectorAll('.tab').forEach(tab => {
-                tab.classList.remove('active');
-            });
-            
-            // Mostrar tab seleccionado
-            document.getElementById(tabName).classList.add('active');
-            event.target.classList.add('active');
-            
-            // Actualizar gráficas si es necesario
-            if (tabName === 'correlations') {
-                setTimeout(() => {
-                    createCorrelationHeatmap();
-                    createKeyCorrelationsChart();
-                }, 100);
-            } else if (tabName === 'temporal') {
-                setTimeout(() => {
-                    createAutocorrelationChart();
-                    createTrendsChart();
-                }, 100);
-            }
-        }
-        
-        function updateCorrelationMatrix() {
-            if (analysisData) {
-                createCorrelationHeatmap();
-                createKeyCorrelationsChart();
-            }
-        }
-        
-        function downloadFile(folder, filename) {
-            const link = document.createElement('a');
-            link.href = `/download/${folder}/${filename}`;
-            link.download = filename;
-            link.click();
-        }
-        
-        function downloadAnalysisReport() {
-            if (!analysisData) return;
-            
-            const report = {
-                timestamp: new Date().toISOString(),
-                dataset_info: {
-                    total_samples: currentDataset.length,
-                    scenarios: [...new Set(currentDataset.map(d => d.Scenario))].length,
-                    variables: Object.keys(currentDataset[0]).length
-                },
-                correlations: analysisData.correlations,
-                variability: analysisData.variability,
-                temporal_analysis: analysisData.temporal,
-                ml_readiness: analysisData.mlReadiness
-            };
-            
-            const blob = new Blob([JSON.stringify(report, null, 2)], { type: 'application/json' });
-            const url = URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = `chlorella_analysis_report_${new Date().toISOString().split('T')[0]}.json`;
-            a.click();
-            URL.revokeObjectURL(url);
-        }
-        
-        function downloadMLConfig() {
-            if (!analysisData) return;
-            
-            const config = {
-                dataset_info: {
-                    samples: currentDataset.length,
-                    features: Object.keys(currentDataset[0]).length,
-                    target_variables: ['Biomasa', 'mu', 'Productividad'],
-                    categorical_features: ['Regimen_Luz', 'Condicion_Estres'],
-                    temporal_features: ['Hora', 'Dia_Ciclo', 'Hora_Sin', 'Hora_Cos']
-                },
-                preprocessing: {
-                    normalization: 'StandardScaler',
-                    outlier_removal: 'IQR',
-                    train_test_split: [0.7, 0.15, 0.15],
-                    cross_validation: 'TimeSeriesSplit'
-                },
-                models: {
-                    neural_network: {
-                        architecture: [128, 64, 32],
-                        activation: 'relu',
-                        optimizer: 'adam',
-                        learning_rate: 0.001,
-                        batch_size: 32,
-                        epochs: 100
-                    },
-                    random_forest: {
-                        n_estimators: 100,
-                        max_depth: 15,
-                        min_samples_split: 5,
-                        min_samples_leaf: 2
-                    },
-                    lstm: {
-                        sequence_length: 24,
-                        hidden_units: 64,
-                        layers: 2,
-                        dropout: 0.3
-                    }
-                },
-                evaluation: {
-                    metrics: ['MSE', 'MAE', 'R2', 'MAPE'],
-                    validation_strategy: 'walk_forward'
-                }
-            };
-            
-            const blob = new Blob([JSON.stringify(config, null, 2)], { type: 'application/json' });
-            const url = URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = `chlorella_ml_config_${new Date().toISOString().split('T')[0]}.json`;
-            a.click();
-            URL.revokeObjectURL(url);
-        }
-        
-        // Event listeners
-        document.getElementById('biomass-scenario').addEventListener('change', createBiomassChart);
-        
-        // Inicializar aplicación
-        document.addEventListener('DOMContentLoaded', function() {
-            console.log('Generador Avanzado de Chlorella cargado');
-        });
-    </script>
-</body>
-</html>
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: {
-                        legend: {
-                            display: true,
-                            position: 'top'
-                        }
-                    },
-                    scales: {
-                        y: {
-                            beginAtZero: true,
-                            title: {
-                                display: true,
-                                text: 'Biomasa (g/L)'
-                            }
-                        },
-                        x: {
-                            title: {
-                                display: true,
-                                text: 'Tiempo (horas)'
-                            }
-                        }
-                    }
-                }
-            });
-        }
-        
-        function createGrowthChart() {
-            const ctx = document.getElementById('growthChart').getContext('2d');
-            const data = currentDataset.slice(0, 500); // Limitar para rendimiento
-            
-            if (charts.growth) charts.growth.destroy();
-            
-            charts.growth = new Chart(ctx, {
-                type: 'line',
-                data: {
-                    labels: data.map(d => d.Hora),
-                    datasets: [{
-                        label: 'Tasa de Crecimiento (μ)',
-                        data: data.map(d => d.mu),
-                        borderColor: '#8b5cf6',
-                        backgroundColor: 'rgba(139, 92, 246, 0.1)',
+        function calculateDataStatistics() {
+            if (!currentDataset || currentDataset.length === 0) return;
+            
+            const variables = ['pH', 'Temperature_C', 'PAR_umol_m2_s', 'Biomass_g_L', 'Growth_Rate_h'];
+            
+            dataStats = {
+                totalPoints: currentDataset.length,
+                scenarios: [...new Set(currentDataset.map(d => d.Scenario))].length,
+                duration: Math.max(...currentDataset.map(d => d.Time_h)),
+                variables
