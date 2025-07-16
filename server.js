@@ -1,4 +1,4 @@
-// server.js - Versión ultra corregida para Railway
+// server.js - Versión corregida para Railway
 const express = require('express');
 const fs = require('fs');
 const path = require('path');
@@ -16,7 +16,7 @@ if (!fs.existsSync(datasetsDir)) {
     fs.mkdirSync(datasetsDir, { recursive: true });
 }
 
-// Función avanzada para generar datos con modelo cinético ultra-mejorado
+// Función avanzada para generar datos con modelo cinético completo
 function generateAdvancedData(scenarios, hours, variabilityLevel = 'medium') {
     const data = [];
     
@@ -122,70 +122,58 @@ function generateAdvancedData(scenarios, hours, variabilityLevel = 'medium') {
             co2Level = Math.max(0.01, Math.min(0.1, 
                 co2Level - co2Consumption + 0.0005 + (Math.random() - 0.5) * 0.0002));
             
-            // === MODELO CINÉTICO ULTRA-MEJORADO ===
+            // === MODELO CINÉTICO MEJORADO ===
             
-            // 1. Efecto de LUZ - CRÍTICO con relación directa a concentración celular
+            // 1. Efecto de LUZ - CRÍTICO para fotosíntesis (basado en literatura científica)
+            // Óptimo: 80-200 μmol/m²/s, saturación ~400 μmol/m²/s
             let lightEffect;
             if (lightIntensity === 0) {
-                lightEffect = 0.005; // Respiración mínima en oscuridad
-            } else if (lightIntensity < 30) {
-                lightEffect = (lightIntensity / 30) * 0.2; // Muy limitado
-            } else if (lightIntensity > 500) {
-                // Fotoinhibición gradual
-                lightEffect = 0.9 - Math.min(0.4, (lightIntensity - 500) / 1000);
+                lightEffect = 0.01; // Sin luz = casi sin crecimiento
+            } else if (lightIntensity < 50) {
+                lightEffect = lightIntensity / 50 * 0.3; // Muy limitado
+            } else if (lightIntensity > 400) {
+                lightEffect = 0.8 - (lightIntensity - 400) / 1000; // Fotoinhibición
+                lightEffect = Math.max(0.3, lightEffect);
             } else {
-                // Curva de saturación optimizada
-                lightEffect = (lightIntensity / (lightIntensity + scenarioParams.Ks_light)) * 
-                             (1 + 0.3 * Math.sin(lightIntensity / 100)); // Efecto no-lineal
+                // Curva de Michaelis-Menten realista
+                lightEffect = lightIntensity / (lightIntensity + scenarioParams.Ks_light);
             }
             
-            // 2. Efecto de TEMPERATURA - MÁS PRONUNCIADO
+            // 2. Efecto de TEMPERATURA - Basado en literatura (óptimo 28-35°C)
             let tempEffect;
-            const tempDiff = Math.abs(currentTemp - scenarioParams.tempOptimal);
-            
-            if (currentTemp < 10 || currentTemp > 42) {
+            if (currentTemp < 15 || currentTemp > 40) {
                 tempEffect = 0.01; // Letal
-            } else if (currentTemp < 18 || currentTemp > 38) {
-                tempEffect = 0.15; // Muy limitado
+            } else if (currentTemp < 20 || currentTemp > 38) {
+                tempEffect = 0.2; // Muy limitado
             } else {
-                // Curva de campana MÁS ESTRECHA para mayor sensibilidad
-                tempEffect = Math.exp(-Math.pow(tempDiff / 3.5, 2)); // Más sensible
-                
-                // Bonus por estar en rango óptimo
-                if (tempDiff < 2) {
-                    tempEffect *= 1.2; // 20% bonus en rango óptimo
-                }
+                // Curva optimizada para Chlorella vulgaris
+                const tempDiff = Math.abs(currentTemp - scenarioParams.tempOptimal);
+                tempEffect = Math.exp(-Math.pow(tempDiff / 5, 2));
             }
             
-            // 3. Efecto de pH - MÁS SENSIBLE
+            // 3. Efecto de pH - Basado en literatura (óptimo 8-9.5)
             let pHEffect;
-            const pHDiff = Math.abs(currentpH - scenarioParams.pHOptimal);
-            
-            if (currentpH < 6.0 || currentpH > 10.5) {
+            if (currentpH < 6.0 || currentpH > 10.0) {
                 pHEffect = 0.01; // Letal
-            } else if (currentpH < 6.5 || currentpH > 10.0) {
-                pHEffect = 0.2; // Muy limitado
+            } else if (currentpH < 7.0 || currentpH > 9.8) {
+                pHEffect = 0.3; // Muy limitado
             } else {
-                // Curva optimizada para pH alcalino con mayor sensibilidad
-                pHEffect = Math.exp(-Math.pow(pHDiff / 0.8, 2)); // Más sensible
-                
-                // Bonus por pH alcalino óptimo (8.5-9.5)
-                if (currentpH >= 8.5 && currentpH <= 9.5) {
-                    pHEffect *= 1.3; // 30% bonus en pH óptimo
-                }
+                // Curva optimizada para pH alcalino (preferencia de Chlorella)
+                const pHDiff = Math.abs(currentpH - scenarioParams.pHOptimal);
+                pHEffect = Math.exp(-Math.pow(pHDiff / 1.2, 2));
             }
             
-            // 4. Efecto de NUTRIENTES - Más limitante
+            // 4. Efecto de NUTRIENTES
             const nutrientEffect = Math.pow(nutrients / (nutrients + scenarioParams.Ks_nutrient), 1.5);
             
-            // 5. Inhibición por DENSIDAD - Más realista
+            // 5. Inhibición por DENSIDAD
             const densityInhibition = Math.exp(-biomass / scenarioParams.Ki_biomass);
             
-            // 6. Efecto del OXÍGENO - Más crítico
+            // 6. Efecto del OXÍGENO
             const oxygenEffect = oxygenLevel > 2 ? 
                 Math.min(1.0, (oxygenLevel - 1) / 7) : 0.01;
             
-            // 7. Efecto del CO2 - Más importante para fotosíntesis
+            // 7. Efecto del CO2
             const co2Effect = lightIntensity > 0 ? 
                 Math.min(1.0, co2Level / 0.025) : 1.0;
             
@@ -211,46 +199,24 @@ function generateAdvancedData(scenarios, hours, variabilityLevel = 'medium') {
             const biologicalNoise = (Math.random() - 0.5) * (scenarioParams.noiseLevel * 0.3);
             const actualGrowthRate = Math.max(0.001, mu + biologicalNoise);
             
-            // === CRECIMIENTO CON CORRELACIONES OPTIMIZADAS ===
+            // === CRECIMIENTO ACELERADO PARA MEJORES CORRELACIONES ===
             
-            const growthIncrement = actualGrowthRate * biomass * 2.0; // Más acelerado
-            const mortalityRate = 0.0005 * biomass; // Mortalidad mínima
+            const growthIncrement = actualGrowthRate * biomass * 1.5; // Factor acelerado
+            const mortalityRate = 0.001 * biomass; // Mortalidad reducida
             
             const netGrowth = growthIncrement - mortalityRate;
             biomass = Math.max(0.001, Math.min(biomass + netGrowth, scenarioParams.Ki_biomass));
             
-            // === CONCENTRACIÓN CELULAR DIRECTAMENTE CORRELACIONADA CON PAR ===
-            
-            // Relación directa PAR -> células (basada en fotosíntesis)
-            let baseCellDensity = 1.5e6; // Densidad base
-            
-            // Factor de luz DIRECTO para concentración celular
-            let lightCellFactor = 1.0;
-            if (lightIntensity > 50) {
-                // Relación directa: más luz = más células (hasta saturación)
-                lightCellFactor = 1.0 + Math.min(1.5, lightIntensity / 200);
-            } else {
-                // Sin luz suficiente, densidad reducida
-                lightCellFactor = 0.3 + (lightIntensity / 50) * 0.7;
-            }
-            
-            // Factor de calidad celular basado en condiciones óptimas
-            const qualityFactor = Math.sqrt(tempEffect * pHEffect * nutrientEffect);
-            
-            // Concentración celular MEJORADA
-            const cellGrowthFactor = baseCellDensity * lightCellFactor * qualityFactor;
+            // Concentración celular MÁS CORRELACIONADA con biomasa
+            const cellGrowthFactor = 2.0e6 + (biomass * 0.3e6);
             cellConcentration = biomass * cellGrowthFactor;
-            
-            // Asegurar correlación PAR-células más fuerte
-            const parBonus = Math.min(0.5, lightIntensity / 400);
-            cellConcentration *= (1 + parBonus);
             
             // Productividad
             const instantProductivity = netGrowth * 24;
             totalProductivity += Math.max(0, instantProductivity);
             cumulativeBiomass += biomass;
             
-            // === VARIABLES DERIVADAS MEJORADAS ===
+            // === VARIABLES DERIVADAS ===
             
             const opticalDensity = biomass * (2.0 + 0.3 * Math.random());
             
@@ -272,7 +238,7 @@ function generateAdvancedData(scenarios, hours, variabilityLevel = 'medium') {
             
             const cultureAge = h;
             
-            // Fase de crecimiento BASADA EN TASA DE CRECIMIENTO
+            // Fase de crecimiento
             let growthPhase = 'lag';
             if (actualGrowthRate > scenarioParams.muMax * 0.7) {
                 growthPhase = 'exponential';
@@ -284,7 +250,7 @@ function generateAdvancedData(scenarios, hours, variabilityLevel = 'medium') {
                 growthPhase = 'decline';
             }
             
-            // Indicadores de estrés MÁS SENSIBLES
+            // Indicadores de estrés
             const thermalStress = tempEffect < 0.7 ? 1 : 0;
             const pHStress = pHEffect < 0.7 ? 1 : 0;
             const nutrientStress = nutrients < 0.3 ? 1 : 0;
@@ -388,7 +354,7 @@ function toCSV(data) {
 app.get('/health', (req, res) => {
     res.status(200).json({ 
         status: 'OK', 
-        message: 'Chlorella Generator Running Ultra',
+        message: 'Chlorella Generator Running',
         timestamp: new Date().toISOString(),
         port: PORT
     });
@@ -397,7 +363,7 @@ app.get('/health', (req, res) => {
 // Test endpoint
 app.get('/test', (req, res) => {
     res.json({ 
-        message: 'Servidor Chlorella Ultra OK', 
+        message: 'Servidor Chlorella OK', 
         time: new Date().toISOString(),
         environment: process.env.NODE_ENV || 'development'
     });
@@ -484,23 +450,23 @@ app.post('/generate-dataset', (req, res) => {
             },
             qualityMetrics: {
                 completeness: 100,
-                dataQuality: 'ultra-grade',
+                dataQuality: 'industrial-grade',
                 temporalResolution: 'hourly',
-                biologicalAccuracy: 'very-high'
+                biologicalAccuracy: 'high'
             },
             outputDir: folder
         };
         
-        console.log('✅ Dataset ultra generado exitosamente');
+        console.log('✅ Dataset generado exitosamente');
         res.json({ 
             success: true, 
             stats, 
             outputDir: folder,
-            message: 'Dataset ultra generado correctamente'
+            message: 'Dataset generado correctamente'
         });
         
     } catch (error) {
-        console.error('❌ Error generando dataset ultra:', error);
+        console.error('❌ Error generando dataset:', error);
         res.status(500).json({ 
             success: false, 
             error: error.message || 'Error interno del servidor'
@@ -596,5 +562,54 @@ app.get('/', (req, res) => {
     } else {
         res.send(`
             <html>
-                <head><title>Chlorella Generator Ultra</title></head>
-                <body style="font-family: Arial; text-align
+                <head><title>Chlorella Generator</title></head>
+                <body style="font-family: Arial; text-align: center; padding: 50px;">
+                    <h1>🧬 Generador Chlorella vulgaris</h1>
+                    <p>Servidor funcionando correctamente</p>
+                    <p>Puerto: ${PORT}</p>
+                    <p>Tiempo: ${new Date().toISOString()}</p>
+                    <p><strong>Nota:</strong> Coloca el archivo index.html en la carpeta public/</p>
+                    <a href="/test" style="background: #007bff; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px;">Test Servidor</a>
+                </body>
+            </html>
+        `);
+    }
+});
+
+// Manejo de errores global
+app.use((err, req, res, next) => {
+    console.error('Error del servidor:', err);
+    res.status(500).json({ 
+        error: 'Error interno del servidor',
+        message: err.message
+    });
+});
+
+// Manejo de rutas no encontradas
+app.use('*', (req, res) => {
+    res.status(404).json({ 
+        error: 'Ruta no encontrada',
+        path: req.originalUrl
+    });
+});
+
+// Iniciar servidor
+app.listen(PORT, '0.0.0.0', () => {
+    console.log(`🚀 Servidor Chlorella iniciado en puerto ${PORT}`);
+    console.log(`🌐 Ambiente: ${process.env.NODE_ENV || 'development'}`);
+    console.log(`📁 Directorio datasets: ${datasetsDir}`);
+    console.log(`⏰ Iniciado: ${new Date().toISOString()}`);
+});
+
+// Manejo de cierre graceful
+process.on('SIGTERM', () => {
+    console.log('🛑 Recibida señal SIGTERM, cerrando servidor...');
+    process.exit(0);
+});
+
+process.on('SIGINT', () => {
+    console.log('🛑 Recibida señal SIGINT, cerrando servidor...');
+    process.exit(0);
+});
+
+module.exports = app;
