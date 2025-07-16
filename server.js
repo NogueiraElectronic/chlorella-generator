@@ -3,7 +3,13 @@ const express = require('express');
 const fs = require('fs');
 const path = require('path');
 const app = express();
+
+// Configuración de puerto para Railway
 const PORT = process.env.PORT || 3000;
+
+console.log('Iniciando servidor...');
+console.log('Puerto configurado:', PORT);
+console.log('Variables de entorno PORT:', process.env.PORT);
 
 // Middleware
 app.use(express.json({ limit: '50mb' }));
@@ -503,11 +509,47 @@ if (!fs.existsSync(datasetsDir)) {
     console.log('Directorio de datasets creado');
 }
 
-app.listen(PORT, () => {
-    console.log(`Servidor ejecutándose en puerto ${PORT}`);
-    console.log(`Accede a http://localhost:${PORT} para usar el generador`);
-    console.log(`Directorio de trabajo: ${__dirname}`);
-    console.log(`Directorio de datasets: ${datasetsDir}`);
+// Función para manejar el cierre del servidor
+function handleShutdown() {
+    console.log('Cerrando servidor...');
+    process.exit(0);
+}
+
+process.on('SIGINT', handleShutdown);
+process.on('SIGTERM', handleShutdown);
+
+// Iniciar servidor
+const server = app.listen(PORT, '0.0.0.0', () => {
+    console.log(`✅ Servidor ejecutándose en puerto ${PORT}`);
+    console.log(`🌐 Accede a http://localhost:${PORT} para usar el generador`);
+    console.log(`📁 Directorio de trabajo: ${__dirname}`);
+    console.log(`📊 Directorio de datasets: ${datasetsDir}`);
+    console.log(`🚀 Servidor listo para recibir peticiones`);
+});
+
+// Manejo de errores del servidor
+server.on('error', (error) => {
+    if (error.code === 'EADDRINUSE') {
+        console.error(`❌ Puerto ${PORT} ya está en uso`);
+        console.log('Intentando con puerto alternativo...');
+        
+        // Intentar con un puerto aleatorio
+        const alternativePort = Math.floor(Math.random() * 10000) + 3000;
+        console.log(`Probando puerto ${alternativePort}...`);
+        
+        const alternativeServer = app.listen(alternativePort, '0.0.0.0', () => {
+            console.log(`✅ Servidor ejecutándose en puerto alternativo ${alternativePort}`);
+            console.log(`🌐 Accede a http://localhost:${alternativePort} para usar el generador`);
+        });
+        
+        alternativeServer.on('error', (altError) => {
+            console.error('❌ Error en servidor alternativo:', altError);
+            process.exit(1);
+        });
+    } else {
+        console.error('❌ Error del servidor:', error);
+        process.exit(1);
+    }
 });
 
 // Función para generar datos de un escenario con modelo avanzado
