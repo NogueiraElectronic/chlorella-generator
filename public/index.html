@@ -561,78 +561,116 @@
             });
         }
         
-        // Ambiente
+        // Ambiente - VERSIÓN MEJORADA con tiempo lineal
         function createEnvironmentChart() {
             const ctx = document.getElementById('environmentChart').getContext('2d');
             if (charts.environment) charts.environment.destroy();
             
-            const data = currentDataset.slice(0, 100);
+            // Tomar datos de UN SOLO escenario para ver la progresión temporal clara
+            const firstScenario = currentDataset.filter(d => d.Scenario === 1).slice(0, 150);
+            // Ordenar por tiempo para asegurar continuidad
+            firstScenario.sort((a, b) => (a.Time_h || 0) - (b.Time_h || 0));
             
             charts.environment = new Chart(ctx, {
                 type: 'line',
                 data: {
-                    labels: data.map(d => d.Time_h || 0),
+                    labels: firstScenario.map(d => d.Time_h || 0),
                     datasets: [{
                         label: 'pH',
-                        data: data.map(d => d.pH || 7),
+                        data: firstScenario.map(d => d.pH || 7),
                         borderColor: '#3b82f6',
-                        yAxisID: 'y'
+                        backgroundColor: 'rgba(59, 130, 246, 0.1)',
+                        yAxisID: 'y',
+                        tension: 0.3,
+                        pointRadius: 1
                     }, {
                         label: 'Temperatura (°C)',
-                        data: data.map(d => d.Temperature_C || 25),
+                        data: firstScenario.map(d => d.Temperature_C || 25),
                         borderColor: '#ef4444',
-                        yAxisID: 'y1'
+                        backgroundColor: 'rgba(239, 68, 68, 0.1)',
+                        yAxisID: 'y1',
+                        tension: 0.3,
+                        pointRadius: 1
                     }]
                 },
                 options: {
                     responsive: true,
                     maintainAspectRatio: false,
-                    plugins: { legend: { display: true } },
+                    plugins: { 
+                        legend: { display: true },
+                        title: {
+                            display: true,
+                            text: 'Escenario 1 - Evolución temporal continua'
+                        }
+                    },
                     scales: {
                         x: { title: { display: true, text: 'Tiempo (h)' } },
                         y: { 
                             title: { display: true, text: 'pH' },
-                            min: 6, max: 9
+                            min: 6, max: 9,
+                            position: 'left'
                         },
                         y1: {
                             type: 'linear',
                             display: true,
                             position: 'right',
                             title: { display: true, text: 'Temp (°C)' },
-                            grid: { drawOnChartArea: false }
+                            grid: { drawOnChartArea: false },
+                            min: 15, max: 40
                         }
                     }
                 }
             });
         }
         
-        // Luz
+        // Luz - MEJORADA para mostrar ciclos claros
         function createLightChart() {
             const ctx = document.getElementById('lightChart').getContext('2d');
             if (charts.light) charts.light.destroy();
             
-            const data = currentDataset.slice(0, 150);
+            // Tomar datos de un escenario con ciclo día/noche para ver patrones
+            const cyclicScenario = currentDataset
+                .filter(d => d.Light_Regime === 'cyclic')
+                .slice(0, 100);
+            
+            if (cyclicScenario.length === 0) {
+                // Si no hay datos cíclicos, tomar cualquier escenario
+                cyclicScenario = currentDataset.slice(0, 100);
+            }
+            
+            cyclicScenario.sort((a, b) => (a.Time_h || 0) - (b.Time_h || 0));
             
             charts.light = new Chart(ctx, {
-                type: 'line',
+                type: 'area',
                 data: {
-                    labels: data.map(d => d.Time_h || 0),
+                    labels: cyclicScenario.map(d => d.Time_h || 0),
                     datasets: [{
                         label: 'PAR (μmol/m²/s)',
-                        data: data.map(d => d.PAR_umol_m2_s || 0),
+                        data: cyclicScenario.map(d => d.PAR_umol_m2_s || 0),
                         borderColor: '#f59e0b',
-                        backgroundColor: 'rgba(245, 158, 11, 0.2)',
+                        backgroundColor: 'rgba(245, 158, 11, 0.3)',
                         fill: true,
-                        tension: 0.3
+                        tension: 0.2,
+                        pointRadius: 1
                     }]
                 },
                 options: {
                     responsive: true,
                     maintainAspectRatio: false,
-                    plugins: { legend: { display: true } },
+                    plugins: { 
+                        legend: { display: true },
+                        title: {
+                            display: true,
+                            text: 'Ciclos de luz - Patrón día/noche'
+                        }
+                    },
                     scales: {
                         x: { title: { display: true, text: 'Tiempo (h)' } },
-                        y: { title: { display: true, text: 'PAR (μmol/m²/s)' }, beginAtZero: true }
+                        y: { 
+                            title: { display: true, text: 'PAR (μmol/m²/s)' }, 
+                            beginAtZero: true,
+                            max: Math.max(...cyclicScenario.map(d => d.PAR_umol_m2_s || 0)) * 1.1
+                        }
                     }
                 }
             });
@@ -764,7 +802,7 @@
                         name: 'PAR - Biomasa',
                         value: calculateCorrelation(
                             currentDataset.map(d => d.PAR_umol_m2_s || 0),
-                            currentDataset.map(d => d.Biomasa_g_L || 0)
+                            currentDataset.map(d => d.Biomass_g_L || 0)
                         )
                     },
                     {
