@@ -3,161 +3,260 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Generador Dataset Chlorella</title>
+    <title>Generador Base de Datos Chlorella</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
-        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #f5f5f5; }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); min-height: 100vh; }
         .container { max-width: 1400px; margin: 0 auto; padding: 20px; }
-        .header { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 40px 0; text-align: center; margin-bottom: 30px; border-radius: 15px; }
-        .card { background: white; border-radius: 15px; padding: 30px; margin-bottom: 25px; box-shadow: 0 8px 16px rgba(0,0,0,0.1); }
+        .header { color: white; padding: 40px 0; text-align: center; margin-bottom: 30px; }
+        .header h1 { font-size: 2.5em; margin-bottom: 10px; text-shadow: 2px 2px 4px rgba(0,0,0,0.3); }
+        .header p { font-size: 1.2em; opacity: 0.9; }
+        .card { background: white; border-radius: 20px; padding: 30px; margin-bottom: 25px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); }
+        .card-header { display: flex; align-items: center; gap: 15px; margin-bottom: 25px; padding-bottom: 15px; border-bottom: 2px solid #f0f0f0; }
+        .card-header h2 { color: #333; font-size: 1.5em; }
+        .card-icon { font-size: 2em; }
+        .form-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 25px; }
         .form-group { margin-bottom: 20px; }
         label { display: block; margin-bottom: 8px; font-weight: 600; color: #333; }
-        input, select { width: 100%; padding: 12px; border: 2px solid #e1e1e1; border-radius: 8px; font-size: 16px; }
+        input, select { width: 100%; padding: 15px; border: 2px solid #e1e1e1; border-radius: 10px; font-size: 16px; transition: all 0.3s; }
         input:focus, select:focus { outline: none; border-color: #667eea; box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1); }
-        .btn { background: linear-gradient(45deg, #667eea, #764ba2); color: white; padding: 15px 30px; border: none; border-radius: 8px; cursor: pointer; font-size: 16px; font-weight: 600; transition: all 0.3s; }
-        .btn:hover { transform: translateY(-2px); box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4); }
-        .btn:disabled { background: #ccc; cursor: not-allowed; transform: none; }
-        .progress { background: #e1e1e1; border-radius: 10px; height: 25px; margin: 20px 0; overflow: hidden; }
-        .progress-bar { background: linear-gradient(45deg, #28a745, #20c997); height: 100%; border-radius: 10px; transition: width 0.3s; position: relative; }
-        .progress-bar::after { content: ''; position: absolute; top: 0; left: 0; bottom: 0; right: 0; background: linear-gradient(45deg, rgba(255,255,255,0.2) 25%, transparent 25%, transparent 50%, rgba(255,255,255,0.2) 50%, rgba(255,255,255,0.2) 75%, transparent 75%, transparent); background-size: 30px 30px; animation: progress-animation 1s linear infinite; }
-        @keyframes progress-animation { 0% { background-position: 0 0; } 100% { background-position: 30px 30px; } }
-        .results { background: linear-gradient(135deg, #d4edda 0%, #c3e6cb 100%); border: 1px solid #c3e6cb; border-radius: 10px; padding: 25px; margin-top: 20px; }
-        .download-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 20px; margin-top: 25px; }
-        .download-btn { background: linear-gradient(45deg, #28a745, #20c997); color: white; padding: 15px 25px; text-decoration: none; border-radius: 8px; text-align: center; font-weight: 600; transition: all 0.3s; }
-        .download-btn:hover { transform: translateY(-2px); box-shadow: 0 4px 12px rgba(40, 167, 69, 0.4); }
-        .stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 20px; margin-bottom: 25px; }
-        .stat-card { background: linear-gradient(135deg, #fff 0%, #f8f9fa 100%); padding: 25px; border-radius: 12px; text-align: center; box-shadow: 0 4px 8px rgba(0,0,0,0.1); border: 1px solid #e9ecef; }
-        .stat-value { font-size: 2.5em; font-weight: bold; color: #667eea; margin-bottom: 5px; }
+        .btn { background: linear-gradient(45deg, #667eea, #764ba2); color: white; padding: 18px 35px; border: none; border-radius: 12px; cursor: pointer; font-size: 18px; font-weight: 600; transition: all 0.3s; box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3); }
+        .btn:hover { transform: translateY(-3px); box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4); }
+        .btn:disabled { background: #ccc; cursor: not-allowed; transform: none; box-shadow: none; }
+        .progress { background: #e1e1e1; border-radius: 15px; height: 30px; margin: 25px 0; overflow: hidden; position: relative; }
+        .progress-bar { background: linear-gradient(45deg, #28a745, #20c997); height: 100%; border-radius: 15px; transition: width 0.3s; position: relative; }
+        .progress-text { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); font-weight: bold; color: #333; z-index: 10; }
+        .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px; margin-bottom: 30px; }
+        .stat-card { background: linear-gradient(135deg, #fff 0%, #f8f9fa 100%); padding: 25px; border-radius: 15px; text-align: center; box-shadow: 0 5px 15px rgba(0,0,0,0.1); transition: all 0.3s; }
+        .stat-card:hover { transform: translateY(-5px); }
+        .stat-value { font-size: 2.5em; font-weight: bold; margin-bottom: 5px; background: linear-gradient(45deg, #667eea, #764ba2); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
         .stat-label { color: #666; font-size: 0.9em; font-weight: 500; }
-        .charts-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(500px, 1fr)); gap: 25px; margin-top: 30px; }
-        .chart-container { background: white; border-radius: 15px; padding: 25px; box-shadow: 0 8px 16px rgba(0,0,0,0.1); height: 500px; max-height: 500px; }
-        .chart-title { font-size: 1.2em; font-weight: 600; margin-bottom: 15px; color: #333; text-align: center; }
-        .chart-canvas { width: 100%; height: 400px; max-height: 400px; }
+        .download-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px; margin-top: 30px; }
+        .download-card { background: linear-gradient(135deg, #28a745, #20c997); color: white; padding: 25px; border-radius: 15px; text-align: center; text-decoration: none; transition: all 0.3s; cursor: pointer; }
+        .download-card:hover { transform: translateY(-3px); box-shadow: 0 10px 25px rgba(40, 167, 69, 0.3); }
+        .download-icon { font-size: 2.5em; margin-bottom: 10px; }
+        .download-title { font-size: 1.2em; font-weight: 600; margin-bottom: 5px; }
+        .download-desc { font-size: 0.9em; opacity: 0.9; }
+        .quality-indicator { display: flex; align-items: center; gap: 10px; margin-top: 10px; }
+        .quality-badge { padding: 5px 12px; border-radius: 20px; font-size: 0.8em; font-weight: 600; }
+        .quality-excellent { background: #d4edda; color: #155724; }
+        .quality-good { background: #cce5ff; color: #004085; }
+        .quality-warning { background: #fff3cd; color: #856404; }
+        .data-preview { background: #f8f9fa; border-radius: 10px; padding: 20px; margin-top: 20px; }
+        .preview-table { width: 100%; border-collapse: collapse; font-size: 0.9em; }
+        .preview-table th, .preview-table td { padding: 8px 12px; text-align: left; border-bottom: 1px solid #ddd; }
+        .preview-table th { background: #667eea; color: white; font-weight: 600; }
+        .preview-table tr:hover { background: #f5f5f5; }
+        .charts-container { display: grid; grid-template-columns: repeat(auto-fit, minmax(500px, 1fr)); gap: 30px; margin-top: 30px; }
+        .chart-card { background: white; border-radius: 20px; padding: 25px; box-shadow: 0 8px 20px rgba(0,0,0,0.1); }
+        .chart-title { font-size: 1.3em; font-weight: 600; color: #333; margin-bottom: 15px; text-align: center; }
+        .chart-canvas { width: 100%; height: 350px; max-height: 350px; }
+        .alert { padding: 20px; margin-bottom: 25px; border-radius: 15px; border-left: 5px solid; }
+        .alert-success { background: #d4edda; color: #155724; border-color: #28a745; }
+        .alert-info { background: #d1ecf1; color: #0c5460; border-color: #17a2b8; }
         .hidden { display: none; }
-        .loading { text-align: center; padding: 20px; }
-        .spinner { border: 4px solid #f3f3f3; border-top: 4px solid #667eea; border-radius: 50%; width: 50px; height: 50px; animation: spin 1s linear infinite; margin: 0 auto; }
+        .loading { text-align: center; padding: 30px; }
+        .spinner { border: 4px solid #f3f3f3; border-top: 4px solid #667eea; border-radius: 50%; width: 60px; height: 60px; animation: spin 1s linear infinite; margin: 0 auto 20px; }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
-        .alert { padding: 15px; margin-bottom: 20px; border-radius: 8px; }
-        .alert-success { background: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
-        .alert-warning { background: #fff3cd; color: #856404; border: 1px solid #ffeaa7; }
-        .controls { display: flex; gap: 15px; margin-bottom: 20px; flex-wrap: wrap; }
-        .control-group { display: flex; align-items: center; gap: 10px; }
-        .control-group label { margin-bottom: 0; }
-        .control-group select { width: auto; min-width: 150px; }
+        .config-section { background: #f8f9fa; padding: 20px; border-radius: 15px; margin-bottom: 25px; }
+        .config-row { display: flex; gap: 20px; align-items: end; flex-wrap: wrap; }
+        .config-group { flex: 1; min-width: 200px; }
+        .info-card { background: linear-gradient(135deg, #e3f2fd 0%, #f3e5f5 100%); padding: 20px; border-radius: 15px; margin-bottom: 20px; }
+        .feature-highlight { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 20px; margin-top: 20px; }
+        .feature-item { background: white; padding: 20px; border-radius: 12px; box-shadow: 0 3px 10px rgba(0,0,0,0.1); }
+        .feature-icon { font-size: 1.8em; margin-bottom: 10px; }
+        .feature-title { font-weight: 600; margin-bottom: 8px; color: #333; }
+        .feature-desc { color: #666; font-size: 0.9em; }
+        .correlation-summary { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-top: 20px; }
+        .correlation-item { background: white; padding: 15px; border-radius: 10px; border-left: 4px solid #667eea; }
+        .correlation-value { font-size: 1.3em; font-weight: bold; color: #667eea; }
+        .correlation-label { font-size: 0.9em; color: #666; }
     </style>
 </head>
 <body>
     <div class="header">
-        <h1>🧬 Generador Dataset Chlorella vulgaris</h1>
-        <p>Genera datasets masivos con visualizaciones avanzadas para Machine Learning</p>
+        <h1>🧬 Generador Base de Datos Chlorella vulgaris</h1>
+        <p>Genera datasets científicos de alta calidad para investigación biotecnológica</p>
     </div>
     
     <div class="container">
-        <div class="card">
-            <h2>⚙️ Configuración del Dataset</h2>
-            <div class="form-group">
-                <label for="scenarios">Número de escenarios:</label>
-                <input type="number" id="scenarios" value="25" min="1" max="100">
-                <small>Cada escenario representa condiciones experimentales diferentes</small>
+        <!-- Información del Sistema -->
+        <div class="info-card">
+            <h3>📊 Características del Generador</h3>
+            <div class="feature-highlight">
+                <div class="feature-item">
+                    <div class="feature-icon">🔬</div>
+                    <div class="feature-title">Realismo Biológico</div>
+                    <div class="feature-desc">Modelos cinéticos basados en investigación científica real</div>
+                </div>
+                <div class="feature-item">
+                    <div class="feature-icon">📈</div>
+                    <div class="feature-title">Datos Balanceados</div>
+                    <div class="feature-desc">Distribución equilibrada de condiciones normales y de estrés</div>
+                </div>
+                <div class="feature-item">
+                    <div class="feature-icon">🎯</div>
+                    <div class="feature-title">Alta Calidad</div>
+                    <div class="feature-desc">Validación automática y métricas de calidad integradas</div>
+                </div>
+                <div class="feature-item">
+                    <div class="feature-icon">⚡</div>
+                    <div class="feature-title">Generación Rápida</div>
+                    <div class="feature-desc">Algoritmos optimizados para datasets masivos</div>
+                </div>
             </div>
-            
-            <div class="form-group">
-                <label for="hours">Horas por escenario:</label>
-                <input type="number" id="hours" value="120" min="24" max="480">
-                <small>Duración de cada experimento (120 horas = 5 días)</small>
-            </div>
-            
-            <button class="btn" onclick="generateDataset()" id="generateBtn">
-                🚀 Generar Dataset
-            </button>
         </div>
         
+        <!-- Configuración -->
+        <div class="card">
+            <div class="card-header">
+                <span class="card-icon">⚙️</span>
+                <h2>Configuración de la Base de Datos</h2>
+            </div>
+            
+            <div class="config-section">
+                <div class="config-row">
+                    <div class="config-group">
+                        <label for="scenarios">Número de Escenarios:</label>
+                        <input type="number" id="scenarios" value="100" min="10" max="500">
+                        <small>Condiciones experimentales diferentes</small>
+                    </div>
+                    <div class="config-group">
+                        <label for="hours">Horas por Escenario:</label>
+                        <input type="number" id="hours" value="240" min="24" max="720">
+                        <small>Duración del experimento (240h = 10 días)</small>
+                    </div>
+                    <div class="config-group">
+                        <label for="data-quality">Calidad de Datos:</label>
+                        <select id="data-quality">
+                            <option value="research">Investigación (Alta)</option>
+                            <option value="industrial" selected>Industrial (Media)</option>
+                            <option value="pilot">Piloto (Básica)</option>
+                        </select>
+                        <small>Nivel de ruido y variabilidad</small>
+                    </div>
+                </div>
+                
+                <div class="config-row" style="margin-top: 20px;">
+                    <div class="config-group">
+                        <label for="stress-conditions">Condiciones de Estrés:</label>
+                        <select id="stress-conditions">
+                            <option value="balanced" selected>Balanceado (30%)</option>
+                            <option value="low">Bajo (15%)</option>
+                            <option value="high">Alto (45%)</option>
+                            <option value="extreme">Extremo (60%)</option>
+                        </select>
+                        <small>Frecuencia de condiciones adversas</small>
+                    </div>
+                    <div class="config-group">
+                        <label for="temporal-resolution">Resolución Temporal:</label>
+                        <select id="temporal-resolution">
+                            <option value="hour" selected>Cada Hora</option>
+                            <option value="30min">Cada 30 min</option>
+                            <option value="15min">Cada 15 min</option>
+                            <option value="5min">Cada 5 min</option>
+                        </select>
+                        <small>Frecuencia de muestreo</small>
+                    </div>
+                    <div class="config-group">
+                        <label for="output-format">Formato de Salida:</label>
+                        <select id="output-format">
+                            <option value="csv" selected>CSV</option>
+                            <option value="json">JSON</option>
+                            <option value="excel">Excel</option>
+                            <option value="all">Todos</option>
+                        </select>
+                        <small>Formato de archivos generados</small>
+                    </div>
+                </div>
+            </div>
+            
+            <div style="text-align: center;">
+                <button class="btn" onclick="generateDatabase()" id="generateBtn">
+                    🚀 Generar Base de Datos
+                </button>
+            </div>
+        </div>
+        
+        <!-- Progreso -->
         <div id="progress" class="card hidden">
-            <h3>🔄 Generando Dataset...</h3>
+            <div class="card-header">
+                <span class="card-icon">🔄</span>
+                <h2>Generando Base de Datos</h2>
+            </div>
             <div class="progress">
                 <div id="progress-bar" class="progress-bar" style="width: 0%"></div>
+                <div class="progress-text" id="progress-text">Iniciando...</div>
             </div>
-            <div id="progress-text">Iniciando generación...</div>
             <div class="loading">
                 <div class="spinner"></div>
+                <p id="stage-info">Preparando generación de datos...</p>
             </div>
         </div>
         
+        <!-- Resultados -->
         <div id="results" class="card hidden">
-            <h3>✅ Dataset Generado Exitosamente!</h3>
-            <div id="stats" class="stats"></div>
+            <div class="card-header">
+                <span class="card-icon">✅</span>
+                <h2>Base de Datos Generada</h2>
+            </div>
+            
+            <div class="alert alert-success">
+                <strong>¡Éxito!</strong> Base de datos científica generada con validación automática de calidad.
+            </div>
+            
+            <div id="stats" class="stats-grid"></div>
+            
+            <div id="quality-report" class="data-preview">
+                <h3>📊 Reporte de Calidad</h3>
+                <div id="quality-metrics"></div>
+            </div>
+            
+            <div id="data-preview" class="data-preview">
+                <h3>👁️ Vista Previa de Datos</h3>
+                <table id="preview-table" class="preview-table"></table>
+            </div>
+            
             <div id="downloads" class="download-grid"></div>
         </div>
         
-        <!-- Sección de Gráficas -->
+        <!-- Visualizaciones -->
         <div id="charts-section" class="card hidden">
-            <h3>📊 Visualización de Datos</h3>
-            <div class="alert alert-success">
-                <strong>¡Gráficas interactivas generadas!</strong> Explora los datos de tu dataset con estas visualizaciones.
+            <div class="card-header">
+                <span class="card-icon">📈</span>
+                <h2>Visualización de Datos</h2>
             </div>
             
-            <div class="controls">
-                <div class="control-group">
-                    <label for="chart-scenario">Escenario:</label>
-                    <select id="chart-scenario">
-                        <option value="all">Todos los escenarios</option>
-                    </select>
-                </div>
-                <div class="control-group">
-                    <label for="chart-hours">Horas a mostrar:</label>
-                    <select id="chart-hours">
-                        <option value="24">Últimas 24 horas</option>
-                        <option value="48">Últimas 48 horas</option>
-                        <option value="120">Últimas 120 horas</option>
-                        <option value="all">Todas las horas</option>
-                    </select>
-                </div>
-                <button class="btn" onclick="updateCharts()" style="padding: 8px 16px; font-size: 14px;">
-                    🔄 Actualizar Gráficas
-                </button>
+            <div class="alert alert-info">
+                <strong>Gráficas de Validación:</strong> Verifica la calidad y distribución de tus datos generados.
             </div>
             
-            <div class="charts-grid">
-                <div class="chart-container">
+            <div class="charts-container">
+                <div class="chart-card">
                     <div class="chart-title">📈 Evolución de Biomasa</div>
                     <canvas id="biomassChart" class="chart-canvas"></canvas>
                 </div>
                 
-                <div class="chart-container">
-                    <div class="chart-title">⚡ Tasa de Crecimiento (μ)</div>
-                    <canvas id="growthChart" class="chart-canvas"></canvas>
-                </div>
-                
-                <div class="chart-container">
+                <div class="chart-card">
                     <div class="chart-title">🌡️ Condiciones Ambientales</div>
                     <canvas id="environmentChart" class="chart-canvas"></canvas>
                 </div>
                 
-                <div class="chart-container">
-                    <div class="chart-title">💡 Intensidad de Luz (PAR)</div>
+                <div class="chart-card">
+                    <div class="chart-title">💡 Patrones de Luz</div>
                     <canvas id="lightChart" class="chart-canvas"></canvas>
                 </div>
                 
-                <div class="chart-container">
-                    <div class="chart-title">🔬 Distribución de Biomasa</div>
+                <div class="chart-card">
+                    <div class="chart-title">📊 Distribución de Variables</div>
                     <canvas id="distributionChart" class="chart-canvas"></canvas>
                 </div>
-                
-                <div class="chart-container">
-                    <div class="chart-title">🚨 Condiciones de Estrés</div>
-                    <canvas id="stressChart" class="chart-canvas"></canvas>
-                </div>
             </div>
-        </div>
-        
-        <div class="card">
-            <h3>📄 Datasets Generados Anteriormente</h3>
-            <div id="existing-datasets">
-                <div class="loading">
-                    <div class="spinner"></div>
-                    <p>Cargando datasets existentes...</p>
-                </div>
+            
+            <div id="correlation-analysis" class="data-preview">
+                <h3>🔗 Análisis de Correlaciones</h3>
+                <div id="correlation-results" class="correlation-summary"></div>
             </div>
         </div>
     </div>
@@ -165,10 +264,11 @@
     <script>
         let currentDataset = null;
         let charts = {};
+        let dataStats = null;
         
-        async function generateDataset() {
-            const scenarios = document.getElementById('scenarios').value;
-            const hours = document.getElementById('hours').value;
+        async function generateDatabase() {
+            const scenarios = parseInt(document.getElementById('scenarios').value);
+            const hours = parseInt(document.getElementById('hours').value);
             const generateBtn = document.getElementById('generateBtn');
             
             // Mostrar progreso
@@ -180,520 +280,212 @@
             
             const progressBar = document.getElementById('progress-bar');
             const progressText = document.getElementById('progress-text');
+            const stageInfo = document.getElementById('stage-info');
+            
+            const stages = [
+                'Inicializando parámetros biológicos...',
+                'Generando condiciones experimentales...',
+                'Aplicando modelo cinético de Monod...',
+                'Simulando efectos ambientales...',
+                'Calculando correlaciones entre variables...',
+                'Validando calidad de datos...',
+                'Preparando archivos de salida...'
+            ];
             
             try {
-                progressText.textContent = 'Iniciando generación de datos...';
-                progressBar.style.width = '10%';
-                
-                const response = await fetch('/generate-dataset', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ 
-                        scenarios: parseInt(scenarios), 
-                        hoursPerScenario: parseInt(hours) 
-                    })
-                });
-                
-                if (!response.ok) {
-                    throw new Error('Error en la generación del dataset');
+                // Simular progreso por etapas
+                for (let i = 0; i < stages.length; i++) {
+                    stageInfo.textContent = stages[i];
+                    progressText.textContent = `Etapa ${i + 1} de ${stages.length}`;
+                    progressBar.style.width = `${(i + 1) / stages.length * 85}%`;
+                    await new Promise(resolve => setTimeout(resolve, 800));
                 }
                 
-                const data = await response.json();
+                // Generar datos
+                progressText.textContent = 'Procesando datos...';
+                progressBar.style.width = '95%';
+                await generateDataset(scenarios, hours);
                 
-                if (data.success) {
-                    progressBar.style.width = '100%';
-                    progressText.textContent = '¡Generación completada!';
-                    
-                    // Mostrar estadísticas
-                    const statsHTML = `
-                        <div class="stat-card">
-                            <div class="stat-value">${data.stats.totalPoints.toLocaleString()}</div>
-                            <div class="stat-label">Total de Puntos</div>
-                        </div>
-                        <div class="stat-card">
-                            <div class="stat-value">${data.stats.trainingPoints.toLocaleString()}</div>
-                            <div class="stat-label">Entrenamiento</div>
-                        </div>
-                        <div class="stat-card">
-                            <div class="stat-value">${data.stats.validationPoints.toLocaleString()}</div>
-                            <div class="stat-label">Validación</div>
-                        </div>
-                        <div class="stat-card">
-                            <div class="stat-value">${data.stats.testPoints.toLocaleString()}</div>
-                            <div class="stat-label">Prueba</div>
-                        </div>
-                    `;
-                    
-                    document.getElementById('stats').innerHTML = statsHTML;
-                    
-                    // Botones de descarga
-                    const folderName = data.outputDir.split('/').pop();
-                    const downloadsHTML = `
-                        <a href="/download/${folderName}/training_data.csv" class="download-btn" download>
-                            📊 Datos de Entrenamiento
-                        </a>
-                        <a href="/download/${folderName}/validation_data.csv" class="download-btn" download>
-                            📊 Datos de Validación
-                        </a>
-                        <a href="/download/${folderName}/test_data.csv" class="download-btn" download>
-                            📊 Datos de Prueba
-                        </a>
-                        <a href="/download/${folderName}/complete_dataset.csv" class="download-btn" download>
-                            📊 Dataset Completo
-                        </a>
-                    `;
-                    
-                    document.getElementById('downloads').innerHTML = downloadsHTML;
-                    document.getElementById('results').classList.remove('hidden');
-                    
-                    // Generar datos de muestra para gráficas
-                    generateSampleData(parseInt(scenarios), parseInt(hours));
-                    
-                    // Actualizar lista de datasets
-                    setTimeout(() => {
-                        document.getElementById('progress').classList.add('hidden');
-                        document.getElementById('charts-section').classList.remove('hidden');
-                        loadExistingDatasets();
-                    }, 2000);
-                } else {
-                    throw new Error(data.error || 'Error desconocido');
-                }
+                // Finalizar
+                progressBar.style.width = '100%';
+                progressText.textContent = '¡Completado!';
+                stageInfo.textContent = 'Base de datos generada exitosamente';
+                
+                // Mostrar resultados
+                document.getElementById('results').classList.remove('hidden');
+                document.getElementById('charts-section').classList.remove('hidden');
+                
+                setTimeout(() => {
+                    document.getElementById('progress').classList.add('hidden');
+                }, 2000);
+                
             } catch (error) {
                 progressText.textContent = 'Error: ' + error.message;
                 progressBar.style.width = '0%';
                 progressBar.style.background = '#dc3545';
+                stageInfo.textContent = 'Error en la generación';
             } finally {
                 generateBtn.disabled = false;
-                generateBtn.textContent = '🚀 Generar Dataset';
+                generateBtn.textContent = '🚀 Generar Base de Datos';
             }
         }
         
-        function generateSampleData(scenarios, hours) {
-            const sampleData = [];
+        async function generateDataset(scenarios, hours) {
+            const dataQuality = document.getElementById('data-quality').value;
+            const stressConditions = document.getElementById('stress-conditions').value;
+            const temporalResolution = document.getElementById('temporal-resolution').value;
             
-            for (let s = 0; s < Math.min(scenarios, 5); s++) {
-                for (let h = 0; h < Math.min(hours, 120); h++) {
-                    const baseTemp = 20 + Math.random() * 10;
-                    const basePh = 6.8 + Math.random() * 1.2;
-                    const lightIntensity = Math.random() * 800;
-                    const biomass = 0.1 + Math.random() * 2;
-                    const mu = Math.random() * 0.05;
-                    
-                    sampleData.push({
-                        Scenario: s,
-                        Hora: h,
-                        pH: basePh,
-                        Temperatura: baseTemp,
-                        PAR: lightIntensity,
-                        mu: mu,
-                        Biomasa: biomass,
-                        Estres_Termico: baseTemp > 30 ? 1 : 0,
-                        Estres_pH: basePh < 7 || basePh > 8 ? 1 : 0
-                    });
-                }
-            }
-            
-            currentDataset = sampleData;
-            populateScenarioSelector();
-            createCharts();
-        }
-        
-        function populateScenarioSelector() {
-            const selector = document.getElementById('chart-scenario');
-            selector.innerHTML = '<option value="all">Todos los escenarios</option>';
-            
-            const scenarios = [...new Set(currentDataset.map(d => d.Scenario))];
-            scenarios.forEach(scenario => {
-                const option = document.createElement('option');
-                option.value = scenario;
-                option.textContent = `Escenario ${scenario + 1}`;
-                selector.appendChild(option);
-            });
-        }
-        
-        function createCharts() {
-            createBiomassChart();
-            createGrowthChart();
-            createEnvironmentChart();
-            createLightChart();
-            createDistributionChart();
-            createStressChart();
-        }
-        
-        function createBiomassChart() {
-            const ctx = document.getElementById('biomassChart').getContext('2d');
-            const data = getFilteredData();
-            
-            if (charts.biomass) charts.biomass.destroy();
-            
-            charts.biomass = new Chart(ctx, {
-                type: 'line',
-                data: {
-                    labels: data.map(d => d.Hora),
-                    datasets: [{
-                        label: 'Biomasa (g/L)',
-                        data: data.map(d => d.Biomasa),
-                        borderColor: '#28a745',
-                        backgroundColor: 'rgba(40, 167, 69, 0.1)',
-                        fill: true,
-                        tension: 0.4
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    aspectRatio: 2,
-                    plugins: {
-                        legend: {
-                            display: true,
-                            position: 'top'
-                        }
-                    },
-                    scales: {
-                        y: {
-                            beginAtZero: true,
-                            title: {
-                                display: true,
-                                text: 'Biomasa (g/L)'
-                            }
-                        },
-                        x: {
-                            title: {
-                                display: true,
-                                text: 'Tiempo (horas)'
-                            }
-                        }
-                    }
-                }
-            });
-        }
-        
-        function createGrowthChart() {
-            const ctx = document.getElementById('growthChart').getContext('2d');
-            const data = getFilteredData();
-            
-            if (charts.growth) charts.growth.destroy();
-            
-            charts.growth = new Chart(ctx, {
-                type: 'line',
-                data: {
-                    labels: data.map(d => d.Hora),
-                    datasets: [{
-                        label: 'Tasa de Crecimiento (μ)',
-                        data: data.map(d => d.mu),
-                        borderColor: '#8b5cf6',
-                        backgroundColor: 'rgba(139, 92, 246, 0.1)',
-                        fill: true,
-                        tension: 0.4
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: {
-                        legend: {
-                            display: true,
-                            position: 'top'
-                        }
-                    },
-                    scales: {
-                        y: {
-                            beginAtZero: true,
-                            title: {
-                                display: true,
-                                text: 'μ (h⁻¹)'
-                            }
-                        },
-                        x: {
-                            title: {
-                                display: true,
-                                text: 'Tiempo (horas)'
-                            }
-                        }
-                    }
-                }
-            });
-        }
-        
-        function createEnvironmentChart() {
-            const ctx = document.getElementById('environmentChart').getContext('2d');
-            const data = getFilteredData();
-            
-            if (charts.environment) charts.environment.destroy();
-            
-            charts.environment = new Chart(ctx, {
-                type: 'line',
-                data: {
-                    labels: data.map(d => d.Hora),
-                    datasets: [{
-                        label: 'pH',
-                        data: data.map(d => d.pH),
-                        borderColor: '#3b82f6',
-                        backgroundColor: 'rgba(59, 130, 246, 0.1)',
-                        yAxisID: 'y'
-                    }, {
-                        label: 'Temperatura (°C)',
-                        data: data.map(d => d.Temperatura),
-                        borderColor: '#ef4444',
-                        backgroundColor: 'rgba(239, 68, 68, 0.1)',
-                        yAxisID: 'y1'
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: {
-                        legend: {
-                            display: true,
-                            position: 'top'
-                        }
-                    },
-                    scales: {
-                        y: {
-                            type: 'linear',
-                            display: true,
-                            position: 'left',
-                            title: {
-                                display: true,
-                                text: 'pH'
-                            }
-                        },
-                        y1: {
-                            type: 'linear',
-                            display: true,
-                            position: 'right',
-                            title: {
-                                display: true,
-                                text: 'Temperatura (°C)'
-                            },
-                            grid: {
-                                drawOnChartArea: false
-                            }
-                        },
-                        x: {
-                            title: {
-                                display: true,
-                                text: 'Tiempo (horas)'
-                            }
-                        }
-                    }
-                }
-            });
-        }
-        
-        function createLightChart() {
-            const ctx = document.getElementById('lightChart').getContext('2d');
-            const data = getFilteredData();
-            
-            if (charts.light) charts.light.destroy();
-            
-            charts.light = new Chart(ctx, {
-                type: 'line',
-                data: {
-                    labels: data.map(d => d.Hora),
-                    datasets: [{
-                        label: 'PAR (μmol/m²/s)',
-                        data: data.map(d => d.PAR),
-                        borderColor: '#f59e0b',
-                        backgroundColor: 'rgba(245, 158, 11, 0.1)',
-                        fill: true,
-                        tension: 0.4
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: {
-                        legend: {
-                            display: true,
-                            position: 'top'
-                        }
-                    },
-                    scales: {
-                        y: {
-                            beginAtZero: true,
-                            title: {
-                                display: true,
-                                text: 'PAR (μmol/m²/s)'
-                            }
-                        },
-                        x: {
-                            title: {
-                                display: true,
-                                text: 'Tiempo (horas)'
-                            }
-                        }
-                    }
-                }
-            });
-        }
-        
-        function createDistributionChart() {
-            const ctx = document.getElementById('distributionChart').getContext('2d');
-            const data = getFilteredData();
-            
-            // Crear histograma de biomasa
-            const biomassValues = data.map(d => d.Biomasa);
-            const bins = [0, 0.5, 1, 1.5, 2, 2.5, 3];
-            const counts = bins.slice(0, -1).map((bin, i) => {
-                return biomassValues.filter(v => v >= bin && v < bins[i + 1]).length;
-            });
-            
-            if (charts.distribution) charts.distribution.destroy();
-            
-            charts.distribution = new Chart(ctx, {
-                type: 'bar',
-                data: {
-                    labels: bins.slice(0, -1).map((bin, i) => `${bin}-${bins[i + 1]}`),
-                    datasets: [{
-                        label: 'Frecuencia',
-                        data: counts,
-                        backgroundColor: 'rgba(34, 197, 94, 0.8)',
-                        borderColor: '#22c55e',
-                        borderWidth: 1
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: {
-                        legend: {
-                            display: true,
-                            position: 'top'
-                        }
-                    },
-                    scales: {
-                        y: {
-                            beginAtZero: true,
-                            title: {
-                                display: true,
-                                text: 'Frecuencia'
-                            }
-                        },
-                        x: {
-                            title: {
-                                display: true,
-                                text: 'Biomasa (g/L)'
-                            }
-                        }
-                    }
-                }
-            });
-        }
-        
-        function createStressChart() {
-            const ctx = document.getElementById('stressChart').getContext('2d');
-            const data = getFilteredData();
-            
-            const stressData = {
-                thermal: data.filter(d => d.Estres_Termico === 1).length,
-                ph: data.filter(d => d.Estres_pH === 1).length,
-                normal: data.filter(d => d.Estres_Termico === 0 && d.Estres_pH === 0).length
+            // Configuración de calidad
+            const qualityConfig = {
+                research: { noise: 0.01, precision: 4, outliers: 0.02 },
+                industrial: { noise: 0.03, precision: 3, outliers: 0.05 },
+                pilot: { noise: 0.08, precision: 2, outliers: 0.10 }
             };
             
-            if (charts.stress) charts.stress.destroy();
+            const stressConfig = {
+                balanced: { thermal: 0.15, ph: 0.15 },
+                low: { thermal: 0.05, ph: 0.10 },
+                high: { thermal: 0.25, ph: 0.20 },
+                extreme: { thermal: 0.35, ph: 0.25 }
+            };
             
-            charts.stress = new Chart(ctx, {
-                type: 'doughnut',
-                data: {
-                    labels: ['Estrés Térmico', 'Estrés pH', 'Condiciones Normales'],
-                    datasets: [{
-                        data: [stressData.thermal, stressData.ph, stressData.normal],
-                        backgroundColor: [
-                            '#ef4444',
-                            '#f59e0b',
-                            '#22c55e'
-                        ],
-                        borderWidth: 2
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: {
-                        legend: {
-                            display: true,
-                            position: 'bottom'
-                        }
+            const resolutionConfig = {
+                hour: 1,
+                '30min': 0.5,
+                '15min': 0.25,
+                '5min': 0.0833
+            };
+            
+            const quality = qualityConfig[dataQuality];
+            const stress = stressConfig[stressConditions];
+            const resolution = resolutionConfig[temporalResolution];
+            
+            const allData = [];
+            const totalPoints = Math.floor(scenarios * hours / resolution);
+            
+            for (let s = 0; s < scenarios; s++) {
+                // Parámetros del escenario
+                const scenarioParams = {
+                    baseTemp: 20 + Math.random() * 10,
+                    basePh: 6.8 + Math.random() * 1.2,
+                    maxPAR: 400 + Math.random() * 600,
+                    initialBiomass: 0.05 + Math.random() * 0.3,
+                    nutrientLevel: 0.5 + Math.random() * 0.5,
+                    lightRegime: Math.random() > 0.5 ? 'continuous' : 'cyclic',
+                    stressType: Math.random() < stress.thermal ? 'thermal' : 
+                               Math.random() < stress.ph ? 'ph' : 'normal'
+                };
+                
+                // Variables del cultivo
+                let currentBiomass = scenarioParams.initialBiomass;
+                let currentCellConc = currentBiomass * 2e6;
+                let currentpH = scenarioParams.basePh;
+                let currentTemp = scenarioParams.baseTemp;
+                let nutrients = scenarioParams.nutrientLevel;
+                
+                for (let t = 0; t < hours; t += resolution) {
+                    const hour = Math.floor(t);
+                    
+                    // Ciclo de luz
+                    let lightIntensity;
+                    if (scenarioParams.lightRegime === 'continuous') {
+                        lightIntensity = scenarioParams.maxPAR * (0.8 + 0.2 * Math.random());
+                    } else {
+                        const hourOfDay = hour % 24;
+                        lightIntensity = hourOfDay >= 6 && hourOfDay <= 18 ? 
+                            scenarioParams.maxPAR * Math.sin((hourOfDay - 6) * Math.PI / 12) : 0;
                     }
+                    
+                    // Variaciones ambientales
+                    const tempVariation = scenarioParams.stressType === 'thermal' ? 
+                        5 + Math.random() * 3 : Math.random() * 2 - 1;
+                    currentTemp = Math.max(15, Math.min(40, 
+                        scenarioParams.baseTemp + tempVariation + 2 * Math.sin(t * Math.PI / 12)));
+                    
+                    const pHDrift = scenarioParams.stressType === 'ph' ? 
+                        -0.5 + Math.random() * 0.2 : (Math.random() - 0.5) * 0.1;
+                    currentpH = Math.max(6.0, Math.min(9.0, 
+                        scenarioParams.basePh + pHDrift + 0.3 * Math.sin(t * 0.05)));
+                    
+                    // Depleción de nutrientes
+                    nutrients = Math.max(0.1, nutrients - 0.001 * currentBiomass * resolution);
+                    
+                    // Modelo cinético de Monod
+                    const muMax = 0.08;
+                    const Ks_light = 300;
+                    const Ks_nutrient = 0.1;
+                    const Ki_biomass = 4;
+                    
+                    const lightEffect = lightIntensity / (lightIntensity + Ks_light);
+                    const tempEffect = currentTemp >= 15 && currentTemp <= 35 ? 
+                        Math.exp(-Math.pow((currentTemp - 25) / 10, 2)) : 0.1;
+                    const pHEffect = currentpH >= 6.5 && currentpH <= 8.5 ? 
+                        Math.exp(-Math.pow((currentpH - 7.2) / 1.5, 2)) : 0.1;
+                    const nutrientEffect = nutrients / (nutrients + Ks_nutrient);
+                    const inhibitionEffect = Ki_biomass / (Ki_biomass + currentBiomass);
+                    
+                    const mu = muMax * lightEffect * tempEffect * pHEffect * nutrientEffect * inhibitionEffect;
+                    
+                    // Aplicar ruido según calidad
+                    const growthRate = Math.max(0, mu + (Math.random() - 0.5) * quality.noise);
+                    
+                    // Actualizar biomasa
+                    currentBiomass = Math.min(currentBiomass * Math.exp(growthRate * resolution), 5.0);
+                    currentCellConc = currentCellConc * Math.exp(growthRate * resolution);
+                    
+                    // Ruido en mediciones
+                    const biomassNoise = currentBiomass * (1 + (Math.random() - 0.5) * quality.noise);
+                    const cellConcNoise = currentCellConc * (1 + (Math.random() - 0.5) * quality.noise);
+                    
+                    // Crear punto de datos
+                    const dataPoint = {
+                        Scenario: s + 1,
+                        Time_h: parseFloat(t.toFixed(2)),
+                        DateTime: new Date(Date.now() + t * 3600000).toISOString(),
+                        pH: parseFloat(currentpH.toFixed(quality.precision)),
+                        Temperature_C: parseFloat(currentTemp.toFixed(quality.precision)),
+                        PAR_umol_m2_s: parseFloat(lightIntensity.toFixed(quality.precision)),
+                        Growth_Rate_h: parseFloat(growthRate.toFixed(quality.precision + 1)),
+                        Biomass_g_L: parseFloat(biomassNoise.toFixed(quality.precision)),
+                        Cell_Concentration_cells_mL: parseFloat(cellConcNoise.toFixed(0)),
+                        Nutrients_g_L: parseFloat(nutrients.toFixed(quality.precision)),
+                        Optical_Density_OD680: parseFloat((currentBiomass * 2.5).toFixed(quality.precision)),
+                        Productivity_g_L_d: parseFloat((currentBiomass * growthRate * 24).toFixed(quality.precision)),
+                        Light_Efficiency: parseFloat((mu / Math.max(0.001, lightIntensity / 1000)).toFixed(quality.precision + 1)),
+                        Thermal_Stress: currentTemp > 32 || currentTemp < 18 ? 1 : 0,
+                        pH_Stress: currentpH < 6.5 || currentpH > 8.5 ? 1 : 0,
+                        Light_Regime: scenarioParams.lightRegime,
+                        Stress_Condition: scenarioParams.stressType,
+                        Data_Quality: dataQuality,
+                        Sampling_Resolution: temporalResolution
+                    };
+                    
+                    allData.push(dataPoint);
                 }
-            });
-        }
-        
-        function getFilteredData() {
-            if (!currentDataset) return [];
-            
-            const selectedScenario = document.getElementById('chart-scenario').value;
-            const selectedHours = document.getElementById('chart-hours').value;
-            
-            let filteredData = currentDataset;
-            
-            if (selectedScenario !== 'all') {
-                filteredData = filteredData.filter(d => d.Scenario === parseInt(selectedScenario));
             }
             
-            if (selectedHours !== 'all') {
-                const maxHours = parseInt(selectedHours);
-                const maxHourInData = Math.max(...filteredData.map(d => d.Hora));
-                filteredData = filteredData.filter(d => d.Hora >= Math.max(0, maxHourInData - maxHours));
-            }
+            currentDataset = allData;
             
-            return filteredData;
+            // Calcular estadísticas
+            calculateDataStatistics();
+            
+            // Mostrar resultados
+            displayResults();
+            
+            // Crear visualizaciones
+            createCharts();
+            
+            // Análisis de correlaciones
+            performCorrelationAnalysis();
         }
         
-        function updateCharts() {
-            if (currentDataset) {
-                createCharts();
-            }
-        }
-        
-        async function loadExistingDatasets() {
-            try {
-                const response = await fetch('/datasets');
-                const datasets = await response.json();
-                
-                const container = document.getElementById('existing-datasets');
-                
-                if (datasets.length === 0) {
-                    container.innerHTML = '<p>No hay datasets generados anteriormente.</p>';
-                    return;
-                }
-                
-                const datasetsHTML = datasets.map(dataset => `
-                    <div style="border: 1px solid #ddd; padding: 15px; margin: 10px 0; border-radius: 8px; background: white;">
-                        <div style="display: flex; justify-content: space-between; align-items: center;">
-                            <div>
-                                <strong>📅 ${new Date(dataset.created).toLocaleString()}</strong>
-                                <br>
-                                <small>${dataset.files.length} archivos</small>
-                            </div>
-                            <div style="text-align: right;">
-                                ${dataset.files.map(file => `
-                                    <a href="/download/${dataset.id}/${file.name}" 
-                                       class="download-btn" 
-                                       style="margin: 2px; padding: 8px 12px; font-size: 12px;"
-                                       download>
-                                        ${file.name.replace('.csv', '')}
-                                    </a>
-                                `).join('')}
-                            </div>
-                        </div>
-                    </div>
-                `).join('');
-                
-                container.innerHTML = datasetsHTML;
-            } catch (error) {
-                console.error('Error loading datasets:', error);
-                document.getElementById('existing-datasets').innerHTML = 
-                    '<p>Error al cargar datasets existentes.</p>';
-            }
-        }
-        
-        // Cargar datasets al cargar la página
-        loadExistingDatasets();
-        
-        // Actualizar cada 30 segundos
-        setInterval(loadExistingDatasets, 30000);
-    </script>
-</body>
-</html>
+        function calculateDataStatistics() {
+            if (!currentDataset || currentDataset.length === 0) return;
+            
+            const variables = ['pH', 'Temperature_C', 'PAR_umol_m2_s', 'Biomass_g_L', 'Growth_Rate_h'];
+            
+            dataStats = {
+                totalPoints: currentDataset.length,
+                scenarios: [...new Set(currentDataset.map(d => d.Scenario))].length,
+                duration: Math.max(...currentDataset.map(d => d.Time_h)),
+                variables
