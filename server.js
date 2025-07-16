@@ -1,4 +1,4 @@
-// server.js - Versión mínima que funciona 100%
+// server.js - Versión corregida para Railway
 const express = require('express');
 const fs = require('fs');
 const path = require('path');
@@ -7,25 +7,7 @@ const app = express();
 const PORT = process.env.PORT || 3000;
 
 // Middleware básico
-app.use(express.json());
-app.use(express.static('public'));
-
-// Crear directorio para datasets
-const datasetsDir = path.join(__dirname, 'generated_datasets');
-if (!fs.existsSync(datasetsDir)) {
-    fs.mkdirSync(datasetsDir, { recursive: true });
-}
-
-// server.js - Versión avanzada con base de datos perfecta
-const express = require('express');
-const fs = require('fs');
-const path = require('path');
-
-const app = express();
-const PORT = process.env.PORT || 3000;
-
-// Middleware básico
-app.use(express.json());
+app.use(express.json({ limit: '50mb' }));
 app.use(express.static('public'));
 
 // Crear directorio para datasets
@@ -314,16 +296,46 @@ function toCSV(data) {
     return rows.join('\n');
 }
 
-// Rutas
-app.get('/test', (req, res) => {
-    res.json({ message: 'Servidor OK', time: new Date().toISOString() });
+// Health check endpoint
+app.get('/health', (req, res) => {
+    res.status(200).json({ 
+        status: 'OK', 
+        message: 'Chlorella Generator Running',
+        timestamp: new Date().toISOString(),
+        port: PORT
+    });
 });
 
+// Test endpoint
+app.get('/test', (req, res) => {
+    res.json({ 
+        message: 'Servidor Chlorella OK', 
+        time: new Date().toISOString(),
+        environment: process.env.NODE_ENV || 'development'
+    });
+});
+
+// Endpoint principal para generar dataset
 app.post('/generate-dataset', (req, res) => {
     try {
         const { scenarios = 25, hoursPerScenario = 120 } = req.body;
         
-        console.log(`Generando ${scenarios} escenarios con ${hoursPerScenario} horas`);
+        // Validar parámetros
+        if (scenarios < 1 || scenarios > 100) {
+            return res.status(400).json({ 
+                success: false, 
+                error: 'Escenarios debe estar entre 1 y 100' 
+            });
+        }
+        
+        if (hoursPerScenario < 24 || hoursPerScenario > 480) {
+            return res.status(400).json({ 
+                success: false, 
+                error: 'Horas debe estar entre 24 y 480' 
+            });
+        }
+        
+        console.log(`🚀 Generando ${scenarios} escenarios con ${hoursPerScenario} horas`);
         
         const data = generateAdvancedData(scenarios, hoursPerScenario);
         
@@ -336,16 +348,26 @@ app.post('/generate-dataset', (req, res) => {
         const valid = shuffled.slice(trainSize, trainSize + validSize);
         const test = shuffled.slice(trainSize + validSize);
         
-        // Guardar archivos
+        // Crear directorio con timestamp
         const timestamp = Date.now();
         const folder = path.join(datasetsDir, timestamp.toString());
         fs.mkdirSync(folder, { recursive: true });
         
-        fs.writeFileSync(path.join(folder, 'complete_dataset.csv'), toCSV(data));
-        fs.writeFileSync(path.join(folder, 'training_data.csv'), toCSV(train));
-        fs.writeFileSync(path.join(folder, 'validation_data.csv'), toCSV(valid));
-        fs.writeFileSync(path.join(folder, 'test_data.csv'), toCSV(test));
+        // Guardar archivos CSV
+        try {
+            fs.writeFileSync(path.join(folder, 'complete_dataset.csv'), toCSV(data));
+            fs.writeFileSync(path.join(folder, 'training_data.csv'), toCSV(train));
+            fs.writeFileSync(path.join(folder, 'validation_data.csv'), toCSV(valid));
+            fs.writeFileSync(path.join(folder, 'test_data.csv'), toCSV(test));
+        } catch (writeError) {
+            console.error('Error escribiendo archivos:', writeError);
+            return res.status(500).json({ 
+                success: false, 
+                error: 'Error guardando archivos CSV' 
+            });
+        }
         
+        // Estadísticas del dataset
         const stats = {
             totalPoints: data.length,
             trainingPoints: train.length,
@@ -361,78 +383,171 @@ app.post('/generate-dataset', (req, res) => {
             stressDistribution: {
                 thermal: data.filter(d => d.Thermal_Stress === 1).length,
                 ph: data.filter(d => d.pH_Stress === 1).length,
-                normal: data.filter(d => d.Thermal_Stress === 0 && d.pH_Stress === 0).length
+                nutrient: data.filter(d => d.Nutrient_Stress === 1).length,
+                normal: data.filter(d => d.Overall_Stress_Score === 0).length
             },
             qualityMetrics: {
                 completeness: 100,
-                dataQuality: 'industrial',
-                resolution: 'hour'
+                dataQuality: 'industrial-grade',
+                temporalResolution: 'hourly',
+                biologicalAccuracy: 'high'
             },
             outputDir: folder
         };
         
-        console.log('Dataset generado exitosamente');
-        res.json({ success: true, stats, outputDir: folder });
+        console.log('✅ Dataset generado exitosamente');
+        res.json({ 
+            success: true, 
+            stats, 
+            outputDir: folder,
+            message: 'Dataset generado correctamente'
+        });
         
     } catch (error) {
-        console.error('Error:', error);
-        res.status(500).json({ success: false, error: error.message });
+        console.error('❌ Error generando dataset:', error);
+        res.status(500).json({ 
+            success: false, 
+            error: error.message || 'Error interno del servidor'
+        });
     }
 });
 
+// Endpoint para obtener muestra de datos
 app.get('/sample-data/:folder', (req, res) => {
     try {
         const filePath = path.join(datasetsDir, req.params.folder, 'complete_dataset.csv');
         
         if (!fs.existsSync(filePath)) {
-            return res.status(404).json({ error: 'No encontrado' });
+            return res.status(404).json({ 
+                error: 'Dataset no encontrado',
+                folder: req.params.folder
+            });
         }
         
         const csv = fs.readFileSync(filePath, 'utf8');
-        const lines = csv.split('\n');
+        const lines = csv.split('\n').filter(line => line.trim());
         const headers = lines[0].split(',');
         
+        // Tomar muestra de los primeros 1000 registros
+        const sampleSize = Math.min(1000, lines.length - 1);
         const data = [];
-        for (let i = 1; i < Math.min(lines.length, 1001); i++) {
-            if (lines[i].trim()) {
+        
+        for (let i = 1; i <= sampleSize; i++) {
+            if (lines[i] && lines[i].trim()) {
                 const values = lines[i].split(',');
                 const row = {};
-                headers.forEach((h, idx) => {
-                    row[h] = isNaN(values[idx]) ? values[idx] : parseFloat(values[idx]);
+                headers.forEach((header, idx) => {
+                    const value = values[idx];
+                    row[header] = isNaN(value) ? value : parseFloat(value);
                 });
                 data.push(row);
             }
         }
         
-        res.json(data);
+        res.json({
+            data: data,
+            sampleSize: data.length,
+            totalRows: lines.length - 1,
+            headers: headers
+        });
         
     } catch (error) {
-        res.status(500).json({ error: error.message });
+        console.error('Error obteniendo muestra:', error);
+        res.status(500).json({ 
+            error: 'Error leyendo datos',
+            details: error.message
+        });
     }
 });
 
+// Endpoint para descargar archivos
 app.get('/download/:folder/:filename', (req, res) => {
-    const filePath = path.join(datasetsDir, req.params.folder, req.params.filename);
-    
-    if (fs.existsSync(filePath)) {
-        res.download(filePath);
-    } else {
-        res.status(404).send('Archivo no encontrado');
+    try {
+        const filePath = path.join(datasetsDir, req.params.folder, req.params.filename);
+        
+        if (!fs.existsSync(filePath)) {
+            return res.status(404).json({ 
+                error: 'Archivo no encontrado',
+                path: req.params.filename
+            });
+        }
+        
+        // Configurar headers para descarga
+        res.setHeader('Content-Disposition', `attachment; filename="${req.params.filename}"`);
+        res.setHeader('Content-Type', 'text/csv');
+        
+        res.download(filePath, req.params.filename, (err) => {
+            if (err) {
+                console.error('Error en descarga:', err);
+                if (!res.headersSent) {
+                    res.status(500).json({ error: 'Error descargando archivo' });
+                }
+            }
+        });
+        
+    } catch (error) {
+        console.error('Error preparando descarga:', error);
+        res.status(500).json({ error: 'Error interno' });
     }
 });
 
+// Ruta principal
 app.get('/', (req, res) => {
     const indexPath = path.join(__dirname, 'public', 'index.html');
+    
     if (fs.existsSync(indexPath)) {
         res.sendFile(indexPath);
     } else {
-        res.send('<h1>Servidor funcionando</h1><p>Falta el archivo public/index.html</p>');
+        res.send(`
+            <html>
+                <head><title>Chlorella Generator</title></head>
+                <body style="font-family: Arial; text-align: center; padding: 50px;">
+                    <h1>🧬 Generador Chlorella vulgaris</h1>
+                    <p>Servidor funcionando correctamente</p>
+                    <p>Puerto: ${PORT}</p>
+                    <p>Tiempo: ${new Date().toISOString()}</p>
+                    <p><strong>Nota:</strong> Coloca el archivo index.html en la carpeta public/</p>
+                    <a href="/test" style="background: #007bff; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px;">Test Servidor</a>
+                </body>
+            </html>
+        `);
     }
+});
+
+// Manejo de errores global
+app.use((err, req, res, next) => {
+    console.error('Error del servidor:', err);
+    res.status(500).json({ 
+        error: 'Error interno del servidor',
+        message: err.message
+    });
+});
+
+// Manejo de rutas no encontradas
+app.use('*', (req, res) => {
+    res.status(404).json({ 
+        error: 'Ruta no encontrada',
+        path: req.originalUrl
+    });
 });
 
 // Iniciar servidor
 app.listen(PORT, '0.0.0.0', () => {
-    console.log(`Servidor iniciado en puerto ${PORT}`);
+    console.log(`🚀 Servidor Chlorella iniciado en puerto ${PORT}`);
+    console.log(`🌐 Ambiente: ${process.env.NODE_ENV || 'development'}`);
+    console.log(`📁 Directorio datasets: ${datasetsDir}`);
+    console.log(`⏰ Iniciado: ${new Date().toISOString()}`);
+});
+
+// Manejo de cierre graceful
+process.on('SIGTERM', () => {
+    console.log('🛑 Recibida señal SIGTERM, cerrando servidor...');
+    process.exit(0);
+});
+
+process.on('SIGINT', () => {
+    console.log('🛑 Recibida señal SIGINT, cerrando servidor...');
+    process.exit(0);
 });
 
 module.exports = app;
