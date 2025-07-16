@@ -811,7 +811,14 @@
                             currentDataset.map(d => d.Time_h || 0),
                             currentDataset.map(d => d.Biomass_g_L || 0)
                         )
-                    }
+                    },
+                    {
+                        name: 'Nutrientes - Crecimiento',
+                        value: calculateCorrelation(
+                            currentDataset.map(d => d.Nutrients_g_L || 0),
+                            currentDataset.map(d => d.Growth_Rate_mu_h || 0)
+                        )
+                    },
                 ];
                 
                 document.getElementById('correlations').innerHTML = correlations.map(corr => {
