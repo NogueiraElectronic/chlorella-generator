@@ -662,6 +662,167 @@
             }
         }
         
+        // === FUNCIONES DE GRÁFICAS (DEFINIDAS ANTES DE SER USADAS) ===
+        
+        // Gráfica de biomasa
+        function createBiomassChart() {
+            const ctx = document.getElementById('biomassChart').getContext('2d');
+            if (charts.biomass) charts.biomass.destroy();
+            
+            const scenarios = [...new Set(currentDataset.map(d => d.Scenario))].slice(0, 5);
+            const colors = ['#667eea', '#f093fb', '#4facfe', '#43e97b', '#fa709a'];
+            
+            charts.biomass = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    datasets: scenarios.map((scenario, index) => {
+                        const data = currentDataset
+                            .filter(d => d.Scenario === scenario)
+                            .sort((a, b) => (a.Time_days || 0) - (b.Time_days || 0))
+                            .map(d => ({ x: d.Time_days || 0, y: d.Biomass_g_L || 0 }));
+                        
+                        return {
+                            label: `Escenario ${scenario}`,
+                            data: data,
+                            borderColor: colors[index % colors.length],
+                            backgroundColor: colors[index % colors.length] + '20',
+                            tension: 0.3,
+                            pointRadius: 2
+                        };
+                    })
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { display: true } },
+                    scales: {
+                        x: { title: { display: true, text: 'Tiempo (días)' } },
+                        y: { title: { display: true, text: 'Biomasa (g/L)' }, beginAtZero: true }
+                    }
+                }
+            });
+        }
+        
+        // Gráfica de temperatura
+        function createTemperatureChart() {
+            const ctx = document.getElementById('temperatureChart').getContext('2d');
+            if (charts.temperature) charts.temperature.destroy();
+            
+            const data = currentDataset.slice(0, 200).map(d => ({
+                x: d.Time_days || 0,
+                y: d.Temperature_C || 0
+            }));
+            
+            charts.temperature = new Chart(ctx, {
+                type: 'scatter',
+                data: {
+                    datasets: [{
+                        label: 'Temperatura',
+                        data: data,
+                        backgroundColor: 'rgba(239, 68, 68, 0.6)',
+                        borderColor: '#ef4444',
+                        pointRadius: 3
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { display: true } },
+                    scales: {
+                        x: { title: { display: true, text: 'Tiempo (días)' } },
+                        y: { title: { display: true, text: 'Temperatura (°C)' } }
+                    }
+                }
+            });
+        }
+        
+        // Gráfica de pH
+        function createPHChart() {
+            const ctx = document.getElementById('pHChart').getContext('2d');
+            if (charts.pH) charts.pH.destroy();
+            
+            const data = currentDataset.slice(0, 200).map(d => ({
+                x: d.Time_days || 0,
+                y: d.pH || 0
+            }));
+            
+            charts.pH = new Chart(ctx, {
+                type: 'scatter',
+                data: {
+                    datasets: [{
+                        label: 'pH',
+                        data: data,
+                        backgroundColor: 'rgba(59, 130, 246, 0.6)',
+                        borderColor: '#3b82f6',
+                        pointRadius: 3
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { display: true } },
+                    scales: {
+                        x: { title: { display: true, text: 'Tiempo (días)' } },
+                        y: { title: { display: true, text: 'pH' }, min: 6, max: 10 }
+                    }
+                }
+            });
+        }
+        
+        // Gráfica de PAR
+        function createPARChart() {
+            const ctx = document.getElementById('parChart').getContext('2d');
+            if (charts.par) charts.par.destroy();
+            
+            const data = currentDataset.slice(0, 200).map(d => ({
+                x: d.Time_days || 0,
+                y: d.PAR_umol_m2_s || 0
+            }));
+            
+            charts.par = new Chart(ctx, {
+                type: 'scatter',
+                data: {
+                    datasets: [{
+                        label: 'PAR',
+                        data: data,
+                        backgroundColor: 'rgba(245, 158, 11, 0.6)',
+                        borderColor: '#f59e0b',
+                        pointRadius: 3
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { display: true } },
+                    scales: {
+                        x: { title: { display: true, text: 'Tiempo (días)' } },
+                        y: { title: { display: true, text: 'PAR (μmol/m²/s)' }, beginAtZero: true }
+                    }
+                }
+            });
+        }
+        
+        // Crear gráficas básicas
+        function createCharts() {
+            if (!currentDataset || !Array.isArray(currentDataset) || currentDataset.length === 0) {
+                debugLog('⚠️ Sin datos para gráficas');
+                return;
+            }
+            
+            debugLog('📊 Creando gráficas básicas:', currentDataset.length, 'registros');
+            
+            try {
+                createBiomassChart();
+                createTemperatureChart();
+                createPHChart();
+                createPARChart();
+                debugLog('✅ Gráficas creadas');
+            } catch (error) {
+                debugLog('❌ Error creando gráficas:', error);
+                showMessage(`❌ Error en gráficas: ${error.message}`, 'error');
+            }
+        }
+        
         // Crear gráficas básicas
         function createCharts() {
             if (!currentDataset || !Array.isArray(currentDataset) || currentDataset.length === 0) {
