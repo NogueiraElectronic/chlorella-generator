@@ -1,31 +1,33 @@
 {
   "name": "chlorella-generator",
-  "version": "1.0.0",
-  "description": "Generador de datasets científicos de Chlorella vulgaris",
+  "version": "2.0.0",
+  "description": "Generador de datasets hiperrealistas de Chlorella vulgaris para Machine Learning",
   "main": "server.js",
   "scripts": {
     "start": "node server.js",
-    "dev": "node server.js",
-    "test": "node -e \"console.log('Test passed')\"",
-    "build": "echo 'No build needed'"
-  },
-  "dependencies": {
-    "express": "^4.18.2"
-  },
-  "engines": {
-    "node": ">=18.0.0",
-    "npm": ">=8.0.0"
-  },
-  "repository": {
-    "type": "git",
-    "url": "tu-repositorio-github"
+    "dev": "nodemon server.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [
     "chlorella",
-    "bioinformatics",
     "dataset",
-    "microalgae"
+    "machine-learning",
+    "biotechnology",
+    "algae"
   ],
-  "author": "Tu nombre",
-  "license": "MIT"
+  "author": "Tu Nombre",
+  "license": "MIT",
+  "dependencies": {
+    "express": "^4.18.2"
+  },
+  "devDependencies": {
+    "nodemon": "^3.0.1"
+  },
+  "engines": {
+    "node": ">=16.0.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "tu-repo-github"
+  }
 }
