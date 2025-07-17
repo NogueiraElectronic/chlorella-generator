@@ -3,87 +3,98 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Chlorella Generator v3.0</title>
+    <title>Chlorella Generator - Análisis Completo</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body { 
-            font-family: Arial, sans-serif; 
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); 
             min-height: 100vh; 
             padding: 20px;
         }
-        .container { max-width: 1200px; margin: 0 auto; }
+        .container { max-width: 1400px; margin: 0 auto; }
         .header { 
             color: white; 
             text-align: center; 
-            padding: 20px 0; 
+            padding: 30px 0; 
             margin-bottom: 30px;
             background: rgba(0,0,0,0.1);
             border-radius: 15px;
         }
-        .header h1 { font-size: 2.5em; margin-bottom: 10px; }
+        .header h1 { font-size: 2.8em; margin-bottom: 10px; text-shadow: 2px 2px 4px rgba(0,0,0,0.3); }
         .version-badge {
-            background: #28a745;
+            background: linear-gradient(45deg, #28a745, #20c997);
             color: white;
-            padding: 8px 16px;
-            border-radius: 20px;
+            padding: 10px 20px;
+            border-radius: 25px;
             font-size: 0.9em;
             margin-top: 10px;
             display: inline-block;
+            font-weight: bold;
         }
         .card { 
             background: white; 
             border-radius: 15px; 
             padding: 30px; 
             margin-bottom: 25px; 
-            box-shadow: 0 8px 20px rgba(0,0,0,0.1); 
+            box-shadow: 0 10px 30px rgba(0,0,0,0.15); 
         }
         .form-group { margin-bottom: 20px; }
-        label { display: block; margin-bottom: 8px; font-weight: 600; }
+        label { display: block; margin-bottom: 8px; font-weight: 600; color: #333; }
         input, select { 
             width: 100%; 
             padding: 12px; 
             border: 2px solid #e1e1e1; 
             border-radius: 8px; 
             font-size: 16px; 
+            transition: border-color 0.3s;
         }
+        input:focus, select:focus { outline: none; border-color: #28a745; }
         .form-row {
             display: grid;
-            grid-template-columns: 1fr 1fr;
+            grid-template-columns: 1fr 1fr 1fr;
             gap: 20px;
             margin-bottom: 20px;
         }
         .ranges-info {
-            background: #e8f5e8;
-            border: 1px solid #28a745;
-            padding: 15px;
-            border-radius: 8px;
-            margin-top: 10px;
+            background: linear-gradient(135deg, #e8f5e8, #d4f1d4);
+            border: 2px solid #28a745;
+            padding: 20px;
+            border-radius: 12px;
+            margin-top: 15px;
         }
         .ranges-info h4 {
-            color: #28a745;
-            margin-bottom: 10px;
-        }
-        .ranges-info ul {
-            margin-left: 20px;
-            color: #333;
+            color: #155724;
+            margin-bottom: 12px;
+            font-size: 1.1em;
         }
         .btn { 
-            background: linear-gradient(45deg, #667eea, #764ba2); 
+            background: linear-gradient(45deg, #28a745, #20c997); 
             color: white; 
             padding: 15px 30px; 
             border: none; 
-            border-radius: 8px; 
+            border-radius: 10px; 
             cursor: pointer; 
             font-size: 16px; 
             font-weight: 600; 
             margin: 10px; 
-            transition: transform 0.2s;
+            transition: all 0.3s;
+            box-shadow: 0 4px 15px rgba(40, 167, 69, 0.3);
         }
-        .btn:hover { transform: translateY(-2px); }
-        .btn:disabled { background: #ccc; cursor: not-allowed; transform: none; }
-        .btn-test { background: linear-gradient(45deg, #17a2b8, #138496); }
+        .btn:hover { 
+            transform: translateY(-2px); 
+            box-shadow: 0 6px 20px rgba(40, 167, 69, 0.4);
+        }
+        .btn:disabled { 
+            background: #6c757d; 
+            cursor: not-allowed; 
+            transform: none; 
+            box-shadow: none;
+        }
+        .btn-test { background: linear-gradient(45deg, #17a2b8, #20c997); }
+        .btn-correlations { background: linear-gradient(45deg, #fd7e14, #ffc107); }
+        
         .stats { 
             display: grid; 
             grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); 
@@ -91,123 +102,242 @@
             margin: 20px 0; 
         }
         .stat-card { 
-            background: #f8f9fa; 
-            padding: 20px; 
-            border-radius: 10px; 
+            background: linear-gradient(135deg, #f8f9fa, #e9ecef);
+            padding: 25px; 
+            border-radius: 12px; 
             text-align: center; 
-            border-left: 4px solid #28a745;
+            border-left: 5px solid #28a745;
+            transition: transform 0.2s;
         }
-        .stat-value { font-size: 2em; font-weight: bold; color: #28a745; }
-        .stat-label { color: #666; font-size: 0.9em; }
+        .stat-card:hover { transform: translateY(-3px); }
+        .stat-value { font-size: 2.2em; font-weight: bold; color: #28a745; margin-bottom: 5px; }
+        .stat-label { color: #495057; font-size: 0.9em; font-weight: 500; }
+        
         .downloads { 
             display: grid; 
-            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); 
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); 
             gap: 15px; 
             margin: 20px 0; 
         }
         .download-btn { 
-            background: #28a745; 
+            background: linear-gradient(45deg, #28a745, #20c997); 
             color: white; 
-            padding: 15px; 
-            border-radius: 8px; 
+            padding: 18px; 
+            border-radius: 10px; 
             text-decoration: none; 
             text-align: center; 
             font-weight: 600; 
-            transition: background 0.2s;
+            transition: all 0.3s;
+            box-shadow: 0 4px 15px rgba(40, 167, 69, 0.2);
         }
-        .download-btn:hover { background: #218838; }
-        .charts { 
+        .download-btn:hover { 
+            background: linear-gradient(45deg, #218838, #1e7e34); 
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(40, 167, 69, 0.3);
+        }
+        
+        .charts-grid { 
             display: grid; 
-            grid-template-columns: repeat(auto-fit, minmax(500px, 1fr)); 
-            gap: 20px; 
-            margin: 20px 0; 
+            grid-template-columns: repeat(auto-fit, minmax(600px, 1fr)); 
+            gap: 25px; 
+            margin: 25px 0; 
         }
         .chart-container { 
             background: white; 
-            padding: 20px; 
-            border-radius: 10px; 
-            margin: 20px 0;
-            height: 400px;
-            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+            padding: 25px; 
+            border-radius: 15px; 
+            height: 450px;
+            box-shadow: 0 8px 25px rgba(0,0,0,0.1);
+            border: 1px solid #e9ecef;
         }
         .chart-title { 
-            font-size: 1.2em; 
+            font-size: 1.3em; 
             font-weight: 600; 
-            margin-bottom: 15px; 
+            margin-bottom: 20px; 
             text-align: center; 
-            color: #333;
+            color: #343a40;
+            border-bottom: 2px solid #28a745;
+            padding-bottom: 10px;
         }
+        .chart-canvas { 
+            width: 100% !important; 
+            height: 360px !important;
+        }
+        
+        .correlations-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+            margin: 20px 0;
+        }
+        .correlation-card {
+            background: linear-gradient(135deg, #fff, #f8f9fa);
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            border-left: 5px solid;
+            transition: transform 0.2s;
+        }
+        .correlation-card:hover { transform: translateY(-2px); }
+        .correlation-value {
+            font-size: 2em;
+            font-weight: bold;
+            margin-bottom: 8px;
+        }
+        .correlation-label {
+            color: #495057;
+            font-size: 1em;
+            margin-bottom: 5px;
+        }
+        .correlation-strength {
+            font-size: 0.85em;
+            padding: 4px 12px;
+            border-radius: 15px;
+            color: white;
+            display: inline-block;
+            font-weight: 500;
+        }
+        
+        .metrics-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 20px;
+            margin: 20px 0;
+        }
+        .metric-card {
+            background: linear-gradient(135deg, #e3f2fd, #bbdefb);
+            padding: 20px;
+            border-radius: 12px;
+            border-left: 5px solid #2196f3;
+        }
+        .metric-title {
+            color: #1565c0;
+            font-weight: 600;
+            margin-bottom: 15px;
+            font-size: 1.1em;
+        }
+        .metric-list {
+            list-style: none;
+            padding: 0;
+        }
+        .metric-list li {
+            padding: 8px 0;
+            border-bottom: 1px solid rgba(33, 150, 243, 0.1);
+            display: flex;
+            justify-content: space-between;
+        }
+        .metric-list li:last-child { border-bottom: none; }
+        
+        .recommendations {
+            background: linear-gradient(135deg, #fff3e0, #ffe0b2);
+            border: 2px solid #ff9800;
+            padding: 25px;
+            border-radius: 15px;
+            margin: 25px 0;
+        }
+        .recommendations h3 {
+            color: #e65100;
+            margin-bottom: 15px;
+            font-size: 1.3em;
+        }
+        
         .hidden { display: none; }
         .alert { 
-            padding: 15px; 
+            padding: 18px; 
             margin: 15px 0; 
-            border-radius: 8px; 
-            border-left: 4px solid; 
+            border-radius: 10px; 
+            border-left: 5px solid; 
+            font-weight: 500;
         }
         .alert-success { background: #d4edda; color: #155724; border-color: #28a745; }
         .alert-error { background: #f8d7da; color: #721c24; border-color: #dc3545; }
         .alert-info { background: #d1ecf1; color: #0c5460; border-color: #17a2b8; }
-        .loading { text-align: center; padding: 20px; }
+        .alert-warning { background: #fff3cd; color: #856404; border-color: #ffc107; }
+        
+        .loading { text-align: center; padding: 30px; }
         .spinner { 
             border: 4px solid #f3f3f3; 
-            border-top: 4px solid #667eea; 
+            border-top: 4px solid #28a745; 
             border-radius: 50%; 
-            width: 40px; 
-            height: 40px; 
+            width: 50px; 
+            height: 50px; 
             animation: spin 1s linear infinite; 
             margin: 0 auto 20px; 
         }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
         
+        .validation-badges {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin: 15px 0;
+        }
+        .badge {
+            padding: 6px 12px;
+            border-radius: 15px;
+            font-size: 0.85em;
+            font-weight: 500;
+        }
+        .badge-success { background: #d4edda; color: #155724; }
+        .badge-warning { background: #fff3cd; color: #856404; }
+        .badge-danger { background: #f8d7da; color: #721c24; }
+        
         @media (max-width: 768px) {
             .form-row { grid-template-columns: 1fr; }
-            .charts { grid-template-columns: 1fr; }
+            .charts-grid { grid-template-columns: 1fr; }
+            .chart-container { min-width: unset; height: 400px; }
         }
     </style>
 </head>
 <body>
     <div class="header">
         <h1>🧬 Generador Chlorella vulgaris</h1>
-        <p>Modelo Científico Real - Valores Biológicamente Correctos</p>
-        <div class="version-badge">v3.0 Scientific</div>
+        <p>Análisis Científico Completo - Validación y Correlaciones Avanzadas</p>
+        <div class="version-badge">v4.0 Complete Analysis</div>
     </div>
     
     <div class="container">
-        <!-- Configuración -->
+        <!-- Configuración Avanzada -->
         <div class="card">
-            <h2>⚙️ Configuración del Experimento</h2>
+            <h2>⚙️ Configuración del Experimento Científico</h2>
             
             <div class="form-row">
                 <div class="form-group">
-                    <label for="scenarios">Número de escenarios:</label>
-                    <input type="number" id="scenarios" value="10" min="1" max="100">
-                    <small>Recomendado: 10-50 escenarios</small>
+                    <label for="scenarios">Escenarios:</label>
+                    <input type="number" id="scenarios" value="25" min="5" max="100">
+                    <small>5-100 escenarios</small>
                 </div>
                 <div class="form-group">
-                    <label for="totalDays">Duración total (días):</label>
-                    <input type="number" id="totalDays" value="15" min="1" max="60">
-                    <small>Recomendado: 15-30 días</small>
+                    <label for="totalDays">Duración (días):</label>
+                    <input type="number" id="totalDays" value="30" min="7" max="60">
+                    <small>7-60 días</small>
                 </div>
-            </div>
-            
-            <div class="form-group">
-                <label for="variability">Nivel de variabilidad:</label>
-                <select id="variability">
-                    <option value="low">Baja - Condiciones controladas</option>
-                    <option value="medium" selected>Media - Variaciones realistas</option>
-                    <option value="high">Alta - Condiciones desafiantes</option>
-                </select>
+                <div class="form-group">
+                    <label for="variability">Variabilidad:</label>
+                    <select id="variability">
+                        <option value="low">Baja (Laboratorio)</option>
+                        <option value="medium" selected>Media (Industrial)</option>
+                        <option value="high">Alta (Desafiante)</option>
+                    </select>
+                </div>
             </div>
             
             <div class="ranges-info">
-                <h4>🔬 Rangos Científicos Garantizados:</h4>
-                <ul>
-                    <li><strong>Biomasa:</strong> 0.05-4.0 g/L (cultivos reales)</li>
-                    <li><strong>Temperatura:</strong> 20-35°C (rango biológico)</li>
-                    <li><strong>pH:</strong> 6.5-9.0 (supervivencia)</li>
-                    <li><strong>PAR:</strong> 0-400 μmol/m²/s (saturación fotosintética)</li>
-                    <li><strong>Crecimiento:</strong> 0.001-0.05 h⁻¹ (literatura científica)</li>
-                </ul>
+                <h4>🔬 Parámetros Científicos Validados:</h4>
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px;">
+                    <div>
+                        <strong>Biomasa:</strong> 0.05-4.0 g/L<br>
+                        <strong>Crecimiento:</strong> 0.001-0.05 h⁻¹
+                    </div>
+                    <div>
+                        <strong>Temperatura:</strong> 20-35°C<br>
+                        <strong>pH:</strong> 6.5-9.0
+                    </div>
+                    <div>
+                        <strong>PAR:</strong> 0-400 μmol/m²/s<br>
+                        <strong>Células:</strong> 0.1-10 M/mL
+                    </div>
+                </div>
             </div>
             
             <div style="text-align: center; margin-top: 30px;">
@@ -217,44 +347,75 @@
                 <button class="btn btn-test" onclick="testConnection()">
                     🔧 Test Servidor
                 </button>
+                <button class="btn btn-correlations" onclick="analyzeCorrelations()" id="correlationsBtn" disabled>
+                    📊 Análisis de Correlaciones
+                </button>
             </div>
         </div>
         
-        <!-- Resultados -->
+        <!-- Resultados y Validación -->
         <div id="results" class="card hidden">
-            <h2>✅ Resultados del Dataset</h2>
+            <h2>✅ Resultados y Validación Científica</h2>
+            <div id="validation-badges" class="validation-badges"></div>
             <div id="stats" class="stats"></div>
             <div id="downloads" class="downloads"></div>
         </div>
         
-        <!-- Gráficas -->
+        <!-- Métricas de Calidad -->
+        <div id="quality-metrics" class="card hidden">
+            <h2>📊 Métricas de Calidad del Dataset</h2>
+            <div id="metrics-grid" class="metrics-grid"></div>
+        </div>
+        
+        <!-- Correlaciones -->
+        <div id="correlations-section" class="card hidden">
+            <h2>🔗 Análisis de Correlaciones</h2>
+            <div id="correlations-grid" class="correlations-grid"></div>
+        </div>
+        
+        <!-- Visualizaciones Mejoradas -->
         <div id="charts-section" class="card hidden">
-            <h2>📊 Visualizaciones Científicas</h2>
-            <div id="charts" class="charts">
+            <h2>📈 Visualizaciones Científicas Avanzadas</h2>
+            <div id="charts" class="charts-grid">
                 <div class="chart-container">
-                    <div class="chart-title">📈 Evolución de Biomasa por Escenario</div>
-                    <canvas id="biomassChart" width="400" height="200"></canvas>
+                    <div class="chart-title">📈 Curvas de Crecimiento por Escenario</div>
+                    <canvas id="biomassChart" class="chart-canvas"></canvas>
                 </div>
                 <div class="chart-container">
-                    <div class="chart-title">🌡️ Temperatura vs Tiempo</div>
-                    <canvas id="temperatureChart" width="400" height="200"></canvas>
+                    <div class="chart-title">🌡️ Distribución de Temperatura</div>
+                    <canvas id="temperatureChart" class="chart-canvas"></canvas>
                 </div>
                 <div class="chart-container">
-                    <div class="chart-title">🔬 pH vs Tiempo</div>
-                    <canvas id="pHChart" width="400" height="200"></canvas>
+                    <div class="chart-title">🔬 Evolución del pH</div>
+                    <canvas id="pHChart" class="chart-canvas"></canvas>
                 </div>
                 <div class="chart-container">
-                    <div class="chart-title">💡 PAR vs Tiempo</div>
-                    <canvas id="parChart" width="400" height="200"></canvas>
+                    <div class="chart-title">💡 Ciclos de Iluminación PAR</div>
+                    <canvas id="parChart" class="chart-canvas"></canvas>
+                </div>
+                <div class="chart-container">
+                    <div class="chart-title">⚡ Productividad Específica</div>
+                    <canvas id="productivityChart" class="chart-canvas"></canvas>
+                </div>
+                <div class="chart-container">
+                    <div class="chart-title">🧬 Fases de Crecimiento</div>
+                    <canvas id="phasesChart" class="chart-canvas"></canvas>
                 </div>
             </div>
+        </div>
+        
+        <!-- Recomendaciones ML -->
+        <div id="ml-recommendations" class="recommendations hidden">
+            <h3>🤖 Recomendaciones para Machine Learning</h3>
+            <div id="ml-content"></div>
         </div>
         
         <!-- Loading -->
         <div id="loading" class="card hidden">
             <div class="loading">
                 <div class="spinner"></div>
-                <p id="loadingText">Generando dataset científico...</p>
+                <p id="loadingText">Generando dataset científico completo...</p>
+                <p id="loadingDetails" style="color: #6c757d; margin-top: 10px;"></p>
             </div>
         </div>
         
@@ -267,8 +428,9 @@
         let currentDataset = null;
         let currentStats = null;
         let charts = {};
+        let correlationsData = null;
         
-        // Mostrar mensajes
+        // Utilidades
         function showMessage(message, type = 'success') {
             const messagesDiv = document.getElementById('messages');
             const alertDiv = document.createElement('div');
@@ -277,44 +439,84 @@
             messagesDiv.appendChild(alertDiv);
             
             setTimeout(() => {
-                if (alertDiv.parentNode) {
-                    alertDiv.remove();
-                }
-            }, 5000);
+                if (alertDiv.parentNode) alertDiv.remove();
+            }, 6000);
+        }
+        
+        function formatNumber(num, decimals = 2) {
+            return parseFloat(num).toFixed(decimals);
+        }
+        
+        function calculateCorrelation(x, y) {
+            const n = Math.min(x.length, y.length);
+            if (n < 2) return 0;
+            
+            const meanX = x.reduce((a, b) => a + b, 0) / n;
+            const meanY = y.reduce((a, b) => a + b, 0) / n;
+            
+            let num = 0, denX = 0, denY = 0;
+            for (let i = 0; i < n; i++) {
+                const dx = x[i] - meanX;
+                const dy = y[i] - meanY;
+                num += dx * dy;
+                denX += dx * dx;
+                denY += dy * dy;
+            }
+            
+            const denominator = Math.sqrt(denX * denY);
+            return denominator === 0 ? 0 : num / denominator;
+        }
+        
+        function getCorrelationColor(r) {
+            const abs = Math.abs(r);
+            if (abs > 0.7) return '#28a745';  // Fuerte - Verde
+            if (abs > 0.4) return '#17a2b8';  // Moderada - Azul
+            if (abs > 0.2) return '#ffc107';  // Débil - Amarillo
+            return '#6c757d';                 // Muy débil - Gris
+        }
+        
+        function getCorrelationStrength(r) {
+            const abs = Math.abs(r);
+            if (abs > 0.7) return 'Fuerte';
+            if (abs > 0.4) return 'Moderada';
+            if (abs > 0.2) return 'Débil';
+            return 'Muy débil';
         }
         
         // Test de conexión
         async function testConnection() {
             try {
-                showMessage('🔧 Probando conexión con servidor científico...', 'info');
+                showMessage('🔧 Verificando servidor científico...', 'info');
                 const response = await fetch('/test');
                 
                 if (response.ok) {
                     const data = await response.json();
-                    showMessage(`✅ Servidor OK: ${data.message}`, 'success');
-                    console.log('Rangos científicos:', data.ranges);
+                    showMessage(`✅ Servidor científico OK: ${data.message}`, 'success');
+                    if (data.ranges) {
+                        console.log('📊 Rangos científicos verificados:', data.ranges);
+                    }
                 } else {
                     throw new Error(`HTTP ${response.status}`);
                 }
             } catch (error) {
-                showMessage(`❌ Error conectando: ${error.message}`, 'error');
+                showMessage(`❌ Error de conexión: ${error.message}`, 'error');
             }
         }
         
-        // Generar dataset científico
+        // Generar dataset científico completo
         async function generateDataset() {
             const scenarios = parseInt(document.getElementById('scenarios').value);
             const totalDays = parseInt(document.getElementById('totalDays').value);
             const variability = document.getElementById('variability').value;
             
             // Validaciones
-            if (scenarios < 1 || scenarios > 100) {
-                showMessage('❌ Escenarios debe estar entre 1 y 100', 'error');
+            if (scenarios < 5 || scenarios > 100) {
+                showMessage('❌ Escenarios debe estar entre 5 y 100', 'error');
                 return;
             }
             
-            if (totalDays < 1 || totalDays > 60) {
-                showMessage('❌ Días debe estar entre 1 y 60', 'error');
+            if (totalDays < 7 || totalDays > 60) {
+                showMessage('❌ Días debe estar entre 7 y 60', 'error');
                 return;
             }
             
@@ -322,13 +524,13 @@
             const generateBtn = document.getElementById('generateBtn');
             generateBtn.disabled = true;
             document.getElementById('loading').classList.remove('hidden');
-            document.getElementById('results').classList.add('hidden');
-            document.getElementById('charts-section').classList.add('hidden');
+            hideAllSections();
+            
+            const totalRecords = scenarios * totalDays * 24;
+            document.getElementById('loadingDetails').textContent = 
+                `Generando ${totalRecords.toLocaleString()} registros científicos...`;
             
             try {
-                document.getElementById('loadingText').textContent = 
-                    `Generando ${scenarios} escenarios de ${totalDays} días con modelo científico...`;
-                
                 // Generar dataset
                 const response = await fetch('/generate-dataset', {
                     method: 'POST',
@@ -346,38 +548,34 @@
                 }
                 
                 const data = await response.json();
-                
                 if (!data.success) {
                     throw new Error(data.error || 'Error desconocido');
                 }
                 
                 currentStats = data.stats;
                 
-                // Mostrar validación científica
-                if (data.stats.scientificValidation) {
-                    const validation = data.stats.scientificValidation;
-                    if (validation.biomassRealistic && validation.temperatureRealistic && 
-                        validation.pHRealistic && validation.growthRateRealistic) {
-                        showMessage('✅ Validación científica: Todos los valores son biológicamente correctos', 'success');
-                    }
-                }
+                // Validar científicamente
+                validateScientificData(data.stats);
                 
                 // Obtener muestra
-                document.getElementById('loadingText').textContent = 'Obteniendo muestra para visualización...';
+                document.getElementById('loadingText').textContent = 'Obteniendo muestra para análisis...';
                 await getSample();
                 
                 // Mostrar resultados
                 displayResults();
+                displayQualityMetrics();
                 
-                // Crear gráficas
+                // Crear visualizaciones
                 if (currentDataset && currentDataset.length > 0) {
-                    document.getElementById('loadingText').textContent = 'Creando visualizaciones...';
+                    document.getElementById('loadingText').textContent = 'Creando visualizaciones avanzadas...';
                     createAllCharts();
-                    document.getElementById('charts-section').classList.remove('hidden');
+                    showAllSections();
                 }
                 
-                document.getElementById('results').classList.remove('hidden');
-                showMessage('✅ Dataset científico generado exitosamente', 'success');
+                // Habilitar correlaciones
+                document.getElementById('correlationsBtn').disabled = false;
+                
+                showMessage('✅ Dataset científico completo generado exitosamente', 'success');
                 
             } catch (error) {
                 showMessage(`❌ Error: ${error.message}`, 'error');
@@ -387,18 +585,17 @@
             }
         }
         
-        // Obtener muestra
+        // Obtener muestra estratificada
         async function getSample() {
-            if (!currentStats || !currentStats.folderName) return;
+            if (!currentStats?.folderName) return;
             
             try {
                 const response = await fetch(`/sample-data/${currentStats.folderName}`);
-                
                 if (response.ok) {
                     const sampleData = await response.json();
                     if (sampleData.data && Array.isArray(sampleData.data)) {
                         currentDataset = sampleData.data;
-                        console.log('Dataset cargado:', currentDataset.length, 'registros');
+                        console.log('📊 Dataset cargado:', currentDataset.length, 'registros para análisis');
                     }
                 }
             } catch (error) {
@@ -406,13 +603,49 @@
             }
         }
         
-        // Mostrar resultados
+        // Validar datos científicamente
+        function validateScientificData(stats) {
+            const badges = document.getElementById('validation-badges');
+            let html = '<h4 style="margin-bottom: 10px;">🔬 Validación Científica:</h4>';
+            
+            const validations = [
+                {
+                    name: 'Biomasa',
+                    valid: stats.biomassRange?.max <= 5.0 && stats.biomassRange?.min >= 0.01,
+                    value: `${formatNumber(stats.biomassRange?.min || 0)}-${formatNumber(stats.biomassRange?.max || 0)} g/L`
+                },
+                {
+                    name: 'Temperatura',
+                    valid: stats.temperatureRange?.max <= 40 && stats.temperatureRange?.min >= 15,
+                    value: `${formatNumber(stats.temperatureRange?.min || 0)}-${formatNumber(stats.temperatureRange?.max || 0)} °C`
+                },
+                {
+                    name: 'pH',
+                    valid: stats.pHRange?.max <= 10 && stats.pHRange?.min >= 6,
+                    value: `${formatNumber(stats.pHRange?.min || 0)}-${formatNumber(stats.pHRange?.max || 0)}`
+                },
+                {
+                    name: 'Crecimiento',
+                    valid: stats.growthRateRange?.max <= 0.1 && stats.growthRateRange?.min >= 0,
+                    value: `${formatNumber(stats.growthRateRange?.min || 0, 4)}-${formatNumber(stats.growthRateRange?.max || 0, 4)} h⁻¹`
+                }
+            ];
+            
+            validations.forEach(v => {
+                const badgeClass = v.valid ? 'badge-success' : 'badge-danger';
+                const icon = v.valid ? '✅' : '❌';
+                html += `<div class="badge ${badgeClass}">${icon} ${v.name}: ${v.value}</div>`;
+            });
+            
+            badges.innerHTML = html;
+        }
+        
+        // Mostrar resultados mejorados
         function displayResults() {
             if (!currentStats) return;
             
             const stats = currentStats;
             
-            // Estadísticas principales
             document.getElementById('stats').innerHTML = `
                 <div class="stat-card">
                     <div class="stat-value">${(stats.totalPoints || 0).toLocaleString()}</div>
@@ -427,228 +660,30 @@
                     <div class="stat-label">Duración</div>
                 </div>
                 <div class="stat-card">
-                    <div class="stat-value">${(stats.biomassRange?.max || 0).toFixed(2)}</div>
+                    <div class="stat-value">${formatNumber(stats.biomassRange?.max || 0)}</div>
                     <div class="stat-label">Biomasa Máx (g/L)</div>
                 </div>
                 <div class="stat-card">
-                    <div class="stat-value">${(stats.temperatureRange?.max || 0).toFixed(1)}</div>
+                    <div class="stat-value">${formatNumber(stats.temperatureRange?.max || 0, 1)}</div>
                     <div class="stat-label">Temp Máx (°C)</div>
                 </div>
                 <div class="stat-card">
-                    <div class="stat-value">${(stats.pHRange?.max || 0).toFixed(2)}</div>
+                    <div class="stat-value">${formatNumber(stats.pHRange?.max || 0)}</div>
                     <div class="stat-label">pH Máx</div>
                 </div>
             `;
             
-            // Enlaces de descarga
+            // Enlaces de descarga mejorados
             if (stats.folderName) {
                 document.getElementById('downloads').innerHTML = `
                     <a href="/download/${stats.folderName}/complete_dataset.csv" class="download-btn">
-                        📊 Dataset Completo (${(stats.totalPoints || 0).toLocaleString()})
+                        📊 Dataset Completo<br><small>${(stats.totalPoints || 0).toLocaleString()} registros</small>
                     </a>
                     <a href="/download/${stats.folderName}/training_data.csv" class="download-btn">
-                        🎯 Entrenamiento (${(stats.trainingPoints || 0).toLocaleString()})
+                        🎯 Entrenamiento<br><small>${(stats.trainingPoints || 0).toLocaleString()} registros (70%)</small>
                     </a>
                     <a href="/download/${stats.folderName}/validation_data.csv" class="download-btn">
-                        🔍 Validación (${(stats.validationPoints || 0).toLocaleString()})
+                        🔍 Validación<br><small>${(stats.validationPoints || 0).toLocaleString()} registros (15%)</small>
                     </a>
                     <a href="/download/${stats.folderName}/test_data.csv" class="download-btn">
-                        🧪 Prueba (${(stats.testPoints || 0).toLocaleString()})
-                    </a>
-                `;
-            }
-        }
-        
-        // === FUNCIONES DE GRÁFICAS ===
-        
-        // Gráfica de biomasa
-        function createBiomassChart() {
-            const ctx = document.getElementById('biomassChart').getContext('2d');
-            if (charts.biomass) charts.biomass.destroy();
-            
-            const scenarios = [...new Set(currentDataset.map(d => d.Scenario))].slice(0, 5);
-            const colors = ['#28a745', '#17a2b8', '#ffc107', '#dc3545', '#6f42c1'];
-            
-            charts.biomass = new Chart(ctx, {
-                type: 'line',
-                data: {
-                    datasets: scenarios.map((scenario, index) => {
-                        const data = currentDataset
-                            .filter(d => d.Scenario === scenario)
-                            .sort((a, b) => (a.Time_days || 0) - (b.Time_days || 0))
-                            .map(d => ({ x: d.Time_days || 0, y: d.Biomass_g_L || 0 }));
-                        
-                        return {
-                            label: `Escenario ${scenario}`,
-                            data: data,
-                            borderColor: colors[index % colors.length],
-                            backgroundColor: colors[index % colors.length] + '20',
-                            tension: 0.3,
-                            pointRadius: 1
-                        };
-                    })
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: { legend: { display: true, position: 'top' } },
-                    scales: {
-                        x: { title: { display: true, text: 'Tiempo (días)' } },
-                        y: { title: { display: true, text: 'Biomasa (g/L)' }, beginAtZero: true }
-                    }
-                }
-            });
-        }
-        
-        // Gráfica de temperatura
-        function createTemperatureChart() {
-            const ctx = document.getElementById('temperatureChart').getContext('2d');
-            if (charts.temperature) charts.temperature.destroy();
-            
-            const data = currentDataset.slice(0, 300).map(d => ({
-                x: d.Time_days || 0,
-                y: d.Temperature_C || 0
-            }));
-            
-            charts.temperature = new Chart(ctx, {
-                type: 'scatter',
-                data: {
-                    datasets: [{
-                        label: 'Temperatura',
-                        data: data,
-                        backgroundColor: 'rgba(220, 53, 69, 0.6)',
-                        borderColor: '#dc3545',
-                        pointRadius: 2
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: { legend: { display: true } },
-                    scales: {
-                        x: { title: { display: true, text: 'Tiempo (días)' } },
-                        y: { title: { display: true, text: 'Temperatura (°C)' } }
-                    }
-                }
-            });
-        }
-        
-        // Gráfica de pH
-        function createPHChart() {
-            const ctx = document.getElementById('pHChart').getContext('2d');
-            if (charts.pH) charts.pH.destroy();
-            
-            const data = currentDataset.slice(0, 300).map(d => ({
-                x: d.Time_days || 0,
-                y: d.pH || 0
-            }));
-            
-            charts.pH = new Chart(ctx, {
-                type: 'scatter',
-                data: {
-                    datasets: [{
-                        label: 'pH',
-                        data: data,
-                        backgroundColor: 'rgba(23, 162, 184, 0.6)',
-                        borderColor: '#17a2b8',
-                        pointRadius: 2
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: { legend: { display: true } },
-                    scales: {
-                        x: { title: { display: true, text: 'Tiempo (días)' } },
-                        y: { title: { display: true, text: 'pH' }, min: 6, max: 10 }
-                    }
-                }
-            });
-        }
-        
-        // Gráfica de PAR
-        function createPARChart() {
-            const ctx = document.getElementById('parChart').getContext('2d');
-            if (charts.par) charts.par.destroy();
-            
-            const data = currentDataset.slice(0, 300).map(d => ({
-                x: d.Time_days || 0,
-                y: d.PAR_umol_m2_s || 0
-            }));
-            
-            charts.par = new Chart(ctx, {
-                type: 'scatter',
-                data: {
-                    datasets: [{
-                        label: 'PAR',
-                        data: data,
-                        backgroundColor: 'rgba(255, 193, 7, 0.6)',
-                        borderColor: '#ffc107',
-                        pointRadius: 2
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: { legend: { display: true } },
-                    scales: {
-                        x: { title: { display: true, text: 'Tiempo (días)' } },
-                        y: { title: { display: true, text: 'PAR (μmol/m²/s)' }, beginAtZero: true }
-                    }
-                }
-            });
-        }
-        
-        // Crear todas las gráficas
-        function createAllCharts() {
-            if (!currentDataset || currentDataset.length === 0) return;
-            
-            console.log('Creando gráficas científicas:', currentDataset.length, 'registros');
-            
-            try {
-                createBiomassChart();
-                createTemperatureChart();
-                createPHChart();
-                createPARChart();
-                console.log('✅ Gráficas creadas exitosamente');
-            } catch (error) {
-                console.error('Error creando gráficas:', error);
-                showMessage(`❌ Error en gráficas: ${error.message}`, 'error');
-            }
-        }
-        
-        // Inicialización
-        document.addEventListener('DOMContentLoaded', function() {
-            console.log('✅ Aplicación Chlorella v3.0 Scientific cargada');
-            
-            // Test inicial
-            setTimeout(testConnection, 1000);
-            
-            // Tooltips
-            const tooltips = {
-                scenarios: "Número de experimentos independientes con diferentes condiciones",
-                totalDays: "Duración de cada cultivo en días - 15-30 días recomendado",
-                variability: "Nivel de variación en las condiciones experimentales"
-            };
-            
-            Object.entries(tooltips).forEach(([id, text]) => {
-                const element = document.getElementById(id);
-                if (element) element.title = text;
-            });
-        });
-        
-        // Manejo de errores
-        window.addEventListener('error', function(e) {
-            console.error('Error:', e.message);
-            showMessage(`Error: ${e.message}`, 'error');
-        });
-        
-        window.addEventListener('unhandledrejection', function(e) {
-            console.error('Promise error:', e.reason);
-            showMessage(`Error: ${e.reason}`, 'error');
-        });
-        
-        console.log('✅ Chlorella Generator v3.0 Scientific cargado');
-    </script>
-</body>
-</html>
+                        🧪
