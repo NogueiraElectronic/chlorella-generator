@@ -1,1327 +1,217 @@
-<!DOCTYPE html>
-<html lang="es">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Chlorella Generator - Análisis Completo</title>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        body { 
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); 
-            min-height: 100vh; 
-            padding: 20px;
-        }
-        .container { max-width: 1400px; margin: 0 auto; }
-        .header { 
-            color: white; 
-            text-align: center; 
-            padding: 30px 0; 
-            margin-bottom: 30px;
-            background: rgba(0,0,0,0.1);
-            border-radius: 15px;
-        }
-        .header h1 { font-size: 2.8em; margin-bottom: 10px; text-shadow: 2px 2px 4px rgba(0,0,0,0.3); }
-        .version-badge {
-            background: linear-gradient(45deg, #28a745, #20c997);
-            color: white;
-            padding: 10px 20px;
-            border-radius: 25px;
-            font-size: 0.9em;
-            margin-top: 10px;
-            display: inline-block;
-            font-weight: bold;
-        }
-        .card { 
-            background: white; 
-            border-radius: 15px; 
-            padding: 30px; 
-            margin-bottom: 25px; 
-            box-shadow: 0 10px 30px rgba(0,0,0,0.15); 
-        }
-        .form-group { margin-bottom: 20px; }
-        label { display: block; margin-bottom: 8px; font-weight: 600; color: #333; }
-        input, select { 
-            width: 100%; 
-            padding: 12px; 
-            border: 2px solid #e1e1e1; 
-            border-radius: 8px; 
-            font-size: 16px; 
-            transition: border-color 0.3s;
-        }
-        input:focus, select:focus { outline: none; border-color: #28a745; }
-        .form-row {
-            display: grid;
-            grid-template-columns: 1fr 1fr 1fr;
-            gap: 20px;
-            margin-bottom: 20px;
-        }
-        .ranges-info {
-            background: linear-gradient(135deg, #e8f5e8, #d4f1d4);
-            border: 2px solid #28a745;
-            padding: 20px;
-            border-radius: 12px;
-            margin-top: 15px;
-        }
-        .ranges-info h4 {
-            color: #155724;
-            margin-bottom: 12px;
-            font-size: 1.1em;
-        }
-        .btn { 
-            background: linear-gradient(45deg, #28a745, #20c997); 
-            color: white; 
-            padding: 15px 30px; 
-            border: none; 
-            border-radius: 10px; 
-            cursor: pointer; 
-            font-size: 16px; 
-            font-weight: 600; 
-            margin: 10px; 
-            transition: all 0.3s;
-            box-shadow: 0 4px 15px rgba(40, 167, 69, 0.3);
-        }
-        .btn:hover { 
-            transform: translateY(-2px); 
-            box-shadow: 0 6px 20px rgba(40, 167, 69, 0.4);
-        }
-        .btn:disabled { 
-            background: #6c757d; 
-            cursor: not-allowed; 
-            transform: none; 
-            box-shadow: none;
-        }
-        .btn-test { background: linear-gradient(45deg, #17a2b8, #20c997); }
-        .btn-correlations { background: linear-gradient(45deg, #fd7e14, #ffc107); }
-        
-        .stats { 
-            display: grid; 
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); 
-            gap: 20px; 
-            margin: 20px 0; 
-        }
-        .stat-card { 
-            background: linear-gradient(135deg, #f8f9fa, #e9ecef);
-            padding: 25px; 
-            border-radius: 12px; 
-            text-align: center; 
-            border-left: 5px solid #28a745;
-            transition: transform 0.2s;
-        }
-        .stat-card:hover { transform: translateY(-3px); }
-        .stat-value { font-size: 2.2em; font-weight: bold; color: #28a745; margin-bottom: 5px; }
-        .stat-label { color: #495057; font-size: 0.9em; font-weight: 500; }
-        
-        .downloads { 
-            display: grid; 
-            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); 
-            gap: 15px; 
-            margin: 20px 0; 
-        }
-        .download-btn { 
-            background: linear-gradient(45deg, #28a745, #20c997); 
-            color: white; 
-            padding: 18px; 
-            border-radius: 10px; 
-            text-decoration: none; 
-            text-align: center; 
-            font-weight: 600; 
-            transition: all 0.3s;
-            box-shadow: 0 4px 15px rgba(40, 167, 69, 0.2);
-        }
-        .download-btn:hover { 
-            background: linear-gradient(45deg, #218838, #1e7e34); 
-            transform: translateY(-2px);
-            box-shadow: 0 6px 20px rgba(40, 167, 69, 0.3);
-        }
-        
-        .charts-grid { 
-            display: grid; 
-            grid-template-columns: repeat(auto-fit, minmax(600px, 1fr)); 
-            gap: 25px; 
-            margin: 25px 0; 
-        }
-        .chart-container { 
-            background: white; 
-            padding: 25px; 
-            border-radius: 15px; 
-            height: 450px;
-            box-shadow: 0 8px 25px rgba(0,0,0,0.1);
-            border: 1px solid #e9ecef;
-        }
-        .chart-title { 
-            font-size: 1.3em; 
-            font-weight: 600; 
-            margin-bottom: 20px; 
-            text-align: center; 
-            color: #343a40;
-            border-bottom: 2px solid #28a745;
-            padding-bottom: 10px;
-        }
-        .chart-canvas { 
-            width: 100% !important; 
-            height: 360px !important;
-        }
-        
-        .correlations-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-            gap: 20px;
-            margin: 20px 0;
-        }
-        .correlation-card {
-            background: linear-gradient(135deg, #fff, #f8f9fa);
-            padding: 20px;
-            border-radius: 12px;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
-            border-left: 5px solid;
-            transition: transform 0.2s;
-        }
-        .correlation-card:hover { transform: translateY(-2px); }
-        .correlation-value {
-            font-size: 2em;
-            font-weight: bold;
-            margin-bottom: 8px;
-        }
-        .correlation-label {
-            color: #495057;
-            font-size: 1em;
-            margin-bottom: 5px;
-        }
-        .correlation-strength {
-            font-size: 0.85em;
-            padding: 4px 12px;
-            border-radius: 15px;
-            color: white;
-            display: inline-block;
-            font-weight: 500;
-        }
-        
-        .metrics-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
-            gap: 20px;
-            margin: 20px 0;
-        }
-        .metric-card {
-            background: linear-gradient(135deg, #e3f2fd, #bbdefb);
-            padding: 20px;
-            border-radius: 12px;
-            border-left: 5px solid #2196f3;
-        }
-        .metric-title {
-            color: #1565c0;
-            font-weight: 600;
-            margin-bottom: 15px;
-            font-size: 1.1em;
-        }
-        .metric-list {
-            list-style: none;
-            padding: 0;
-        }
-        .metric-list li {
-            padding: 8px 0;
-            border-bottom: 1px solid rgba(33, 150, 243, 0.1);
-            display: flex;
-            justify-content: space-between;
-        }
-        .metric-list li:last-child { border-bottom: none; }
-        
-        .recommendations {
-            background: linear-gradient(135deg, #fff3e0, #ffe0b2);
-            border: 2px solid #ff9800;
-            padding: 25px;
-            border-radius: 15px;
-            margin: 25px 0;
-        }
-        .recommendations h3 {
-            color: #e65100;
-            margin-bottom: 15px;
-            font-size: 1.3em;
-        }
-        
-        .hidden { display: none; }
-        .alert { 
-            padding: 18px; 
-            margin: 15px 0; 
-            border-radius: 10px; 
-            border-left: 5px solid; 
-            font-weight: 500;
-        }
-        .alert-success { background: #d4edda; color: #155724; border-color: #28a745; }
-        .alert-error { background: #f8d7da; color: #721c24; border-color: #dc3545; }
-        .alert-info { background: #d1ecf1; color: #0c5460; border-color: #17a2b8; }
-        .alert-warning { background: #fff3cd; color: #856404; border-color: #ffc107; }
-        
-        .loading { text-align: center; padding: 30px; }
-        .spinner { 
-            border: 4px solid #f3f3f3; 
-            border-top: 4px solid #28a745; 
-            border-radius: 50%; 
-            width: 50px; 
-            height: 50px; 
-            animation: spin 1s linear infinite; 
-            margin: 0 auto 20px; 
-        }
-        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
-        
-        .validation-badges {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 10px;
-            margin: 15px 0;
-        }
-        .badge {
-            padding: 6px 12px;
-            border-radius: 15px;
-            font-size: 0.85em;
-            font-weight: 500;
-        }
-        .badge-success { background: #d4edda; color: #155724; }
-        .badge-warning { background: #fff3cd; color: #856404; }
-        .badge-danger { background: #f8d7da; color: #721c24; }
-        
-        @media (max-width: 768px) {
-            .form-row { grid-template-columns: 1fr; }
-            .charts-grid { grid-template-columns: 1fr; }
-            .chart-container { min-width: unset; height: 400px; }
-        }
-    </style>
-</head>
-<body>
-    <div class="header">
-        <h1>🧬 Generador Chlorella vulgaris</h1>
-        <p>Análisis Científico Completo - Validación y Correlaciones Avanzadas</p>
-        <div class="version-badge">v4.0 Complete Analysis</div>
-    </div>
+// Función mejorada para crear gráfica de biomasa con mejor visualización
+function createBiomassChart() {
+    const ctx = document.getElementById('biomassChart').getContext('2d');
+    if (charts.biomass) charts.biomass.destroy();
     
-    <div class="container">
-        <!-- Configuración Avanzada -->
-        <div class="card">
-            <h2>⚙️ Configuración del Experimento Científico</h2>
-            
-            <div class="form-row">
-                <div class="form-group">
-                    <label for="scenarios">Escenarios:</label>
-                    <input type="number" id="scenarios" value="25" min="5" max="100">
-                    <small>5-100 escenarios</small>
-                </div>
-                <div class="form-group">
-                    <label for="totalDays">Duración (días):</label>
-                    <input type="number" id="totalDays" value="30" min="7" max="60">
-                    <small>7-60 días</small>
-                </div>
-                <div class="form-group">
-                    <label for="variability">Variabilidad:</label>
-                    <select id="variability">
-                        <option value="low">Baja (Laboratorio)</option>
-                        <option value="medium" selected>Media (Industrial)</option>
-                        <option value="high">Alta (Desafiante)</option>
-                    </select>
-                </div>
-            </div>
-            
-            <div class="ranges-info">
-                <h4>🔬 Parámetros Científicos Validados:</h4>
-                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px;">
-                    <div>
-                        <strong>Biomasa:</strong> 0.05-4.0 g/L<br>
-                        <strong>Crecimiento:</strong> 0.001-0.05 h⁻¹
-                    </div>
-                    <div>
-                        <strong>Temperatura:</strong> 20-35°C<br>
-                        <strong>pH:</strong> 6.5-9.0
-                    </div>
-                    <div>
-                        <strong>PAR:</strong> 0-400 μmol/m²/s<br>
-                        <strong>Células:</strong> 0.1-10 M/mL
-                    </div>
-                </div>
-            </div>
-            
-            <div style="text-align: center; margin-top: 30px;">
-                <button class="btn" onclick="generateDataset()" id="generateBtn">
-                    🚀 Generar Dataset Científico
-                </button>
-                <button class="btn btn-test" onclick="testConnection()">
-                    🔧 Test Servidor
-                </button>
-                <button class="btn btn-correlations" onclick="analyzeCorrelations()" id="correlationsBtn" disabled>
-                    📊 Análisis de Correlaciones
-                </button>
-            </div>
-        </div>
+    // Filtrar solo escenarios con datos suficientes
+    const scenarios = [...new Set(currentDataset.map(d => d.Scenario))].slice(0, 8);
+    const colors = ['#28a745', '#17a2b8', '#ffc107', '#dc3545', '#6f42c1', '#fd7e14', '#20c997', '#6c757d'];
+    
+    // Preparar datos por escenario con mejor procesamiento
+    const datasets = scenarios.map((scenario, index) => {
+        const scenarioData = currentDataset
+            .filter(d => d.Scenario === scenario)
+            .sort((a, b) => (a.Time_days || 0) - (b.Time_days || 0));
         
-        <!-- Resultados y Validación -->
-        <div id="results" class="card hidden">
-            <h2>✅ Resultados y Validación Científica</h2>
-            <div id="validation-badges" class="validation-badges"></div>
-            <div id="stats" class="stats"></div>
-            <div id="downloads" class="downloads"></div>
-        </div>
+        // Procesar datos para mejor visualización
+        const processedData = scenarioData.map(d => ({
+            x: d.Time_days || 0,
+            y: d.Biomass_g_L || 0
+        }));
         
-        <!-- Métricas de Calidad -->
-        <div id="quality-metrics" class="card hidden">
-            <h2>📊 Métricas de Calidad del Dataset</h2>
-            <div id="metrics-grid" class="metrics-grid"></div>
-        </div>
+        // Filtrar datos extremos si es necesario
+        const validData = processedData.filter(d => d.y > 0 && d.y < 10);
         
-        <!-- Correlaciones -->
-        <div id="correlations-section" class="card hidden">
-            <h2>🔗 Análisis de Correlaciones</h2>
-            <div id="correlations-grid" class="correlations-grid"></div>
+        return {
+            label: `Escenario ${scenario}`,
+            data: validData,
+            borderColor: colors[index % colors.length],
+            backgroundColor: colors[index % colors.length] + '20',
+            tension: 0.4,
+            pointRadius: 2,
+            pointHoverRadius: 4,
+            borderWidth: 3,
+            fill: false
+        };
+    });
+    
+    // Calcular rangos para mejor escala
+    const allYValues = datasets.flatMap(d => d.data.map(p => p.y));
+    const minY = Math.min(...allYValues);
+    const maxY = Math.max(...allYValues);
+    const yPadding = (maxY - minY) * 0.1;
+    
+    charts.biomass = new Chart(ctx, {
+        type: 'line',
+        data: { datasets },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: { 
+                legend: { 
+                    display: true, 
+                    position: 'top',
+                    labels: { usePointStyle: true }
+                },
+                title: { 
+                    display: true, 
+                    text: 'Curvas de Crecimiento Sigmoidal - Chlorella vulgaris',
+                    font: { size: 16, weight: 'bold' }
+                },
+                tooltip: {
+                    callbacks: {
+                        label: function(context) {
+                            return `${context.dataset.label}: ${context.parsed.y.toFixed(3)} g/L`;
+                        }
+                    }
+                }
+            },
+            scales: {
+                x: { 
+                    title: { 
+                        display: true, 
+                        text: 'Tiempo (días)',
+                        font: { size: 14, weight: 'bold' }
+                    },
+                    grid: { 
+                        color: 'rgba(0,0,0,0.1)',
+                        drawBorder: false
+                    },
+                    ticks: {
+                        font: { size: 12 }
+                    }
+                },
+                y: { 
+                    title: { 
+                        display: true, 
+                        text: 'Biomasa (g/L)',
+                        font: { size: 14, weight: 'bold' }
+                    },
+                    beginAtZero: false,
+                    min: Math.max(0, minY - yPadding),
+                    max: maxY + yPadding,
+                    grid: { 
+                        color: 'rgba(0,0,0,0.1)',
+                        drawBorder: false
+                    },
+                    ticks: {
+                        font: { size: 12 },
+                        callback: function(value) {
+                            return value.toFixed(2);
+                        }
+                    }
+                }
+            },
+            interaction: {
+                mode: 'index',
+                intersect: false
+            },
+            animation: {
+                duration: 1000,
+                easing: 'easeOutQuart'
+            }
+        }
+    });
+    
+    // Agregar información estadística
+    const statsInfo = document.createElement('div');
+    statsInfo.innerHTML = `
+        <div style="margin-top: 10px; padding: 10px; background: #f8f9fa; border-radius: 5px; font-size: 12px;">
+            <strong>📊 Estadísticas de Biomasa:</strong><br>
+            Rango: ${minY.toFixed(3)} - ${maxY.toFixed(3)} g/L<br>
+            Promedio: ${(allYValues.reduce((a, b) => a + b, 0) / allYValues.length).toFixed(3)} g/L<br>
+            Escenarios visualizados: ${scenarios.length}
         </div>
-        
-        <!-- Visualizaciones Mejoradas -->
-        <div id="charts-section" class="card hidden">
-            <h2>📈 Visualizaciones Científicas Avanzadas</h2>
-            <div id="charts" class="charts-grid">
-                <div class="chart-container">
-                    <div class="chart-title">📈 Curvas de Crecimiento por Escenario</div>
-                    <canvas id="biomassChart" class="chart-canvas"></canvas>
-                </div>
-                <div class="chart-container">
-                    <div class="chart-title">🌡️ Distribución de Temperatura</div>
-                    <canvas id="temperatureChart" class="chart-canvas"></canvas>
-                </div>
-                <div class="chart-container">
-                    <div class="chart-title">🔬 Evolución del pH</div>
-                    <canvas id="pHChart" class="chart-canvas"></canvas>
-                </div>
-                <div class="chart-container">
-                    <div class="chart-title">💡 Ciclos de Iluminación PAR</div>
-                    <canvas id="parChart" class="chart-canvas"></canvas>
-                </div>
-                <div class="chart-container">
-                    <div class="chart-title">⚡ Productividad Específica</div>
-                    <canvas id="productivityChart" class="chart-canvas"></canvas>
-                </div>
-                <div class="chart-container">
-                    <div class="chart-title">🧬 Fases de Crecimiento</div>
-                    <canvas id="phasesChart" class="chart-canvas"></canvas>
-                </div>
-            </div>
-        </div>
-        
-        <!-- Recomendaciones ML -->
-        <div id="ml-recommendations" class="recommendations hidden">
-            <h3>🤖 Recomendaciones para Machine Learning</h3>
-            <div id="ml-content"></div>
-        </div>
-        
-        <!-- Loading -->
-        <div id="loading" class="card hidden">
-            <div class="loading">
-                <div class="spinner"></div>
-                <p id="loadingText">Generando dataset científico completo...</p>
-                <p id="loadingDetails" style="color: #6c757d; margin-top: 10px;"></p>
-            </div>
-        </div>
-        
-        <!-- Mensajes -->
-        <div id="messages"></div>
-    </div>
+    `;
+    ctx.canvas.parentNode.appendChild(statsInfo);
+}
 
-    <script>
-        // Variables globales
-        let currentDataset = null;
-        let currentStats = null;
-        let charts = {};
-        let correlationsData = null;
+// Función auxiliar para análisis de calidad de las curvas
+function analyzeBiomassQuality() {
+    const scenarios = [...new Set(currentDataset.map(d => d.Scenario))];
+    const analysis = {};
+    
+    scenarios.forEach(scenario => {
+        const data = currentDataset
+            .filter(d => d.Scenario === scenario)
+            .sort((a, b) => (a.Time_days || 0) - (b.Time_days || 0));
         
-        // === FUNCIONES PRINCIPALES ===
+        const biomassValues = data.map(d => d.Biomass_g_L || 0);
+        const timeValues = data.map(d => d.Time_days || 0);
         
-        // Test de conexión
-        async function testConnection() {
-            try {
-                showMessage('🔧 Verificando servidor científico...', 'info');
-                const response = await fetch('/test');
-                
-                if (response.ok) {
-                    const data = await response.json();
-                    showMessage(`✅ Servidor científico OK: ${data.message}`, 'success');
-                    if (data.ranges) {
-                        console.log('📊 Rangos científicos verificados:', data.ranges);
-                    }
-                } else {
-                    throw new Error(`HTTP ${response.status}`);
-                }
-            } catch (error) {
-                showMessage(`❌ Error de conexión: ${error.message}`, 'error');
-            }
-        }
+        // Análisis de crecimiento
+        const maxBiomass = Math.max(...biomassValues);
+        const initialBiomass = biomassValues[0] || 0;
+        const finalBiomass = biomassValues[biomassValues.length - 1] || 0;
         
-        // Generar dataset científico completo
-        async function generateDataset() {
-            const scenarios = parseInt(document.getElementById('scenarios').value);
-            const totalDays = parseInt(document.getElementById('totalDays').value);
-            const variability = document.getElementById('variability').value;
-            
-            // Validaciones
-            if (scenarios < 5 || scenarios > 100) {
-                showMessage('❌ Escenarios debe estar entre 5 y 100', 'error');
-                return;
-            }
-            
-            if (totalDays < 7 || totalDays > 60) {
-                showMessage('❌ Días debe estar entre 7 y 60', 'error');
-                return;
-            }
-            
-            // UI
-            const generateBtn = document.getElementById('generateBtn');
-            generateBtn.disabled = true;
-            document.getElementById('loading').classList.remove('hidden');
-            hideAllSections();
-            
-            const totalRecords = scenarios * totalDays * 24;
-            document.getElementById('loadingDetails').textContent = 
-                `Generando ${totalRecords.toLocaleString()} registros científicos...`;
-            
-            try {
-                // Generar dataset
-                const response = await fetch('/generate-dataset', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        scenarios: scenarios,
-                        totalDays: totalDays,
-                        variabilityLevel: variability
-                    })
-                });
-                
-                if (!response.ok) {
-                    const errorText = await response.text();
-                    throw new Error(`Servidor ${response.status}: ${errorText}`);
-                }
-                
-                const data = await response.json();
-                if (!data.success) {
-                    throw new Error(data.error || 'Error desconocido');
-                }
-                
-                currentStats = data.stats;
-                
-                // Validar científicamente
-                validateScientificData(data.stats);
-                
-                // Obtener muestra
-                document.getElementById('loadingText').textContent = 'Obteniendo muestra para análisis...';
-                await getSample();
-                
-                // Mostrar resultados
-                displayResults();
-                displayQualityMetrics();
-                
-                // Crear visualizaciones
-                if (currentDataset && currentDataset.length > 0) {
-                    document.getElementById('loadingText').textContent = 'Creando visualizaciones avanzadas...';
-                    createAllCharts();
-                    showAllSections();
-                }
-                
-                // Habilitar correlaciones
-                document.getElementById('correlationsBtn').disabled = false;
-                
-                showMessage('✅ Dataset científico completo generado exitosamente', 'success');
-                
-            } catch (error) {
-                showMessage(`❌ Error: ${error.message}`, 'error');
-            } finally {
-                document.getElementById('loading').classList.add('hidden');
-                generateBtn.disabled = false;
-            }
-        }
+        // Detectar fases de crecimiento
+        const growthRate = (finalBiomass - initialBiomass) / (timeValues[timeValues.length - 1] - timeValues[0]);
         
-        // Obtener muestra estratificada
-        async function getSample() {
-            if (!currentStats?.folderName) return;
-            
-            try {
-                const response = await fetch(`/sample-data/${currentStats.folderName}`);
-                if (response.ok) {
-                    const sampleData = await response.json();
-                    if (sampleData.data && Array.isArray(sampleData.data)) {
-                        currentDataset = sampleData.data;
-                        console.log('📊 Dataset cargado:', currentDataset.length, 'registros para análisis');
-                    }
-                }
-            } catch (error) {
-                console.error('Error obteniendo muestra:', error);
-            }
-        }
+        analysis[scenario] = {
+            maxBiomass,
+            initialBiomass,
+            finalBiomass,
+            growthRate,
+            dataPoints: data.length,
+            timeSpan: timeValues[timeValues.length - 1] - timeValues[0],
+            avgBiomass: biomassValues.reduce((a, b) => a + b, 0) / biomassValues.length
+        };
+    });
+    
+    console.log('📊 Análisis de Calidad de Curvas:', analysis);
+    return analysis;
+}
+
+// Función para detectar si las curvas son realistas
+function validateBiomassRealism() {
+    const analysis = analyzeBiomassQuality();
+    const validations = [];
+    
+    Object.entries(analysis).forEach(([scenario, data]) => {
+        const checks = {
+            scenario: parseInt(scenario),
+            maxBiomassRealistic: data.maxBiomass >= 0.05 && data.maxBiomass <= 5.0,
+            growthRateRealistic: data.growthRate >= 0 && data.growthRate <= 0.5,
+            dataPointsSufficient: data.dataPoints >= 50,
+            timeSpanAdequate: data.timeSpan >= 7,
+            sigmoidalShape: data.maxBiomass > data.initialBiomass && data.maxBiomass > data.finalBiomass * 0.8
+        };
         
-        // Análisis de correlaciones avanzado
-        async function analyzeCorrelations() {
-            if (!currentDataset || currentDataset.length === 0) {
-                showMessage('❌ No hay datos para analizar correlaciones', 'error');
-                return;
-            }
-            
-            try {
-                showMessage('📊 Calculando correlaciones científicas...', 'info');
-                
-                // Variables clave para análisis
-                const variables = {
-                    'Biomasa': currentDataset.map(d => d.Biomass_g_L || 0),
-                    'Temperatura': currentDataset.map(d => d.Temperature_C || 0),
-                    'pH': currentDataset.map(d => d.pH || 0),
-                    'PAR': currentDataset.map(d => d.PAR_umol_m2_s || 0),
-                    'Crecimiento': currentDataset.map(d => d.Specific_Growth_Rate_h || 0),
-                    'Tiempo': currentDataset.map(d => d.Time_days || 0),
-                    'Productividad': currentDataset.map(d => d.Instantaneous_Productivity_g_L_d || 0)
-                };
-                
-                const correlations = [];
-                const varNames = Object.keys(variables);
-                
-                // Calcular todas las correlaciones
-                for (let i = 0; i < varNames.length; i++) {
-                    for (let j = i + 1; j < varNames.length; j++) {
-                        const var1 = varNames[i];
-                        const var2 = varNames[j];
-                        const correlation = calculateCorrelation(variables[var1], variables[var2]);
-                        
-                        correlations.push({
-                            var1, var2, correlation,
-                            strength: getCorrelationStrength(correlation),
-                            color: getCorrelationColor(correlation)
-                        });
-                    }
-                }
-                
-                // Ordenar por fuerza de correlación
-                correlations.sort((a, b) => Math.abs(b.correlation) - Math.abs(a.correlation));
-                correlationsData = correlations;
-                
-                // Mostrar correlaciones
-                displayCorrelations(correlations);
-                document.getElementById('correlations-section').classList.remove('hidden');
-                
-                showMessage('✅ Análisis de correlaciones completado', 'success');
-                
-            } catch (error) {
-                showMessage(`❌ Error en correlaciones: ${error.message}`, 'error');
-            }
-        }
-        
-        // === FUNCIONES DE VISUALIZACIÓN Y ANÁLISIS ===
-        
-        // Validar datos científicamente
-        function validateScientificData(stats) {
-            const badges = document.getElementById('validation-badges');
-            let html = '<h4 style="margin-bottom: 10px;">🔬 Validación Científica:</h4>';
-            
-            const validations = [
-                {
-                    name: 'Biomasa',
-                    valid: stats.biomassRange?.max <= 5.0 && stats.biomassRange?.min >= 0.01,
-                    value: `${formatNumber(stats.biomassRange?.min || 0)}-${formatNumber(stats.biomassRange?.max || 0)} g/L`
-                },
-                {
-                    name: 'Temperatura',
-                    valid: stats.temperatureRange?.max <= 40 && stats.temperatureRange?.min >= 15,
-                    value: `${formatNumber(stats.temperatureRange?.min || 0)}-${formatNumber(stats.temperatureRange?.max || 0)} °C`
-                },
-                {
-                    name: 'pH',
-                    valid: stats.pHRange?.max <= 10 && stats.pHRange?.min >= 6,
-                    value: `${formatNumber(stats.pHRange?.min || 0)}-${formatNumber(stats.pHRange?.max || 0)}`
-                },
-                {
-                    name: 'Crecimiento',
-                    valid: stats.growthRateRange?.max <= 0.1 && stats.growthRateRange?.min >= 0,
-                    value: `${formatNumber(stats.growthRateRange?.min || 0, 4)}-${formatNumber(stats.growthRateRange?.max || 0, 4)} h⁻¹`
-                }
-            ];
-            
-            validations.forEach(v => {
-                const badgeClass = v.valid ? 'badge-success' : 'badge-danger';
-                const icon = v.valid ? '✅' : '❌';
-                html += `<div class="badge ${badgeClass}">${icon} ${v.name}: ${v.value}</div>`;
-            });
-            
-            badges.innerHTML = html;
-        }
-        
-        // Mostrar resultados mejorados
-        function displayResults() {
-            if (!currentStats) return;
-            
-            const stats = currentStats;
-            
-            document.getElementById('stats').innerHTML = `
-                <div class="stat-card">
-                    <div class="stat-value">${(stats.totalPoints || 0).toLocaleString()}</div>
-                    <div class="stat-label">Total Registros</div>
-                </div>
-                <div class="stat-card">
-                    <div class="stat-value">${stats.scenarios || 0}</div>
-                    <div class="stat-label">Escenarios</div>
-                </div>
-                <div class="stat-card">
-                    <div class="stat-value">${stats.duration || 'N/A'}</div>
-                    <div class="stat-label">Duración</div>
-                </div>
-                <div class="stat-card">
-                    <div class="stat-value">${formatNumber(stats.biomassRange?.max || 0)}</div>
-                    <div class="stat-label">Biomasa Máx (g/L)</div>
-                </div>
-                <div class="stat-card">
-                    <div class="stat-value">${formatNumber(stats.temperatureRange?.max || 0, 1)}</div>
-                    <div class="stat-label">Temp Máx (°C)</div>
-                </div>
-                <div class="stat-card">
-                    <div class="stat-value">${formatNumber(stats.pHRange?.max || 0)}</div>
-                    <div class="stat-label">pH Máx</div>
-                </div>
-            `;
-            
-            // Enlaces de descarga mejorados
-            if (stats.folderName) {
-                document.getElementById('downloads').innerHTML = `
-                    <a href="/download/${stats.folderName}/complete_dataset.csv" class="download-btn">
-                        📊 Dataset Completo<br><small>${(stats.totalPoints || 0).toLocaleString()} registros</small>
-                    </a>
-                    <a href="/download/${stats.folderName}/training_data.csv" class="download-btn">
-                        🎯 Entrenamiento<br><small>${(stats.trainingPoints || 0).toLocaleString()} registros (70%)</small>
-                    </a>
-                    <a href="/download/${stats.folderName}/validation_data.csv" class="download-btn">
-                        🔍 Validación<br><small>${(stats.validationPoints || 0).toLocaleString()} registros (15%)</small>
-                    </a>
-                    <a href="/download/${stats.folderName}/test_data.csv" class="download-btn">
-                        🧪 Prueba<br><small>${(stats.testPoints || 0).toLocaleString()} registros (15%)</small>
-                    </a>
-                `;
-            }
-        }
-        
-        // Mostrar métricas de calidad avanzadas
-        function displayQualityMetrics() {
-            if (!currentDataset || !currentStats) return;
-            
-            const stats = currentStats;
-            const biomassValues = currentDataset.map(d => d.Biomass_g_L || 0);
-            const tempValues = currentDataset.map(d => d.Temperature_C || 0);
-            const pHValues = currentDataset.map(d => d.pH || 0);
-            const parValues = currentDataset.map(d => d.PAR_umol_m2_s || 0);
-            
-            // Calcular estadísticas descriptivas
-            const biomassStats = calculateStats(biomassValues);
-            const tempStats = calculateStats(tempValues);
-            const pHStats = calculateStats(pHValues);
-            const parStats = calculateStats(parValues);
-            
-            // Distribución de fases
-            const phases = {};
-            currentDataset.forEach(d => {
-                const phase = d.Growth_Phase || 'unknown';
-                phases[phase] = (phases[phase] || 0) + 1;
-            });
-            
-            document.getElementById('metrics-grid').innerHTML = `
-                <div class="metric-card">
-                    <div class="metric-title">📊 Estadísticas de Biomasa</div>
-                    <ul class="metric-list">
-                        <li><span>Media:</span><span>${formatNumber(biomassStats.mean)} g/L</span></li>
-                        <li><span>Desv. Estándar:</span><span>${formatNumber(biomassStats.std)} g/L</span></li>
-                        <li><span>Coef. Variación:</span><span>${formatNumber(biomassStats.cv)}%</span></li>
-                        <li><span>Rango:</span><span>${formatNumber(biomassStats.min)}-${formatNumber(biomassStats.max)} g/L</span></li>
-                    </ul>
-                </div>
-                <div class="metric-card">
-                    <div class="metric-title">🌡️ Estadísticas de Temperatura</div>
-                    <ul class="metric-list">
-                        <li><span>Media:</span><span>${formatNumber(tempStats.mean, 1)} °C</span></li>
-                        <li><span>Desv. Estándar:</span><span>${formatNumber(tempStats.std, 1)} °C</span></li>
-                        <li><span>Rango:</span><span>${formatNumber(tempStats.min, 1)}-${formatNumber(tempStats.max, 1)} °C</span></li>
-                        <li><span>Distribución:</span><span>Normal</span></li>
-                    </ul>
-                </div>
-                <div class="metric-card">
-                    <div class="metric-title">🔬 Estadísticas de pH</div>
-                    <ul class="metric-list">
-                        <li><span>Media:</span><span>${formatNumber(pHStats.mean)}</span></li>
-                        <li><span>Desv. Estándar:</span><span>${formatNumber(pHStats.std)}</span></li>
-                        <li><span>Rango:</span><span>${formatNumber(pHStats.min)}-${formatNumber(pHStats.max)}</span></li>
-                        <li><span>Alcalinidad:</span><span>${pHStats.mean > 7.5 ? 'Alta' : 'Media'}</span></li>
-                    </ul>
-                </div>
-                <div class="metric-card">
-                    <div class="metric-title">💡 Estadísticas de PAR</div>
-                    <ul class="metric-list">
-                        <li><span>Media:</span><span>${formatNumber(parStats.mean, 1)} μmol/m²/s</span></li>
-                        <li><span>Máximo:</span><span>${formatNumber(parStats.max, 1)} μmol/m²/s</span></li>
-                        <li><span>Ciclos:</span><span>${parStats.min === 0 ? 'Día/Noche' : 'Continuo'}</span></li>
-                        <li><span>Saturación:</span><span>${parStats.max > 200 ? 'Óptima' : 'Limitante'}</span></li>
-                    </ul>
-                </div>
-                <div class="metric-card">
-                    <div class="metric-title">🧬 Distribución de Fases</div>
-                    <ul class="metric-list">
-                        ${Object.entries(phases).map(([phase, count]) => 
-                            `<li><span>${phase}:</span><span>${count} (${formatNumber(count/currentDataset.length*100, 1)}%)</span></li>`
-                        ).join('')}
-                    </ul>
-                </div>
-                <div class="metric-card">
-                    <div class="metric-title">✅ Calidad del Dataset</div>
-                    <ul class="metric-list">
-                        <li><span>Completitud:</span><span>100%</span></li>
-                        <li><span>Consistencia:</span><span>Alta</span></li>
-                        <li><span>Validez científica:</span><span>Verificada</span></li>
-                        <li><span>Score ML:</span><span>${calculateMLScore()}/10</span></li>
-                    </ul>
-                </div>
-            `;
-        }
-        
-        // Mostrar correlaciones
-        function displayCorrelations(correlations) {
-            const grid = document.getElementById('correlations-grid');
-            
-            grid.innerHTML = correlations.slice(0, 12).map(corr => `
-                <div class="correlation-card" style="border-left-color: ${corr.color};">
-                    <div class="correlation-value" style="color: ${corr.color};">
-                        ${formatNumber(corr.correlation, 3)}
-                    </div>
-                    <div class="correlation-label">
-                        ${corr.var1} ↔ ${corr.var2}
-                    </div>
-                    <div class="correlation-strength" style="background-color: ${corr.color};">
-                        ${corr.strength}
-                    </div>
-                </div>
-            `).join('');
-        }
-        
-        // === FUNCIONES DE GRÁFICAS ===
-        
-        function createBiomassChart() {
-            const ctx = document.getElementById('biomassChart').getContext('2d');
-            if (charts.biomass) charts.biomass.destroy();
-            
-            const scenarios = [...new Set(currentDataset.map(d => d.Scenario))].slice(0, 8);
-            const colors = ['#28a745', '#17a2b8', '#ffc107', '#dc3545', '#6f42c1', '#fd7e14', '#20c997', '#6c757d'];
-            
-            charts.biomass = new Chart(ctx, {
-                type: 'line',
-                data: {
-                    datasets: scenarios.map((scenario, index) => {
-                        const data = currentDataset
-                            .filter(d => d.Scenario === scenario)
-                            .sort((a, b) => (a.Time_days || 0) - (b.Time_days || 0))
-                            .map(d => ({ x: d.Time_days || 0, y: d.Biomass_g_L || 0 }));
-                        
-                        return {
-                            label: `Escenario ${scenario}`,
-                            data: data,
-                            borderColor: colors[index % colors.length],
-                            backgroundColor: colors[index % colors.length] + '20',
-                            tension: 0.4,
-                            pointRadius: 1,
-                            borderWidth: 2
-                        };
-                    })
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: { 
-                        legend: { display: true, position: 'top' },
-                        title: { display: true, text: 'Curvas de crecimiento sigmoidales' }
-                    },
-                    scales: {
-                        x: { 
-                            title: { display: true, text: 'Tiempo (días)' },
-                            grid: { color: 'rgba(0,0,0,0.1)' }
-                        },
-                        y: { 
-                            title: { display: true, text: 'Biomasa (g/L)' }, 
-                            beginAtZero: true,
-                            grid: { color: 'rgba(0,0,0,0.1)' }
-                        }
-                    }
-                }
-            });
-        }
-        
-        function createTemperatureChart() {
-            const ctx = document.getElementById('temperatureChart').getContext('2d');
-            if (charts.temperature) charts.temperature.destroy();
-            
-            const tempValues = currentDataset.map(d => d.Temperature_C || 0);
-            const bins = [];
-            const counts = [];
-            
-            // Crear histograma
-            const min = Math.min(...tempValues);
-            const max = Math.max(...tempValues);
-            const binCount = 15;
-            const binSize = (max - min) / binCount;
-            
-            for (let i = 0; i < binCount; i++) {
-                const binStart = min + i * binSize;
-                const binEnd = binStart + binSize;
-                bins.push(`${binStart.toFixed(1)}-${binEnd.toFixed(1)}`);
-                counts.push(tempValues.filter(v => v >= binStart && v < binEnd).length);
-            }
-            
-            charts.temperature = new Chart(ctx, {
-                type: 'bar',
-                data: {
-                    labels: bins,
-                    datasets: [{
-                        label: 'Frecuencia',
-                        data: counts,
-                        backgroundColor: 'rgba(220, 53, 69, 0.7)',
-                        borderColor: '#dc3545',
-                        borderWidth: 1
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: { 
-                        legend: { display: false },
-                        title: { display: true, text: 'Distribución normal de temperatura' }
-                    },
-                    scales: {
-                        x: { title: { display: true, text: 'Temperatura (°C)' } },
-                        y: { title: { display: true, text: 'Frecuencia' }, beginAtZero: true }
-                    }
-                }
-            });
-        }
-        
-        function createPHChart() {
-            const ctx = document.getElementById('pHChart').getContext('2d');
-            if (charts.pH) charts.pH.destroy();
-            
-            // Mostrar evolución del pH por escenario
-            const scenario1 = currentDataset
-                .filter(d => d.Scenario === 1)
-                .sort((a, b) => (a.Time_days || 0) - (b.Time_days || 0))
-                .slice(0, 150);
-            
-            charts.pH = new Chart(ctx, {
-                type: 'line',
-                data: {
-                    labels: scenario1.map(d => d.Time_days || 0),
-                    datasets: [{
-                        label: 'pH',
-                        data: scenario1.map(d => d.pH || 0),
-                        borderColor: '#17a2b8',
-                        backgroundColor: 'rgba(23, 162, 184, 0.1)',
-                        tension: 0.3,
-                        pointRadius: 1,
-                        fill: true
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: { 
-                        legend: { display: false },
-                        title: { display: true, text: 'Evolución del pH (Escenario 1)' }
-                    },
-                    scales: {
-                        x: { title: { display: true, text: 'Tiempo (días)' } },
-                        y: { 
-                            title: { display: true, text: 'pH' }, 
-                            min: 6.5, max: 9.5,
-                            grid: { color: 'rgba(0,0,0,0.1)' }
-                        }
-                    }
-                }
-            });
-        }
-        
-        function createPARChart() {
-            const ctx = document.getElementById('parChart').getContext('2d');
-            if (charts.par) charts.par.destroy();
-            
-            // Mostrar ciclos de luz
-            const cyclicData = currentDataset
-                .filter(d => d.Light_Regime === 'cyclic')
-                .slice(0, 200)
-                .sort((a, b) => (a.Time_h || 0) - (b.Time_h || 0));
-            
-            if (cyclicData.length === 0) {
-                cyclicData.push(...currentDataset.slice(0, 200));
-            }
-            
-            charts.par = new Chart(ctx, {
-                type: 'line',
-                data: {
-                    labels: cyclicData.map(d => d.Time_h || 0),
-                    datasets: [{
-                        label: 'PAR',
-                        data: cyclicData.map(d => d.PAR_umol_m2_s || 0),
-                        borderColor: '#ffc107',
-                        backgroundColor: 'rgba(255, 193, 7, 0.3)',
-                        tension: 0.1,
-                        pointRadius: 0,
-                        fill: true
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: { 
-                        legend: { display: false },
-                        title: { display: true, text: 'Ciclos de iluminación día/noche' }
-                    },
-                    scales: {
-                        x: { title: { display: true, text: 'Tiempo (h)' } },
-                        y: { 
-                            title: { display: true, text: 'PAR (μmol/m²/s)' }, 
-                            beginAtZero: true,
-                            grid: { color: 'rgba(0,0,0,0.1)' }
-                        }
-                    }
-                }
-            });
-        }
-        
-        function createProductivityChart() {
-            const ctx = document.getElementById('productivityChart').getContext('2d');
-            if (charts.productivity) charts.productivity.destroy();
-            
-            const data = currentDataset.slice(0, 500).map(d => ({
-                x: d.Time_days || 0,
-                y: d.Instantaneous_Productivity_g_L_d || 0
-            }));
-            
-            charts.productivity = new Chart(ctx, {
-                type: 'scatter',
-                data: {
-                    datasets: [{
-                        label: 'Productividad',
-                        data: data,
-                        backgroundColor: 'rgba(111, 66, 193, 0.6)',
-                        borderColor: '#6f42c1',
-                        pointRadius: 3
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: { 
-                        legend: { display: false },
-                        title: { display: true, text: 'Productividad específica vs tiempo' }
-                    },
-                    scales: {
-                        x: { title: { display: true, text: 'Tiempo (días)' } },
-                        y: { 
-                            title: { display: true, text: 'Productividad (g/L/día)' }, 
-                            beginAtZero: true,
-                            grid: { color: 'rgba(0,0,0,0.1)' }
-                        }
-                    }
-                }
-            });
-        }
-        
-        function createPhasesChart() {
-            const ctx = document.getElementById('phasesChart').getContext('2d');
-            if (charts.phases) charts.phases.destroy();
-            
-            const phases = {};
-            currentDataset.forEach(d => {
-                const phase = d.Growth_Phase || 'unknown';
-                phases[phase] = (phases[phase] || 0) + 1;
-            });
-            
-            const colors = ['#28a745', '#17a2b8', '#ffc107', '#dc3545', '#6f42c1'];
-            
-            charts.phases = new Chart(ctx, {
-                type: 'doughnut',
-                data: {
-                    labels: Object.keys(phases).map(p => p.charAt(0).toUpperCase() + p.slice(1)),
-                    datasets: [{
-                        data: Object.values(phases),
-                        backgroundColor: colors,
-                        borderColor: '#fff',
-                        borderWidth: 3
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: {
-                        legend: { position: 'bottom' },
-                        title: { display: true, text: 'Distribución de fases de crecimiento' }
-                    }
-                }
-            });
-        }
-        
-        // Crear todas las gráficas
-        function createAllCharts() {
-            if (!currentDataset || currentDataset.length === 0) return;
-            
-            console.log('📊 Creando visualizaciones científicas avanzadas...');
-            
-            setTimeout(() => {
-                try {
-                    createBiomassChart();
-                    createTemperatureChart();
-                    createPHChart();
-                    createPARChart();
-                    createProductivityChart();
-                    createPhasesChart();
-                    
-                    // Mostrar recomendaciones ML
-                    displayMLRecommendations();
-                    
-                    console.log('✅ Todas las visualizaciones creadas exitosamente');
-                } catch (error) {
-                    console.error('Error creando gráficas:', error);
-                    showMessage(`❌ Error en visualizaciones: ${error.message}`, 'error');
-                }
-            }, 500);
-        }
-        
-        // Mostrar recomendaciones para ML
-        function displayMLRecommendations() {
-            const score = calculateMLScore();
-            const scenarios = currentStats.scenarios || 0;
-            const days = parseInt(currentStats.duration?.split(' ')[0] || 0);
-            
-            let recommendations = [];
-            let models = [];
-            let preprocessing = [];
-            
-            // Recomendaciones basadas en calidad
-            if (score >= 8) {
-                recommendations.push("✅ <strong>Excelente calidad:</strong> Dataset listo para ML de producción");
-                models.push("Random Forest", "XGBoost", "Neural Networks", "LSTM");
-            } else if (score >= 6) {
-                recommendations.push("✅ <strong>Buena calidad:</strong> Apropiado para la mayoría de modelos ML");
-                models.push("Random Forest", "XGBoost", "SVM");
-            } else {
-                recommendations.push("⚠️ <strong>Calidad mejorable:</strong> Considerar más escenarios o días");
-                models.push("Random Forest", "Linear Regression");
-            }
-            
-            // Recomendaciones específicas
-            if (scenarios >= 30) {
-                recommendations.push("✅ <strong>Diversidad alta:</strong> Excelente generalización esperada");
-            } else {
-                recommendations.push("💡 <strong>Más escenarios:</strong> 30+ recomendado para mejor robustez");
-            }
-            
-            if (days >= 25) {
-                recommendations.push("✅ <strong>Duración óptima:</strong> Captura dinámicas completas");
-            } else {
-                recommendations.push("⏰ <strong>Más duración:</strong> 25+ días capturan más patrones");
-            }
-            
-            // Preprocessing
-            preprocessing.push(
-                "StandardScaler para variables numéricas",
-                "Encoding para variables categóricas",
-                "Feature selection basado en correlaciones",
-                "Windowing para series temporales"
-            );
-            
-            const content = `
-                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px;">
-                    <div>
-                        <h4>🎯 Modelos Recomendados:</h4>
-                        <ul style="margin: 10px 0; padding-left: 20px;">
-                            ${models.map(model => `<li>${model}</li>`).join('')}
-                        </ul>
-                    </div>
-                    <div>
-                        <h4>🔧 Preprocesamiento:</h4>
-                        <ul style="margin: 10px 0; padding-left: 20px;">
-                            ${preprocessing.map(prep => `<li>${prep}</li>`).join('')}
-                        </ul>
-                    </div>
-                    <div>
-                        <h4>📊 Variables Clave:</h4>
-                        <ul style="margin: 10px 0; padding-left: 20px;">
-                            <li>PAR_umol_m2_s (predictor principal)</li>
-                            <li>Temperature_C</li>
-                            <li>pH</li>
-                            <li>Time_days</li>
-                            <li>Growth_Phase</li>
-                        </ul>
-                    </div>
-                    <div>
-                        <h4>🎯 Variables Objetivo:</h4>
-                        <ul style="margin: 10px 0; padding-left: 20px;">
-                            <li>Biomass_g_L (regresión)</li>
-                            <li>Specific_Growth_Rate_h</li>
-                            <li>Growth_Phase (clasificación)</li>
-                            <li>Instantaneous_Productivity_g_L_d</li>
-                        </ul>
-                    </div>
-                </div>
-                
-                <div style="margin-top: 20px;">
-                    <h4>💡 Evaluación del Dataset:</h4>
-                    <ul style="margin: 10px 0; padding-left: 20px;">
-                        ${recommendations.map(rec => `<li>${rec}</li>`).join('')}
-                    </ul>
-                </div>
-                
-                <div style="background: #e8f5e8; padding: 15px; border-radius: 8px; margin-top: 15px;">
-                    <strong>📊 Score ML: ${score}/10</strong> | 
-                    <strong>🎯 Recomendación:</strong> ${score >= 8 ? 'Excelente para ML' : score >= 6 ? 'Bueno para ML' : 'Necesita mejoras'}
-                </div>
-            `;
-            
-            document.getElementById('ml-content').innerHTML = content;
-        }
-        
-        // === FUNCIONES UTILITARIAS ===
-        
-        function showMessage(message, type = 'success') {
-            const messagesDiv = document.getElementById('messages');
-            const alertDiv = document.createElement('div');
-            alertDiv.className = `alert alert-${type}`;
-            alertDiv.innerHTML = message;
-            messagesDiv.appendChild(alertDiv);
-            
-            setTimeout(() => {
-                if (alertDiv.parentNode) alertDiv.remove();
-            }, 6000);
-        }
-        
-        function formatNumber(num, decimals = 2) {
-            return parseFloat(num).toFixed(decimals);
-        }
-        
-        function calculateCorrelation(x, y) {
-            const n = Math.min(x.length, y.length);
-            if (n < 2) return 0;
-            
-            const meanX = x.reduce((a, b) => a + b, 0) / n;
-            const meanY = y.reduce((a, b) => a + b, 0) / n;
-            
-            let num = 0, denX = 0, denY = 0;
-            for (let i = 0; i < n; i++) {
-                const dx = x[i] - meanX;
-                const dy = y[i] - meanY;
-                num += dx * dy;
-                denX += dx * dx;
-                denY += dy * dy;
-            }
-            
-            const denominator = Math.sqrt(denX * denY);
-            return denominator === 0 ? 0 : num / denominator;
-        }
-        
-        function getCorrelationColor(r) {
-            const abs = Math.abs(r);
-            if (abs > 0.7) return '#28a745';  // Fuerte - Verde
-            if (abs > 0.4) return '#17a2b8';  // Moderada - Azul
-            if (abs > 0.2) return '#ffc107';  // Débil - Amarillo
-            return '#6c757d';                 // Muy débil - Gris
-        }
-        
-        function getCorrelationStrength(r) {
-            const abs = Math.abs(r);
-            if (abs > 0.7) return 'Fuerte';
-            if (abs > 0.4) return 'Moderada';
-            if (abs > 0.2) return 'Débil';
-            return 'Muy débil';
-        }
-        
-        function calculateStats(values) {
-            const validValues = values.filter(v => !isNaN(v) && isFinite(v));
-            const n = validValues.length;
-            if (n === 0) return { mean: 0, std: 0, min: 0, max: 0, cv: 0 };
-            
-            const mean = validValues.reduce((a, b) => a + b, 0) / n;
-            const variance = validValues.reduce((sum, val) => sum + Math.pow(val - mean, 2), 0) / n;
-            const std = Math.sqrt(variance);
-            const cv = mean !== 0 ? (std / mean) * 100 : 0;
-            
-            return {
-                mean, std,
-                min: Math.min(...validValues),
-                max: Math.max(...validValues),
-                cv
-            };
-        }
-        
-        function calculateMLScore() {
-            if (!currentStats || !currentDataset) return 5;
-            
-            let score = 10;
-            
-            // Penalizar por pocos escenarios
-            if (currentStats.scenarios < 20) score -= 1;
-            if (currentStats.scenarios < 10) score -= 1;
-            
-            // Penalizar por duración corta
-            const days = parseInt(currentStats.duration?.split(' ')[0] || 0);
-            if (days < 15) score -= 1;
-            if (days < 7) score -= 2;
-            
-            // Bonificar por diversidad
-            const biomassCV = calculateStats(currentDataset.map(d => d.Biomass_g_L || 0)).cv;
-            if (biomassCV > 50) score += 1;
-            
-            return Math.max(1, Math.min(10, score));
-        }
-        
-        function hideAllSections() {
-            document.getElementById('results').classList.add('hidden');
-            document.getElementById('quality-metrics').classList.add('hidden');
-            document.getElementById('correlations-section').classList.add('hidden');
-            document.getElementById('charts-section').classList.add('hidden');
-            document.getElementById('ml-recommendations').classList.add('hidden');
-        }
-        
-        function showAllSections() {
-            document.getElementById('results').classList.remove('hidden');
-            document.getElementById('quality-metrics').classList.remove('hidden');
-            document.getElementById('charts-section').classList.remove('hidden');
-            document.getElementById('ml-recommendations').classList.remove('hidden');
-        }
-        
-        // === INICIALIZACIÓN ===
-        
-        document.addEventListener('DOMContentLoaded', function() {
-            console.log('✅ Chlorella Generator v4.0 Complete Analysis cargado');
-            
-            // Test inicial
-            setTimeout(testConnection, 1000);
-            
-            // Tooltips informativos
-            const tooltips = {
-                scenarios: "Número de experimentos independientes. Más escenarios = mayor diversidad para ML",
-                totalDays: "Duración de cada cultivo. 25-45 días recomendado para capturar dinámicas completas",
-                variability: "Nivel de variación en condiciones ambientales y estrés experimental"
-            };
-            
-            Object.entries(tooltips).forEach(([id, text]) => {
-                const element = document.getElementById(id);
-                if (element) element.title = text;
-            });
-            
-            // Mensaje de bienvenida
-            showMessage('🧬 Generador científico v4.0 listo. Análisis completo con validación científica.', 'info');
-        });
-        
-        // Manejo de errores robusto
-        window.addEventListener('error', function(e) {
-            console.error('Error JavaScript:', e.message);
-            showMessage(`Error: ${e.message}`, 'error');
-        });
-        
-        window.addEventListener('unhandledrejection', function(e) {
-            console.error('Promise rechazada:', e.reason);
-            showMessage(`Error asíncrono: ${e.reason}`, 'error');
-        });
-        
-        console.log('✅ Chlorella Generator v4.0 Complete Analysis inicializado');
-    </script>
-</body>
-</html>
+        checks.overallValid = Object.values(checks).slice(1).every(Boolean);
+        validations.push(checks);
+    });
+    
+    return validations;
+}
+
+// Ejecutar al cargar las gráficas
+function improvedChartGeneration() {
+    if (!currentDataset || currentDataset.length === 0) return;
+    
+    console.log('🔬 Generando curvas mejoradas de biomasa...');
+    
+    // Validar realismo
+    const validations = validateBiomassRealism();
+    const validScenarios = validations.filter(v => v.overallValid).length;
+    
+    console.log(`✅ Escenarios válidos: ${validScenarios}/${validations.length}`);
+    
+    // Crear gráfica mejorada
+    createBiomassChart();
+    
+    // Mostrar análisis
+    const analysisDiv = document.createElement('div');
+    analysisDiv.innerHTML = `
+        <div style="margin-top: 15px; padding: 15px; background: #e8f5e8; border-radius: 8px;">
+            <h4>🔬 Validación Científica de Curvas:</h4>
+            <ul>
+                <li><strong>Escenarios válidos:</strong> ${validScenarios}/${validations.length}</li>
+                <li><strong>Forma sigmoidal:</strong> ${validations.filter(v => v.sigmoidalShape).length} escenarios</li>
+                <li><strong>Rango realista:</strong> ${validations.filter(v => v.maxBiomassRealistic).length} escenarios</li>
+                <li><strong>Datos suficientes:</strong> ${validations.filter(v => v.dataPointsSufficient).length} escenarios</li>
+            </ul>
+        </div>
+    `;
+    
+    document.getElementById('biomassChart').parentNode.appendChild(analysisDiv);
+}
