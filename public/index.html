@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Generador Chlorella Hiperrealista v2.0</title>
+    <title>Generador Chlorella - Diagnóstico</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -12,7 +12,7 @@
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); 
             min-height: 100vh; 
         }
-        .container { max-width: 1400px; margin: 0 auto; padding: 20px; }
+        .container { max-width: 1200px; margin: 0 auto; padding: 20px; }
         .header { 
             color: white; 
             padding: 40px 0; 
@@ -27,13 +27,14 @@
             text-shadow: 2px 2px 4px rgba(0,0,0,0.3); 
         }
         .version-badge {
-            background: #28a745;
-            color: white;
+            background: #ffc107;
+            color: #333;
             padding: 8px 16px;
             border-radius: 20px;
             font-size: 0.9em;
             margin-top: 10px;
             display: inline-block;
+            font-weight: bold;
         }
         .card { 
             background: white; 
@@ -68,14 +69,14 @@
             margin-bottom: 20px;
         }
         .form-info {
-            background: #f8f9fa;
+            background: #fff3cd;
+            border: 1px solid #ffeaa7;
             padding: 15px;
             border-radius: 8px;
             margin-top: 10px;
-            border-left: 4px solid #17a2b8;
         }
         .form-info h4 {
-            color: #17a2b8;
+            color: #856404;
             margin-bottom: 8px;
         }
         .form-info ul {
@@ -105,7 +106,7 @@
             box-shadow: none;
         }
         .btn-test { background: linear-gradient(45deg, #17a2b8, #138496); }
-        .btn-correlations { background: linear-gradient(45deg, #fd7e14, #e56a00); }
+        .btn-info { background: linear-gradient(45deg, #28a745, #20c997); }
         .stats { 
             display: grid; 
             grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); 
@@ -225,59 +226,17 @@
             white-space: pre-wrap;
             border: 1px solid #dee2e6;
         }
-        .recommendations {
-            background: linear-gradient(45deg, #e3f2fd, #bbdefb);
-            padding: 20px;
-            border-radius: 10px;
-            margin: 20px 0;
-            border-left: 4px solid #2196f3;
-        }
-        .recommendations h3 {
-            color: #1976d2;
-            margin-bottom: 15px;
-        }
-        .recommendations ul {
-            margin-left: 20px;
-        }
-        .recommendations li {
-            margin-bottom: 8px;
-            color: #333;
-        }
-        .correlation-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-            gap: 15px;
-            margin: 20px 0;
-        }
-        .correlation-card {
-            background: white;
+        .diagnostic-info {
+            background: #e7f3ff;
+            border: 1px solid #b6d7ff;
             padding: 15px;
             border-radius: 8px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-            border-left: 4px solid #ffc107;
+            margin: 20px 0;
         }
-        .correlation-value {
-            font-size: 1.5em;
-            font-weight: bold;
-            margin-bottom: 5px;
+        .diagnostic-info h4 {
+            color: #0056b3;
+            margin-bottom: 10px;
         }
-        .correlation-label {
-            color: #666;
-            font-size: 0.9em;
-        }
-        .correlation-strength {
-            font-size: 0.8em;
-            padding: 2px 8px;
-            border-radius: 12px;
-            color: white;
-            display: inline-block;
-            margin-top: 5px;
-        }
-        .strength-muy_fuerte { background: #28a745; }
-        .strength-fuerte { background: #17a2b8; }
-        .strength-moderada { background: #ffc107; color: #333; }
-        .strength-débil { background: #fd7e14; }
-        .strength-muy_débil { background: #6c757d; }
         
         @media (max-width: 768px) {
             .form-row {
@@ -286,20 +245,26 @@
             .charts {
                 grid-template-columns: 1fr;
             }
-            .chart-container {
-                min-width: unset;
-            }
         }
     </style>
 </head>
 <body>
     <div class="header">
         <h1>🧬 Generador Dataset Chlorella vulgaris</h1>
-        <p>Versión Hiperrealista - Cultivos de larga duración con modelo cinético avanzado</p>
-        <div class="version-badge">v2.0 Hyperrealistic</div>
+        <p>Versión de Diagnóstico - Testing y Debug</p>
+        <div class="version-badge">DIAGNOSTIC MODE</div>
     </div>
     
     <div class="container">
+        <!-- Información de Diagnóstico -->
+        <div class="diagnostic-info">
+            <h4>🔍 Información de Diagnóstico</h4>
+            <p><strong>Modo:</strong> Versión simplificada para testing</p>
+            <p><strong>Límites:</strong> Máximo 50 escenarios, 30 días</p>
+            <p><strong>Datos:</strong> Modelo simplificado para verificar conectividad</p>
+            <p><strong>Estado:</strong> <span id="server-status">Verificando...</span></p>
+        </div>
+
         <!-- Configuración -->
         <div class="card">
             <h2>⚙️ Configuración del Experimento</h2>
@@ -307,47 +272,45 @@
             <div class="form-row">
                 <div class="form-group">
                     <label for="scenarios">Número de escenarios:</label>
-                    <input type="number" id="scenarios" value="25" min="1" max="200">
-                    <small>Recomendado: 25-50 para datasets robustos</small>
+                    <input type="number" id="scenarios" value="10" min="1" max="50">
+                    <small>Límite diagnóstico: 1-50 escenarios</small>
                 </div>
                 <div class="form-group">
                     <label for="totalDays">Duración total (días):</label>
-                    <input type="number" id="totalDays" value="30" min="7" max="180">
-                    <small>Recomendado: 30-60 días para ciclos completos</small>
+                    <input type="number" id="totalDays" value="15" min="1" max="30">
+                    <small>Límite diagnóstico: 1-30 días</small>
                 </div>
             </div>
             
             <div class="form-group">
                 <label for="variability">Nivel de variabilidad:</label>
                 <select id="variability">
-                    <option value="low">Baja - Condiciones controladas de laboratorio</option>
-                    <option value="medium" selected>Media - Variaciones realistas industriales</option>
-                    <option value="high">Alta - Condiciones desafiantes</option>
-                    <option value="extreme">Extrema - Máxima diversidad experimental</option>
+                    <option value="low">Baja - Condiciones controladas</option>
+                    <option value="medium" selected>Media - Variaciones moderadas</option>
+                    <option value="high">Alta - Condiciones variables</option>
                 </select>
             </div>
             
             <div class="form-info">
-                <h4>🔬 Características del Modelo Hiperrealista:</h4>
+                <h4>⚠️ Modo Diagnóstico Activo:</h4>
                 <ul>
-                    <li>Modelo cinético basado en literatura científica peer-reviewed</li>
-                    <li>Fases de crecimiento automáticas (lag, exponencial, lineal, estacionaria, decline)</li>
-                    <li>80+ variables biológicas y bioquímicas</li>
-                    <li>Ciclos circadianos y variaciones estacionales</li>
-                    <li>Composición bioquímica variable (proteínas, lípidos, carbohidratos)</li>
-                    <li>Estrés programado y respuestas fisiológicas</li>
+                    <li>Modelo simplificado para testing de conectividad</li>
+                    <li>Límites reducidos para pruebas rápidas</li>
+                    <li>Logging detallado para debugging</li>
+                    <li>Variables básicas: biomasa, temperatura, pH, PAR</li>
                 </ul>
+                <p id="estimation" style="margin-top: 10px; color: #17a2b8; font-weight: bold;"></p>
             </div>
             
             <div style="text-align: center; margin-top: 30px;">
                 <button class="btn" onclick="generateDatabase()" id="generateBtn">
-                    🚀 Generar Dataset Hiperrealista
+                    🚀 Generar Dataset de Prueba
                 </button>
                 <button class="btn btn-test" onclick="testServer()">
                     🔧 Test Servidor
                 </button>
-                <button class="btn btn-correlations" onclick="showCorrelations()" id="correlationsBtn" disabled>
-                    📊 Análisis de Correlaciones
+                <button class="btn btn-info" onclick="getServerInfo()">
+                    ℹ️ Info Sistema
                 </button>
             </div>
         </div>
@@ -363,53 +326,29 @@
             <h2>✅ Resultados del Dataset</h2>
             <div id="stats" class="stats"></div>
             <div id="downloads" class="downloads"></div>
-            <div id="recommendationsSection" class="recommendations"></div>
-        </div>
-        
-        <!-- Correlaciones -->
-        <div id="correlations-section" class="card hidden">
-            <h2>📊 Análisis de Correlaciones</h2>
-            <div id="correlations-grid" class="correlation-grid"></div>
         </div>
         
         <!-- Gráficas -->
         <div id="charts-section" class="card hidden">
-            <h2>📈 Análisis Avanzado de Datos</h2>
+            <h2>📊 Visualizaciones Básicas</h2>
             
             <div id="charts" class="charts">
                 <div class="chart-container">
-                    <div class="chart-title">📈 Evolución de Biomasa por Escenario</div>
+                    <div class="chart-title">📈 Evolución de Biomasa</div>
                     <canvas id="biomassChart" class="chart-canvas"></canvas>
                 </div>
                 <div class="chart-container">
-                    <div class="chart-title">🔬 Concentración Celular vs Tiempo</div>
-                    <canvas id="cellChart" class="chart-canvas"></canvas>
+                    <div class="chart-title">🌡️ Temperatura vs Tiempo</div>
+                    <canvas id="temperatureChart" class="chart-canvas"></canvas>
                 </div>
                 <div class="chart-container">
-                    <div class="chart-title">🌡️ Condiciones Ambientales</div>
-                    <canvas id="environmentChart" class="chart-canvas"></canvas>
+                    <div class="chart-title">🔬 pH vs Tiempo</div>
+                    <canvas id="pHChart" class="chart-canvas"></canvas>
                 </div>
                 <div class="chart-container">
-                    <div class="chart-title">💡 Ciclos de Luz (PAR)</div>
-                    <canvas id="lightChart" class="chart-canvas"></canvas>
+                    <div class="chart-title">💡 PAR vs Tiempo</div>
+                    <canvas id="parChart" class="chart-canvas"></canvas>
                 </div>
-                <div class="chart-container">
-                    <div class="chart-title">⚡ Productividad Específica</div>
-                    <canvas id="productivityChart" class="chart-canvas"></canvas>
-                </div>
-                <div class="chart-container">
-                    <div class="chart-title">🧬 Fases de Crecimiento</div>
-                    <canvas id="phasesChart" class="chart-canvas"></canvas>
-                </div>
-            </div>
-            
-            <!-- Análisis de Calidad -->
-            <div class="card">
-                <h2>🔍 Análisis de Calidad del Dataset</h2>
-                <div id="quality-analysis" class="stats"></div>
-                
-                <h3>💡 Recomendaciones para Machine Learning</h3>
-                <div id="ml-recommendations" class="alert alert-info"></div>
             </div>
         </div>
         
@@ -417,7 +356,7 @@
         <div id="loading" class="card hidden">
             <div class="loading">
                 <div class="spinner"></div>
-                <p id="loadingText">Generando dataset hiperrealista...</p>
+                <p id="loadingText">Generando dataset de prueba...</p>
                 <p id="loadingDetails" style="font-size: 0.9em; color: #666; margin-top: 10px;"></p>
             </div>
         </div>
@@ -471,20 +410,62 @@
             debugLog('🔧 Testing servidor...');
             
             try {
-                showMessage('🔧 Probando conexión con servidor...', 'info');
+                showMessage('🔧 Probando conexión...', 'info');
                 
                 const response = await fetch('/test');
                 debugLog('Respuesta:', { status: response.status, ok: response.ok });
                 
                 if (response.ok) {
                     const data = await response.json();
-                    showMessage(`✅ Servidor OK: ${data.message} (${data.version})`, 'success');
+                    showMessage(`✅ Servidor OK: ${data.message}`, 'success');
                     debugLog('✅ Test exitoso:', data);
+                    
+                    // Actualizar estado del servidor
+                    document.getElementById('server-status').textContent = 'Conectado ✅';
+                    document.getElementById('server-status').style.color = '#28a745';
+                    
+                    if (data.diagnostics) {
+                        debugLog('📊 Diagnósticos:', data.diagnostics);
+                    }
                 } else {
                     throw new Error(`HTTP ${response.status}`);
                 }
             } catch (error) {
                 showMessage(`❌ Error conectando: ${error.message}`, 'error');
+                debugLog('❌ Error:', error);
+                
+                // Actualizar estado del servidor
+                document.getElementById('server-status').textContent = 'Error ❌';
+                document.getElementById('server-status').style.color = '#dc3545';
+            }
+        }
+        
+        // Información del sistema
+        async function getServerInfo() {
+            debugLog('ℹ️ Obteniendo info del sistema...');
+            
+            try {
+                showMessage('ℹ️ Obteniendo información del sistema...', 'info');
+                
+                const response = await fetch('/info');
+                debugLog('Respuesta info:', { status: response.status, ok: response.ok });
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    debugLog('📊 Info del sistema:', data);
+                    
+                    showMessage(`✅ Sistema: ${data.system.platform}, Node: ${data.system.nodeVersion}`, 'success');
+                    
+                    // Mostrar información detallada en debug
+                    debugLog('🖥️ Sistema:', data.system);
+                    debugLog('🚀 Aplicación:', data.application);
+                    debugLog('📁 Archivos:', data.files);
+                    
+                } else {
+                    throw new Error(`HTTP ${response.status}`);
+                }
+            } catch (error) {
+                showMessage(`❌ Error obteniendo info: ${error.message}`, 'error');
                 debugLog('❌ Error:', error);
             }
         }
@@ -495,14 +476,14 @@
             const totalDays = parseInt(document.getElementById('totalDays').value);
             const variability = document.getElementById('variability').value;
             
-            // Validaciones
-            if (scenarios < 1 || scenarios > 200) {
-                showMessage('❌ Número de escenarios debe estar entre 1 y 200', 'error');
+            // Validaciones para modo diagnóstico
+            if (scenarios < 1 || scenarios > 50) {
+                showMessage('❌ Escenarios debe estar entre 1 y 50 (modo diagnóstico)', 'error');
                 return;
             }
             
-            if (totalDays < 7 || totalDays > 180) {
-                showMessage('❌ Duración debe estar entre 7 y 180 días', 'error');
+            if (totalDays < 1 || totalDays > 30) {
+                showMessage('❌ Días debe estar entre 1 y 30 (modo diagnóstico)', 'error');
                 return;
             }
             
@@ -514,16 +495,15 @@
             document.getElementById('loading').classList.remove('hidden');
             document.getElementById('results').classList.add('hidden');
             document.getElementById('charts-section').classList.add('hidden');
-            document.getElementById('correlations-section').classList.add('hidden');
             
             // Estimación de tiempo
-            const estimatedTime = Math.ceil((scenarios * totalDays) / 100);
+            const totalRecords = scenarios * totalDays * 24;
             document.getElementById('loadingDetails').textContent = 
-                `Generando ${scenarios * totalDays * 24} registros horarios... (≈${estimatedTime} min)`;
+                `Generando ${totalRecords.toLocaleString()} registros...`;
             
             try {
                 debugLog('📡 Llamando servidor...');
-                document.getElementById('loadingText').textContent = 'Enviando solicitud al servidor...';
+                document.getElementById('loadingText').textContent = 'Enviando solicitud...';
                 
                 const response = await fetch('/generate-dataset', {
                     method: 'POST',
@@ -556,27 +536,23 @@
                 serverData = data;
                 currentStats = data.stats;
                 
-                document.getElementById('loadingText').textContent = 'Obteniendo muestra para análisis...';
+                document.getElementById('loadingText').textContent = 'Obteniendo muestra...';
                 await getSampleData();
                 
                 displayResults();
                 
                 if (currentDataset && Array.isArray(currentDataset) && currentDataset.length > 0) {
-                    document.getElementById('loadingText').textContent = 'Creando visualizaciones...';
-                    createAllCharts();
+                    document.getElementById('loadingText').textContent = 'Creando gráficas...';
+                    createCharts();
                     document.getElementById('charts-section').classList.remove('hidden');
-                } else {
-                    showMessage('⚠️ Dataset generado pero sin datos para gráficas', 'warning');
                 }
                 
                 document.getElementById('results').classList.remove('hidden');
-                document.getElementById('correlationsBtn').disabled = false;
-                
-                showMessage('✅ Dataset hiperrealista generado exitosamente', 'success');
+                showMessage('✅ Dataset de prueba generado exitosamente', 'success');
                 
             } catch (error) {
                 debugLog('❌ Error:', error);
-                showMessage(`❌ Error generando dataset: ${error.message}`, 'error');
+                showMessage(`❌ Error: ${error.message}`, 'error');
             } finally {
                 document.getElementById('loading').classList.add('hidden');
                 generateBtn.disabled = false;
@@ -585,8 +561,8 @@
         
         // Obtener muestra de datos
         async function getSampleData() {
-            if (!serverData || !serverData.outputDir) {
-                debugLog('⚠️ No hay outputDir');
+            if (!serverData || !serverData.stats.folderName) {
+                debugLog('⚠️ No hay folderName en serverData');
                 return;
             }
             
@@ -601,8 +577,8 @@
                     const sampleData = await sampleResponse.json();
                     debugLog('📈 Muestra obtenida:', { 
                         records: sampleData.data?.length || 0,
-                        method: sampleData.samplingMethod,
-                        coverage: sampleData.coverage
+                        totalRows: sampleData.totalRows,
+                        headers: sampleData.headers?.length || 0
                     });
                     
                     if (sampleData.data && Array.isArray(sampleData.data)) {
@@ -612,190 +588,108 @@
                         debugLog('⚠️ Formato de muestra inesperado');
                         currentDataset = null;
                     }
+                } else {
+                    debugLog('⚠️ Error obteniendo muestra');
                 }
             } catch (error) {
-                debugLog('⚠️ Error obteniendo muestra:', error);
+                debugLog('⚠️ Error en getSampleData:', error);
             }
         }
         
-        // Mostrar resultados
+        // Mostrar resultados - CORREGIDO para modo diagnóstico
         function displayResults() {
-            if (!currentStats) return;
+            if (!currentStats) {
+                debugLog('⚠️ No hay currentStats');
+                return;
+            }
             
             const stats = currentStats;
+            debugLog('📊 Mostrando resultados:', stats);
+            
+            // Usar valores seguros con fallbacks
+            const totalPoints = stats.totalPoints || 0;
+            const scenarios = stats.scenarios || 0;
+            const duration = stats.duration || 'N/A';
+            const biomassMax = stats.biomassRange?.max || 0;
+            const biomassMin = stats.biomassRange?.min || 0;
+            const biomassMean = stats.biomassRange?.mean || 0;
             
             // Estadísticas principales
             document.getElementById('stats').innerHTML = `
                 <div class="stat-card">
-                    <div class="stat-value">${stats.totalPoints.toLocaleString()}</div>
+                    <div class="stat-value">${totalPoints.toLocaleString()}</div>
                     <div class="stat-label">Total Registros</div>
                 </div>
                 <div class="stat-card">
-                    <div class="stat-value">${stats.scenarios}</div>
+                    <div class="stat-value">${scenarios}</div>
                     <div class="stat-label">Escenarios</div>
                 </div>
                 <div class="stat-card">
-                    <div class="stat-value">${stats.duration}</div>
+                    <div class="stat-value">${duration}</div>
                     <div class="stat-label">Duración</div>
                 </div>
                 <div class="stat-card">
-                    <div class="stat-value">${stats.biomassRange.max.toFixed(2)}</div>
+                    <div class="stat-value">${biomassMax.toFixed(3)}</div>
                     <div class="stat-label">Biomasa Máx (g/L)</div>
                 </div>
                 <div class="stat-card">
-                    <div class="stat-value">${stats.productivityRange.max.toFixed(3)}</div>
-                    <div class="stat-label">Productividad Máx (g/L/día)</div>
+                    <div class="stat-value">${biomassMean.toFixed(3)}</div>
+                    <div class="stat-label">Biomasa Media (g/L)</div>
                 </div>
                 <div class="stat-card">
-                    <div class="stat-value">${stats.growthRateRange.max.toFixed(4)}</div>
-                    <div class="stat-label">μ Máx (h⁻¹)</div>
+                    <div class="stat-value">${stats.trainingPoints || 0}</div>
+                    <div class="stat-label">Entrenamiento</div>
                 </div>
             `;
             
             // Enlaces de descarga
             const folderName = stats.folderName;
-            document.getElementById('downloads').innerHTML = `
-                <a href="/download/${folderName}/complete_dataset.csv" class="download-btn">
-                    📊 Dataset Completo (${stats.totalPoints.toLocaleString()})
-                </a>
-                <a href="/download/${folderName}/training_data.csv" class="download-btn">
-                    🎯 Entrenamiento (${stats.trainingPoints.toLocaleString()})
-                </a>
-                <a href="/download/${folderName}/validation_data.csv" class="download-btn">
-                    🔍 Validación (${stats.validationPoints.toLocaleString()})
-                </a>
-                <a href="/download/${folderName}/test_data.csv" class="download-btn">
-                    🧪 Prueba (${stats.testPoints.toLocaleString()})
-                </a>
-                <a href="/download/${folderName}/metadata.json" class="download-btn">
-                    📋 Metadata JSON
-                </a>
-            `;
-            
-            // Recomendaciones para ML
-            if (serverData.recommendations) {
-                const rec = serverData.recommendations;
-                document.getElementById('recommendationsSection').innerHTML = `
-                    <h3>🤖 Recomendaciones para Machine Learning</h3>
-                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px;">
-                        <div>
-                            <h4>📊 Modelos Recomendados:</h4>
-                            <ul>
-                                ${rec.mlModels.map(model => `<li>${model}</li>`).join('')}
-                            </ul>
-                        </div>
-                        <div>
-                            <h4>🔑 Variables Clave:</h4>
-                            <ul>
-                                ${rec.keyFeatures.map(feature => `<li>${feature}</li>`).join('')}
-                            </ul>
-                        </div>
-                        <div>
-                            <h4>🎯 Variables Objetivo:</h4>
-                            <ul>
-                                ${rec.targetVariables.map(target => `<li>${target}</li>`).join('')}
-                            </ul>
-                        </div>
-                        <div>
-                            <h4>⚙️ Preprocesamiento:</h4>
-                            <ul>
-                                ${rec.preprocessing.map(prep => `<li>${prep}</li>`).join('')}
-                            </ul>
-                        </div>
-                    </div>
-                    <div style="margin-top: 15px; padding: 10px; background: #e8f4f8; border-radius: 5px;">
-                        <strong>💡 Validación:</strong> ${rec.validation}
-                    </div>
+            if (folderName) {
+                document.getElementById('downloads').innerHTML = `
+                    <a href="/download/${folderName}/complete_dataset.csv" class="download-btn">
+                        📊 Dataset Completo (${totalPoints.toLocaleString()})
+                    </a>
+                    <a href="/download/${folderName}/training_data.csv" class="download-btn">
+                        🎯 Entrenamiento (${stats.trainingPoints || 0})
+                    </a>
+                    <a href="/download/${folderName}/validation_data.csv" class="download-btn">
+                        🔍 Validación (${stats.validationPoints || 0})
+                    </a>
+                    <a href="/download/${folderName}/test_data.csv" class="download-btn">
+                        🧪 Prueba (${stats.testPoints || 0})
+                    </a>
                 `;
             }
         }
         
-        // Mostrar correlaciones
-        async function showCorrelations() {
-            if (!serverData || !serverData.stats.folderName) {
-                showMessage('❌ No hay datos para analizar correlaciones', 'error');
-                return;
-            }
-            
-            try {
-                showMessage('📊 Calculando correlaciones...', 'info');
-                
-                const response = await fetch(`/correlations/${serverData.stats.folderName}`);
-                
-                if (!response.ok) {
-                    throw new Error(`Error HTTP ${response.status}`);
-                }
-                
-                const data = await response.json();
-                debugLog('📊 Correlaciones obtenidas:', data);
-                
-                // Mostrar correlaciones
-                const correlationsGrid = document.getElementById('correlations-grid');
-                correlationsGrid.innerHTML = data.correlations.map(corr => {
-                    const absCorr = Math.abs(corr.correlation);
-                    let color = '#6c757d';
-                    if (absCorr > 0.8) color = '#28a745';
-                    else if (absCorr > 0.6) color = '#17a2b8';
-                    else if (absCorr > 0.4) color = '#ffc107';
-                    else if (absCorr > 0.2) color = '#fd7e14';
-                    
-                    return `
-                        <div class="correlation-card">
-                            <div class="correlation-value" style="color: ${color}">
-                                ${corr.correlation.toFixed(3)}
-                            </div>
-                            <div class="correlation-label">
-                                ${corr.var1} ↔ ${corr.var2}
-                            </div>
-                            <div class="correlation-strength strength-${corr.strength}">
-                                ${corr.strength.replace('_', ' ')}
-                            </div>
-                        </div>
-                    `;
-                }).join('');
-                
-                document.getElementById('correlations-section').classList.remove('hidden');
-                showMessage('✅ Correlaciones calculadas exitosamente', 'success');
-                
-            } catch (error) {
-                debugLog('❌ Error correlaciones:', error);
-                showMessage(`❌ Error calculando correlaciones: ${error.message}`, 'error');
-            }
-        }
-        
-        // Crear todas las gráficas
-        function createAllCharts() {
+        // Crear gráficas básicas
+        function createCharts() {
             if (!currentDataset || !Array.isArray(currentDataset) || currentDataset.length === 0) {
                 debugLog('⚠️ Sin datos para gráficas');
                 return;
             }
             
-            debugLog('📊 Creando gráficas:', currentDataset.length, 'registros');
+            debugLog('📊 Creando gráficas básicas:', currentDataset.length, 'registros');
             
-            setTimeout(() => {
-                try {
-                    createBiomassChart();
-                    createCellChart();
-                    createEnvironmentChart();
-                    createLightChart();
-                    createProductivityChart();
-                    createPhasesChart();
-                    analyzeQuality();
-                    debugLog('✅ Gráficas creadas exitosamente');
-                } catch (error) {
-                    debugLog('❌ Error creando gráficas:', error);
-                    showMessage(`❌ Error en visualizaciones: ${error.message}`, 'error');
-                }
-            }, 500);
+            try {
+                createBiomassChart();
+                createTemperatureChart();
+                createPHChart();
+                createPARChart();
+                debugLog('✅ Gráficas creadas');
+            } catch (error) {
+                debugLog('❌ Error creando gráficas:', error);
+                showMessage(`❌ Error en gráficas: ${error.message}`, 'error');
+            }
         }
         
-        // Gráfica de biomasa por escenario
+        // Gráfica de biomasa
         function createBiomassChart() {
             const ctx = document.getElementById('biomassChart').getContext('2d');
             if (charts.biomass) charts.biomass.destroy();
             
-            const scenarios = [...new Set(currentDataset.map(d => d.Scenario))].slice(0, 8);
-            const colors = ['#667eea', '#f093fb', '#4facfe', '#43e97b', '#fa709a', '#ffecd2', '#a8edea', '#d299c2'];
+            const scenarios = [...new Set(currentDataset.map(d => d.Scenario))].slice(0, 5);
+            const colors = ['#667eea', '#f093fb', '#4facfe', '#43e97b', '#fa709a'];
             
             charts.biomass = new Chart(ctx, {
                 type: 'line',
@@ -812,195 +706,41 @@
                             borderColor: colors[index % colors.length],
                             backgroundColor: colors[index % colors.length] + '20',
                             tension: 0.3,
-                            pointRadius: 1
+                            pointRadius: 2
                         };
                     })
                 },
                 options: {
                     responsive: true,
                     maintainAspectRatio: false,
-                    plugins: { legend: { display: true, position: 'top' } },
-                    scales: {
-                        x: { 
-                            title: { display: true, text: 'Tiempo (días)' }, 
-                            type: 'linear' 
-                        },
-                        y: { 
-                            title: { display: true, text: 'Biomasa (g/L)' }, 
-                            beginAtZero: true 
-                        }
-                    }
-                }
-            });
-        }
-        
-        // Gráfica de concentración celular
-        function createCellChart() {
-            const ctx = document.getElementById('cellChart').getContext('2d');
-            if (charts.cells) charts.cells.destroy();
-            
-            const data = currentDataset.slice(0, 300).map(d => ({
-                x: d.Time_days || 0,
-                y: d.Cell_Density_10E6_mL || 0
-            }));
-            
-            charts.cells = new Chart(ctx, {
-                type: 'scatter',
-                data: {
-                    datasets: [{
-                        label: 'Concentración Celular',
-                        data: data,
-                        backgroundColor: 'rgba(102, 126, 234, 0.6)',
-                        borderColor: '#667eea',
-                        pointRadius: 2
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
                     plugins: { legend: { display: true } },
                     scales: {
                         x: { title: { display: true, text: 'Tiempo (días)' } },
-                        y: { 
-                            title: { display: true, text: 'Células (10⁶/mL)' }, 
-                            beginAtZero: true 
-                        }
+                        y: { title: { display: true, text: 'Temperatura (°C)' } }
                     }
                 }
             });
         }
         
-        // Gráfica de condiciones ambientales
-        function createEnvironmentChart() {
-            const ctx = document.getElementById('environmentChart').getContext('2d');
-            if (charts.environment) charts.environment.destroy();
+        // Gráfica de pH
+        function createPHChart() {
+            const ctx = document.getElementById('pHChart').getContext('2d');
+            if (charts.pH) charts.pH.destroy();
             
-            const firstScenario = currentDataset
-                .filter(d => d.Scenario === 1)
-                .slice(0, 200)
-                .sort((a, b) => (a.Time_days || 0) - (b.Time_days || 0));
+            const data = currentDataset.slice(0, 200).map(d => ({
+                x: d.Time_days || 0,
+                y: d.pH || 0
+            }));
             
-            charts.environment = new Chart(ctx, {
-                type: 'line',
+            charts.pH = new Chart(ctx, {
+                type: 'scatter',
                 data: {
-                    labels: firstScenario.map(d => d.Time_days || 0),
                     datasets: [{
                         label: 'pH',
-                        data: firstScenario.map(d => d.pH || 7),
-                        borderColor: '#3b82f6',
-                        backgroundColor: 'rgba(59, 130, 246, 0.1)',
-                        yAxisID: 'y',
-                        tension: 0.3,
-                        pointRadius: 1
-                    }, {
-                        label: 'Temperatura (°C)',
-                        data: firstScenario.map(d => d.Temperature_C || 25),
-                        borderColor: '#ef4444',
-                        backgroundColor: 'rgba(239, 68, 68, 0.1)',
-                        yAxisID: 'y1',
-                        tension: 0.3,
-                        pointRadius: 1
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: { 
-                        legend: { display: true },
-                        title: {
-                            display: true,
-                            text: 'Escenario 1 - Evolución temporal'
-                        }
-                    },
-                    scales: {
-                        x: { title: { display: true, text: 'Tiempo (días)' } },
-                        y: { 
-                            title: { display: true, text: 'pH' },
-                            min: 6, max: 9,
-                            position: 'left'
-                        },
-                        y1: {
-                            type: 'linear',
-                            display: true,
-                            position: 'right',
-                            title: { display: true, text: 'Temp (°C)' },
-                            grid: { drawOnChartArea: false },
-                            min: 15, max: 40
-                        }
-                    }
-                }
-            });
-        }
-        
-        // Gráfica de luz
-        function createLightChart() {
-            const ctx = document.getElementById('lightChart').getContext('2d');
-            if (charts.light) charts.light.destroy();
-            
-            const cyclicData = currentDataset
-                .filter(d => d.Light_Regime === 'cyclic_16_8')
-                .slice(0, 200)
-                .sort((a, b) => (a.Time_h || 0) - (b.Time_h || 0));
-            
-            if (cyclicData.length === 0) {
-                cyclicData.push(...currentDataset.slice(0, 200));
-            }
-            
-            charts.light = new Chart(ctx, {
-                type: 'line',
-                data: {
-                    labels: cyclicData.map(d => d.Time_h || 0),
-                    datasets: [{
-                        label: 'PAR (μmol/m²/s)',
-                        data: cyclicData.map(d => d.PAR_umol_m2_s || 0),
-                        borderColor: '#f59e0b',
-                        backgroundColor: 'rgba(245, 158, 11, 0.3)',
-                        fill: true,
-                        tension: 0.2,
-                        pointRadius: 1
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: { 
-                        legend: { display: true },
-                        title: {
-                            display: true,
-                            text: 'Ciclos de luz día/noche'
-                        }
-                    },
-                    scales: {
-                        x: { title: { display: true, text: 'Tiempo (h)' } },
-                        y: { 
-                            title: { display: true, text: 'PAR (μmol/m²/s)' }, 
-                            beginAtZero: true,
-                            max: Math.max(...cyclicData.map(d => d.PAR_umol_m2_s || 0)) * 1.1
-                        }
-                    }
-                }
-            });
-        }
-        
-        // Gráfica de productividad
-        function createProductivityChart() {
-            const ctx = document.getElementById('productivityChart').getContext('2d');
-            if (charts.productivity) charts.productivity.destroy();
-            
-            const data = currentDataset.slice(0, 300).map(d => ({
-                x: d.Time_days || 0,
-                y: d.Instantaneous_Productivity_g_L_d || 0
-            }));
-            
-            charts.productivity = new Chart(ctx, {
-                type: 'scatter',
-                data: {
-                    datasets: [{
-                        label: 'Productividad',
                         data: data,
-                        backgroundColor: 'rgba(102, 126, 234, 0.6)',
-                        borderColor: '#667eea',
-                        pointRadius: 2
+                        backgroundColor: 'rgba(59, 130, 246, 0.6)',
+                        borderColor: '#3b82f6',
+                        pointRadius: 3
                     }]
                 },
                 options: {
@@ -1009,175 +749,80 @@
                     plugins: { legend: { display: true } },
                     scales: {
                         x: { title: { display: true, text: 'Tiempo (días)' } },
-                        y: { 
-                            title: { display: true, text: 'Productividad (g/L/día)' }, 
-                            beginAtZero: true 
-                        }
+                        y: { title: { display: true, text: 'pH' }, min: 6, max: 10 }
                     }
                 }
             });
         }
         
-        // Gráfica de fases de crecimiento
-        function createPhasesChart() {
-            const ctx = document.getElementById('phasesChart').getContext('2d');
-            if (charts.phases) charts.phases.destroy();
+        // Gráfica de PAR
+        function createPARChart() {
+            const ctx = document.getElementById('parChart').getContext('2d');
+            if (charts.par) charts.par.destroy();
             
-            const phaseCounts = {
-                'lag': 0,
-                'exponential': 0,
-                'linear': 0,
-                'stationary': 0,
-                'decline': 0
-            };
+            const data = currentDataset.slice(0, 200).map(d => ({
+                x: d.Time_days || 0,
+                y: d.PAR_umol_m2_s || 0
+            }));
             
-            currentDataset.forEach(d => {
-                if (d.Growth_Phase && phaseCounts.hasOwnProperty(d.Growth_Phase)) {
-                    phaseCounts[d.Growth_Phase]++;
-                }
-            });
-            
-            const phases = Object.keys(phaseCounts);
-            const counts = Object.values(phaseCounts);
-            const colors = ['#ff6b6b', '#4ecdc4', '#45b7d1', '#f9ca24', '#f0932b'];
-            
-            charts.phases = new Chart(ctx, {
-                type: 'doughnut',
+            charts.par = new Chart(ctx, {
+                type: 'scatter',
                 data: {
-                    labels: phases.map(p => p.charAt(0).toUpperCase() + p.slice(1)),
                     datasets: [{
-                        data: counts,
-                        backgroundColor: colors,
-                        borderColor: colors.map(c => c + '80'),
-                        borderWidth: 2
+                        label: 'PAR',
+                        data: data,
+                        backgroundColor: 'rgba(245, 158, 11, 0.6)',
+                        borderColor: '#f59e0b',
+                        pointRadius: 3
                     }]
                 },
                 options: {
                     responsive: true,
                     maintainAspectRatio: false,
-                    plugins: {
-                        legend: { position: 'bottom' },
-                        title: {
-                            display: true,
-                            text: 'Distribución de fases de crecimiento'
-                        }
+                    plugins: { legend: { display: true } },
+                    scales: {
+                        x: { title: { display: true, text: 'Tiempo (días)' } },
+                        y: { title: { display: true, text: 'PAR (μmol/m²/s)' }, beginAtZero: true }
                     }
                 }
             });
         }
         
-        // Análisis de calidad del dataset
-        function analyzeQuality() {
-            if (!currentDataset || !currentStats) return;
+        // Actualizar estimación de tiempo
+        function updateTimeEstimate() {
+            const scenarios = parseInt(document.getElementById('scenarios').value) || 0;
+            const days = parseInt(document.getElementById('totalDays').value) || 0;
+            const totalRecords = scenarios * days * 24;
             
-            try {
-                const scenarios = [...new Set(currentDataset.map(d => d.Scenario))];
-                const biomassValues = currentDataset.map(d => d.Biomass_g_L || 0);
-                const timeRange = {
-                    min: Math.min(...currentDataset.map(d => d.Time_days || 0)),
-                    max: Math.max(...currentDataset.map(d => d.Time_days || 0))
-                };
+            if (totalRecords > 0) {
+                let estimate = "< 30 seg";
+                if (totalRecords > 10000) estimate = "30-60 seg";
+                if (totalRecords > 20000) estimate = "1-2 min";
                 
-                const biomassStats = currentStats.biomassRange;
-                const cv = (biomassStats.std / biomassStats.mean) * 100;
-                
-                // Mostrar métricas de calidad
-                document.getElementById('quality-analysis').innerHTML = `
-                    <div class="stat-card">
-                        <div class="stat-value">${scenarios.length}</div>
-                        <div class="stat-label">Escenarios</div>
-                    </div>
-                    <div class="stat-card">
-                        <div class="stat-value">${timeRange.max.toFixed(1)}</div>
-                        <div class="stat-label">Días Totales</div>
-                    </div>
-                    <div class="stat-card">
-                        <div class="stat-value">${cv.toFixed(1)}%</div>
-                        <div class="stat-label">Coef. Variación</div>
-                    </div>
-                    <div class="stat-card">
-                        <div class="stat-value">${currentDataset.length}</div>
-                        <div class="stat-label">Registros Muestra</div>
-                    </div>
-                    <div class="stat-card">
-                        <div class="stat-value">${Object.keys(currentDataset[0]).length}</div>
-                        <div class="stat-label">Variables</div>
-                    </div>
-                    <div class="stat-card">
-                        <div class="stat-value">9.2/10</div>
-                        <div class="stat-label">Calidad Score</div>
-                    </div>
-                `;
-                
-                // Recomendaciones ML específicas
-                const recommendations = [];
-                
-                if (scenarios.length >= 25) {
-                    recommendations.push("✅ <strong>Escenarios:</strong> Excelente diversidad para ML");
-                } else {
-                    recommendations.push("⚠️ <strong>Escenarios:</strong> Considera 25+ para mejor generalización");
-                }
-                
-                if (timeRange.max >= 30) {
-                    recommendations.push("✅ <strong>Duración:</strong> Ciclos largos capturan dinámicas complejas");
-                } else {
-                    recommendations.push("💡 <strong>Duración:</strong> Ciclos 30+ días mejoran predicción temporal");
-                }
-                
-                if (cv > 50) {
-                    recommendations.push("✅ <strong>Variabilidad:</strong> Alta diversidad, ideal para robustez");
-                } else if (cv > 30) {
-                    recommendations.push("✅ <strong>Variabilidad:</strong> Buena diversidad para ML");
-                } else {
-                    recommendations.push("⚠️ <strong>Variabilidad:</strong> Considera mayor diversidad experimental");
-                }
-                
-                recommendations.push("🤖 <strong>Algoritmos:</strong> Random Forest y XGBoost recomendados");
-                recommendations.push("📊 <strong>Validación:</strong> Time series split por días/escenarios");
-                recommendations.push("🔄 <strong>Features:</strong> Crear variables lag y rolling means");
-                recommendations.push("⚡ <strong>Targets:</strong> Biomasa, tasa crecimiento, productividad");
-                
-                const score = Math.max(1, Math.min(10, 
-                    8 + (scenarios.length >= 25 ? 1 : 0) + (cv > 40 ? 1 : 0) + (timeRange.max >= 30 ? 1 : -1)
-                ));
-                
-                document.getElementById('ml-recommendations').innerHTML = `
-                    <h4>🎯 Evaluación para Machine Learning:</h4>
-                    <ul style="margin: 15px 0; padding-left: 20px;">
-                        ${recommendations.map(rec => `<li style="margin: 8px 0;">${rec}</li>`).join('')}
-                    </ul>
-                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-top: 20px;">
-                        <div style="background: #e8f5e8; padding: 15px; border-radius: 8px; text-align: center;">
-                            <strong>📊 Dataset Score: ${score}/10</strong>
-                        </div>
-                        <div style="background: #e8f4fd; padding: 15px; border-radius: 8px; text-align: center;">
-                            <strong>🎯 ML Readiness: ${score >= 8 ? 'Excelente' : score >= 6 ? 'Bueno' : 'Necesita mejoras'}</strong>
-                        </div>
-                        <div style="background: #fff3e0; padding: 15px; border-radius: 8px; text-align: center;">
-                            <strong>🔬 Realismo: Hiperrealista</strong>
-                        </div>
-                    </div>
-                `;
-                
-            } catch (error) {
-                debugLog('❌ Error en análisis de calidad:', error);
-                document.getElementById('ml-recommendations').innerHTML = 
-                    '<p>Error en análisis de calidad. Revisa la consola para más detalles.</p>';
+                document.getElementById('estimation').textContent = 
+                    `📊 Estimación: ${totalRecords.toLocaleString()} registros, tiempo: ${estimate}`;
             }
         }
+        
+        // Event listeners
+        document.getElementById('scenarios').addEventListener('input', updateTimeEstimate);
+        document.getElementById('totalDays').addEventListener('input', updateTimeEstimate);
         
         // Inicialización
         document.addEventListener('DOMContentLoaded', function() {
-            debugLog('🎯 Aplicación Chlorella v2.0 cargada');
+            debugLog('🎯 Aplicación Chlorella Diagnóstico cargada');
             
             // Test inicial del servidor
             setTimeout(testServer, 1000);
             
-            // Agregar tooltips a los campos
+            // Actualizar estimación inicial
+            updateTimeEstimate();
+            
+            // Agregar tooltips
             const tooltips = {
-                scenarios: "Número de experimentos independientes. Más escenarios = mayor diversidad para ML",
-                totalDays: "Duración de cada cultivo. 30-60 días capturan ciclos completos de crecimiento",
-                variability: "Controla la variación en condiciones ambientales y estrés experimental"
+                scenarios: "Número de experimentos independientes (máx. 50 en modo diagnóstico)",
+                totalDays: "Duración de cada cultivo en días (máx. 30 en modo diagnóstico)",
+                variability: "Nivel de variación en las condiciones experimentales"
             };
             
             Object.entries(tooltips).forEach(([id, text]) => {
@@ -1186,12 +831,15 @@
                     element.title = text;
                 }
             });
+            
+            // Mensaje de bienvenida
+            showMessage('🔍 Modo diagnóstico activo. Límites reducidos para testing rápido.', 'info');
         });
         
         // Manejo de errores globales
         window.addEventListener('error', function(e) {
             debugLog('🚨 Error JS:', e.message);
-            showMessage(`🚨 Error de JavaScript: ${e.message}`, 'error');
+            showMessage(`🚨 Error: ${e.message}`, 'error');
         });
         
         window.addEventListener('unhandledrejection', function(e) {
@@ -1208,47 +856,76 @@
             return parseFloat(num).toFixed(decimals);
         }
         
-        function getTimeEstimate(scenarios, days) {
-            const totalHours = scenarios * days * 24;
-            if (totalHours < 1000) return "< 1 min";
-            if (totalHours < 10000) return "1-3 min";
-            if (totalHours < 50000) return "3-10 min";
-            return "10+ min";
+        // Funciones adicionales para debugging
+        function clearDebugLog() {
+            document.getElementById('debugContent').innerHTML = '';
         }
         
-        // Actualizar estimación de tiempo en tiempo real
-        document.getElementById('scenarios').addEventListener('input', updateTimeEstimate);
-        document.getElementById('totalDays').addEventListener('input', updateTimeEstimate);
+        function exportDebugLog() {
+            const content = document.getElementById('debugContent').innerHTML;
+            const blob = new Blob([content], { type: 'text/plain' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `chlorella_debug_${new Date().toISOString().slice(0, 19)}.txt`;
+            a.click();
+            URL.revokeObjectURL(url);
+        }
         
-        function updateTimeEstimate() {
-            const scenarios = parseInt(document.getElementById('scenarios').value) || 0;
-            const days = parseInt(document.getElementById('totalDays').value) || 0;
-            const totalRecords = scenarios * days * 24;
-            
-            if (totalRecords > 0) {
-                const estimate = getTimeEstimate(scenarios, days);
-                const infoDiv = document.querySelector('.form-info');
-                if (infoDiv) {
-                    const estimateText = `<p><strong>📊 Estimación:</strong> ${formatNumber(totalRecords)} registros, tiempo: ${estimate}</p>`;
-                    // Agregar o actualizar la estimación
-                    let estimateP = infoDiv.querySelector('.estimate');
-                    if (!estimateP) {
-                        estimateP = document.createElement('p');
-                        estimateP.className = 'estimate';
-                        estimateP.style.marginTop = '10px';
-                        estimateP.style.color = '#17a2b8';
-                        estimateP.style.fontWeight = 'bold';
-                        infoDiv.appendChild(estimateP);
-                    }
-                    estimateP.innerHTML = `📊 Estimación: ${formatNumber(totalRecords)} registros, tiempo: ${estimate}`;
+        // Agregar botones de debug si es necesario
+        if (debugMode) {
+            setTimeout(() => {
+                const debugCard = document.getElementById('debug');
+                if (debugCard) {
+                    const buttonsDiv = document.createElement('div');
+                    buttonsDiv.style.marginTop = '10px';
+                    buttonsDiv.innerHTML = `
+                        <button onclick="clearDebugLog()" style="background: #dc3545; color: white; padding: 5px 10px; border: none; border-radius: 3px; margin-right: 5px;">
+                            🗑️ Limpiar Log
+                        </button>
+                        <button onclick="exportDebugLog()" style="background: #28a745; color: white; padding: 5px 10px; border: none; border-radius: 3px;">
+                            📥 Descargar Log
+                        </button>
+                    `;
+                    debugCard.appendChild(buttonsDiv);
                 }
-            }
+            }, 2000);
         }
         
-        // Inicializar estimación
-        updateTimeEstimate();
-        
-        console.log('✅ Generador Chlorella Hiperrealista v2.0 cargado correctamente');
+        console.log('✅ Generador Chlorella Diagnóstico cargado correctamente');
     </script>
 </body>
 </html>
+                    maintainAspectRatio: false,
+                    plugins: { legend: { display: true } },
+                    scales: {
+                        x: { title: { display: true, text: 'Tiempo (días)' } },
+                        y: { title: { display: true, text: 'Biomasa (g/L)' }, beginAtZero: true }
+                    }
+                }
+            });
+        }
+        
+        // Gráfica de temperatura
+        function createTemperatureChart() {
+            const ctx = document.getElementById('temperatureChart').getContext('2d');
+            if (charts.temperature) charts.temperature.destroy();
+            
+            const data = currentDataset.slice(0, 200).map(d => ({
+                x: d.Time_days || 0,
+                y: d.Temperature_C || 0
+            }));
+            
+            charts.temperature = new Chart(ctx, {
+                type: 'scatter',
+                data: {
+                    datasets: [{
+                        label: 'Temperatura',
+                        data: data,
+                        backgroundColor: 'rgba(239, 68, 68, 0.6)',
+                        borderColor: '#ef4444',
+                        pointRadius: 3
+                    }]
+                },
+                options: {
+                    responsive: true,
